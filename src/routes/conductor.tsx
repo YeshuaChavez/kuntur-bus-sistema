@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { RoleShell } from "@/components/jaysi/RoleShell";
 import {
-  Play, Pause, Flag, AlertTriangle, MapPin, Gauge, Clock, Route as RouteIcon,
+  Play, Pause, Flag, AlertTriangle, MapPin, Clock, Route as RouteIcon,
   Navigation, BadgeCheck,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
