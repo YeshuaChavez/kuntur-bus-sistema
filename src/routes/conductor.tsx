@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { RoleShell } from "@/components/jaysi/RoleShell";
 import {
-  Play, Pause, Flag, AlertTriangle, MapPin, Gauge, Clock, Route as RouteIcon,
+  Play, Pause, Flag, AlertTriangle, MapPin, Clock, Route as RouteIcon,
   Navigation, BadgeCheck,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
@@ -79,13 +79,50 @@ function DriverBadge({ name }: { name: string }) {
   );
 }
 
+type LogEntry = { label: string; time: string };
+
+function nowHHMM() {
+  return new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
 function ActiveDriverView({
   trip, driverName, onFinish,
 }: { trip: ActiveTrip; driverName: string; onFinish: () => void }) {
-  const [status, setStatus] = useState("En ruta");
+  const [status, setStatus] = useState("Sin iniciar");
   const [sosOpen, setSosOpen] = useState(false);
+  const [startTime, setStartTime] = useState<string | null>(null);
+  const [stopTime, setStopTime] = useState<string | null>(null);
+  const [paradaCount, setParadaCount] = useState(0);
+  const [log, setLog] = useState<LogEntry[]>([]);
+
+  const pushLog = (label: string) => {
+    const time = nowHHMM();
+    setLog((l) => [{ label, time }, ...l]);
+    return time;
+  };
+
+  const handleStart = () => {
+    const t = pushLog("Inicio de ruta");
+    setStartTime(t);
+    setStopTime(null);
+    setStatus("En ruta");
+  };
+
+  const handleStop = () => {
+    const t = pushLog("Parada técnica");
+    setStopTime(t);
+    setStatus("En parada");
+  };
+
+  const handleParada = () => {
+    const next = paradaCount + 1;
+    setParadaCount(next);
+    pushLog(`Parada ${next}`);
+    setStatus(`Parada ${next}`);
+  };
 
   const handleFinish = () => {
+    pushLog("Fin de viaje");
     setStatus("Finalizado");
     onFinish();
   };
@@ -105,8 +142,8 @@ function ActiveDriverView({
           </div>
 
           <div className="mt-5 grid grid-cols-3 gap-3 border-t border-primary-foreground/20 pt-4">
-            <Mini icon={Clock} k="ETA" v="11:45" />
-            <Mini icon={Gauge} k="Vel." v="82 km/h" />
+            <Mini icon={Clock} k="Inicio" v={startTime ?? "—"} />
+            <Mini icon={Pause} k="Últ. parada" v={stopTime ?? "—"} />
             <Mini icon={Flag} k="Estado" v={status} />
           </div>
         </div>
@@ -117,10 +154,24 @@ function ActiveDriverView({
           Reporte rápido
         </h2>
         <div className="mt-3 grid grid-cols-3 gap-3">
-          <BigBtn icon={Play} label="Inicio de ruta" onClick={() => setStatus("En ruta")} active={status === "En ruta"} />
-          <BigBtn icon={Pause} label="Parada técnica" onClick={() => setStatus("En parada")} active={status === "En parada"} />
-          <BigBtn icon={MapPin} label="Checkpoint" onClick={() => setStatus("Checkpoint")} active={status === "Checkpoint"} />
+          <BigBtn icon={Play} label={startTime ? `Inicio · ${startTime}` : "Inicio de ruta"} onClick={handleStart} active={status === "En ruta"} />
+          <BigBtn icon={Pause} label={stopTime ? `Parada · ${stopTime}` : "Parada técnica"} onClick={handleStop} active={status === "En parada"} />
+          <BigBtn icon={MapPin} label={paradaCount > 0 ? `Parada ${paradaCount}` : "Parada 1"} onClick={handleParada} active={status.startsWith("Parada ")} />
         </div>
+
+        {log.length > 0 && (
+          <div className="mt-6 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Bitácora del viaje</h3>
+            <ul className="space-y-2">
+              {log.map((e, i) => (
+                <li key={i} className="flex items-center justify-between border-b border-border/60 pb-2 last:border-0 last:pb-0">
+                  <span className="text-sm font-medium text-foreground">{e.label}</span>
+                  <span className="font-mono text-sm text-primary">{e.time}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* Botones flotantes: Finalizar + SOS */}
@@ -168,7 +219,7 @@ function RouteMap() {
           </span>
         </div>
       </div>
-      <div className="relative h-[260px] bg-[radial-gradient(ellipse_at_center,_var(--secondary)_0%,_var(--background)_75%)]">
+      <div className="relative h-[460px] sm:h-[560px] bg-[radial-gradient(ellipse_at_center,_var(--secondary)_0%,_var(--background)_75%)]">
         <svg viewBox="0 0 760 440" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet">
           <path d="M 60 380 Q 250 420 420 220 T 700 90" stroke="oklch(0.7 0.02 150)" strokeWidth="3" fill="none" strokeDasharray="6 6" opacity="0.5" />
           <path d="M 60 380 Q 200 200 700 90" stroke="oklch(0.7 0.02 150)" strokeWidth="3" fill="none" strokeDasharray="6 6" opacity="0.5" />
