@@ -251,15 +251,77 @@ export function UpcomingTrips({
 
 /* --------------------------- Vista activa (turno) -------------------------- */
 
+type Stop = {
+  name: string;
+  scheduled: string;
+  passengers: { seat: string; name: string; off: boolean }[];
+  done: boolean;
+};
+
+function buildStops(): Stop[] {
+  return [
+    {
+      name: "Huacho", scheduled: "08:10", done: true,
+      passengers: [
+        { seat: "1A", name: "Carlos R.", off: true },
+        { seat: "2B", name: "Lucía M.",  off: true },
+      ],
+    },
+    {
+      name: "Barranca", scheduled: "09:25", done: false,
+      passengers: [
+        { seat: "3C", name: "María L.",   off: false },
+        { seat: "4B", name: "Pedro S.",   off: false },
+        { seat: "5D", name: "Andrea V.",  off: false },
+      ],
+    },
+    {
+      name: "Chimbote", scheduled: "11:40", done: false,
+      passengers: [
+        { seat: "6C", name: "Jorge T.",   off: false },
+        { seat: "7B", name: "Sofía N.",   off: false },
+      ],
+    },
+    {
+      name: "Trujillo", scheduled: "15:20", done: false,
+      passengers: [
+        { seat: "8D", name: "Ricardo P.", off: false },
+        { seat: "9A", name: "Elena G.",   off: false },
+        { seat: "10C", name: "Manuel B.", off: false },
+      ],
+    },
+  ];
+}
+
 function ActiveTripView({
   trip, auxName, onFinish,
 }: { trip: TripOption; auxName: string; onFinish: () => void }) {
-  const [tab, setTab] = useState<"scan" | "map">("scan");
+  const [tab, setTab] = useState<"scan" | "map" | "off">("scan");
   const [online, setOnline] = useState(true);
+  const [stops, setStops] = useState<Stop[]>(buildStops);
   const seats = buildSeats();
   const boarded = seats.filter((s) => s.status === "boarded").length;
   const sold = seats.filter((s) => s.status === "sold").length;
   const emergency = "+51 998 123 456";
+
+  const totalToOff = stops.reduce((acc, s) => acc + s.passengers.length, 0);
+  const offCount = stops.reduce((acc, s) => acc + s.passengers.filter((p) => p.off).length, 0);
+  const currentStopIdx = stops.findIndex((s) => !s.done);
+
+  const togglePassenger = (stopIdx: number, seat: string) => {
+    setStops((prev) => prev.map((s, i) => i !== stopIdx ? s : {
+      ...s,
+      passengers: s.passengers.map((p) => p.seat === seat ? { ...p, off: !p.off } : p),
+    }));
+  };
+
+  const closeStop = (stopIdx: number) => {
+    setStops((prev) => prev.map((s, i) => i !== stopIdx ? s : {
+      ...s,
+      done: true,
+      passengers: s.passengers.map((p) => ({ ...p, off: true })),
+    }));
+  };
 
   return (
     <RoleShell
@@ -315,10 +377,17 @@ function ActiveTripView({
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 rounded-xl border border-border bg-muted p-1">
+        {/* KPIs extra */}
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <Stat icon={CheckCircle2} label="Validados" value={boarded.toString()} />
+          <Stat icon={Users} label="Pendientes" value={sold.toString()} />
+          <Stat icon={LogOut} label="Bajaron" value={`${offCount}/${totalToOff}`} />
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 rounded-xl border border-border bg-muted p-1">
           <button
             onClick={() => setTab("scan")}
-            className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
+            className={`flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-semibold transition-colors ${
               tab === "scan" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
             }`}
           >
@@ -326,19 +395,39 @@ function ActiveTripView({
           </button>
           <button
             onClick={() => setTab("map")}
-            className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
+            className={`flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-semibold transition-colors ${
               tab === "map" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
             }`}
           >
             <Grid3x3 className="h-4 w-4" /> Mapa
           </button>
+          <button
+            onClick={() => setTab("off")}
+            className={`flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-semibold transition-colors ${
+              tab === "off" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+            }`}
+          >
+            <UserMinus className="h-4 w-4" /> Bajadas
+          </button>
         </div>
 
-        {tab === "scan" ? <Scanner /> : <div className="mt-4"><SeatMap seats={seats} variant="operator" /></div>}
+        {tab === "scan" && <Scanner />}
+        {tab === "map" && <div className="mt-4"><SeatMap seats={seats} variant="operator" /></div>}
+        {tab === "off" && (
+          <DropoffPanel
+            stops={stops}
+            currentIdx={currentStopIdx === -1 ? stops.length : currentStopIdx}
+            onToggle={togglePassenger}
+            onClose={closeStop}
+          />
+        )}
 
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <Stat icon={CheckCircle2} label="Validados" value={boarded.toString()} />
-          <Stat icon={Users} label="Pendientes" value={sold.toString()} />
+        {/* Aviso operativo */}
+        <div className="mt-4 flex items-start gap-2 rounded-2xl border border-[var(--warning)]/40 bg-[var(--warning)]/10 p-3">
+          <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-[var(--warning-foreground)]" />
+          <div className="text-xs text-foreground">
+            <strong>Recordatorio:</strong> verifica DNI del pasajero al retirar equipaje en cada parada.
+          </div>
         </div>
       </div>
 
@@ -352,6 +441,105 @@ function ActiveTripView({
         </button>
       </div>
     </RoleShell>
+  );
+}
+
+function DropoffPanel({
+  stops, currentIdx, onToggle, onClose,
+}: {
+  stops: Stop[];
+  currentIdx: number;
+  onToggle: (stopIdx: number, seat: string) => void;
+  onClose: (stopIdx: number) => void;
+}) {
+  return (
+    <div className="mt-4 space-y-3">
+      {stops.map((s, i) => {
+        const off = s.passengers.filter((p) => p.off).length;
+        const total = s.passengers.length;
+        const isCurrent = i === currentIdx;
+        const allOff = off === total && total > 0;
+        return (
+          <div
+            key={s.name}
+            className={`overflow-hidden rounded-2xl border bg-card shadow-[var(--shadow-card)] ${
+              isCurrent ? "border-primary ring-2 ring-primary/20" : "border-border"
+            }`}
+          >
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <div className="flex items-center gap-2">
+                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                  s.done ? "bg-[var(--success)]/15 text-[var(--success)]" : "bg-secondary text-primary"
+                }`}>
+                  <MapPin className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-foreground">{s.name}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Programada {s.scheduled} · {off}/{total} bajaron
+                  </div>
+                </div>
+              </div>
+              {s.done ? (
+                <span className="rounded-full bg-[var(--success)]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--success)]">
+                  Cerrada
+                </span>
+              ) : isCurrent ? (
+                <span className="animate-pulse rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
+                  Actual
+                </span>
+              ) : (
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Pendiente
+                </span>
+              )}
+            </div>
+
+            <ul className="divide-y divide-border">
+              {s.passengers.map((p) => (
+                <li key={p.seat} className="flex items-center justify-between px-4 py-2.5">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-xs font-bold text-foreground">
+                      {p.seat}
+                    </span>
+                    <span className={`text-sm font-medium ${p.off ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                      {p.name}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => !s.done && onToggle(i, p.seat)}
+                    disabled={s.done}
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+                      p.off
+                        ? "bg-[var(--success)]/15 text-[var(--success)]"
+                        : "bg-primary text-primary-foreground hover:opacity-90"
+                    } ${s.done ? "opacity-60" : ""}`}
+                  >
+                    {p.off ? (<><CheckCircle2 className="h-3.5 w-3.5" /> Bajó</>) : (<><LogOut className="h-3.5 w-3.5" /> Retirar</>)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            {!s.done && isCurrent && (
+              <div className="border-t border-border bg-muted/40 p-3">
+                <button
+                  onClick={() => onClose(i)}
+                  disabled={!allOff}
+                  className={`w-full rounded-xl py-2.5 text-sm font-bold transition-all ${
+                    allOff
+                      ? "bg-[image:var(--gradient-primary)] text-primary-foreground active:scale-[0.98]"
+                      : "cursor-not-allowed bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {allOff ? "Cerrar parada y avanzar" : `Faltan ${total - off} pasajeros por bajar`}
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
