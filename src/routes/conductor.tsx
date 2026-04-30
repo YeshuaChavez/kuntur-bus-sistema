@@ -3,7 +3,8 @@ import { useState } from "react";
 import { RoleShell } from "@/components/jaysi/RoleShell";
 import {
   Play, Pause, Flag, AlertTriangle, MapPin, Clock, Route as RouteIcon,
-  Navigation, BadgeCheck,
+  Navigation, BadgeCheck, Fuel, Gauge, ThermometerSun, Wind, Users,
+  CheckCircle2, Circle, TimerReset,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { TripPicker, UpcomingTrips } from "./auxiliar";
