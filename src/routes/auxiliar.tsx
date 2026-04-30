@@ -4,7 +4,8 @@ import { RoleShell } from "@/components/jaysi/RoleShell";
 import { SeatMap, type Seat } from "@/components/jaysi/SeatMap";
 import {
   ScanLine, Grid3x3, Wifi, WifiOff, CheckCircle2, Users, Phone, BadgeCheck,
-  Bus, ArrowRight, Clock, CalendarClock, Flag, ChevronRight,
+  Bus, ArrowRight, Clock, CalendarClock, Flag, ChevronRight, LogOut, MapPin,
+  AlertCircle, UserMinus,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
