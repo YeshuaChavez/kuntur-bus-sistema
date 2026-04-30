@@ -6,7 +6,7 @@ import { useAuth, roleHome } from "@/lib/auth";
 import {
   ArrowRight, Calendar, MapPin, Search, Users, X, QrCode, Clock, Bus, Leaf,
   LogIn, LogOut, ShieldCheck, AlertCircle, ArrowLeftRight, Sparkles, CreditCard, ChevronRight,
-  IdCard, User as UserIcon, Lock, CheckCircle2, Crown, Moon, BedDouble, Star,
+  IdCard, User as UserIcon, Lock, CheckCircle2, Crown, Moon, BedDouble, Star, SlidersHorizontal,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -27,58 +27,72 @@ export const Route = createFileRoute("/")({
 const cities = ["Lima", "Trujillo", "Arequipa", "Cusco", "Piura", "Ica", "Puno", "Chiclayo", "Tacna"];
 
 const tripsBase = [
-  { id: "1", time: "06:30", arr: "11:45", price: 42, type: "Ejecutivo", seats: 18, dur: "5h 15m" },
-  { id: "2", time: "09:15", arr: "14:30", price: 38, type: "Cama",      seats: 6,  dur: "5h 15m" },
-  { id: "3", time: "14:00", arr: "19:15", price: 45, type: "Premium",   seats: 22, dur: "5h 15m" },
+  { id: "1", time: "06:30", arr: "11:45", price: 42, type: "Ejecutivo",     seats: 18, dur: "5h 15m" },
+  { id: "2", time: "09:15", arr: "14:30", price: 38, type: "Cama",          seats: 6,  dur: "5h 15m" },
+  { id: "3", time: "14:00", arr: "19:15", price: 45, type: "Premium",       seats: 22, dur: "5h 15m" },
   { id: "4", time: "22:30", arr: "03:45", price: 36, type: "Cama nocturna", seats: 11, dur: "5h 15m" },
 ];
 
-// Estilos visuales por tipo de viaje — diferenciador claro de servicio
-export const tripStyles: Record<
-  string,
-  { icon: any; label: string; gradient: string; ring: string; chip: string; accent: string; tagline: string }
-> = {
+/* ─── Trip styles — visually distinct per category ─────────────────── */
+export const tripStyles: Record<string, {
+  icon: any; label: string; gradient: string; ring: string; chip: string; accent: string;
+  tagline: string; bgCard: string; borderCard: string; description: string;
+}> = {
   Premium: {
     icon: Crown,
     label: "Premium",
-    gradient: "linear-gradient(135deg, oklch(0.78 0.14 85), oklch(0.68 0.16 50))",
-    ring: "ring-2 ring-[oklch(0.72_0.15_70)]/60",
-    chip: "bg-[oklch(0.72_0.15_70)]/15 text-[oklch(0.45_0.13_60)] border border-[oklch(0.72_0.15_70)]/40",
-    accent: "text-[oklch(0.55_0.14_65)]",
-    tagline: "Servicio VIP · snack incluido",
+    gradient: "linear-gradient(135deg, oklch(0.78 0.14 85), oklch(0.65 0.18 45))",
+    ring: "ring-2 ring-amber-300/50",
+    chip: "bg-amber-100 text-amber-800 border border-amber-300",
+    accent: "text-amber-600",
+    tagline: "VIP · snack incluido",
+    bgCard: "bg-gradient-to-br from-amber-50 to-orange-50",
+    borderCard: "border-amber-200 hover:border-amber-400",
+    description: "Asiento VIP reclinable · snack · almohada · cargador USB",
   },
   Ejecutivo: {
     icon: Star,
     label: "Ejecutivo",
-    gradient: "linear-gradient(135deg, oklch(0.62 0.13 230), oklch(0.55 0.14 250))",
-    ring: "ring-1 ring-[oklch(0.6_0.13_240)]/40",
-    chip: "bg-[oklch(0.6_0.13_240)]/12 text-[oklch(0.4_0.13_245)] border border-[oklch(0.6_0.13_240)]/35",
-    accent: "text-[oklch(0.5_0.13_240)]",
+    gradient: "linear-gradient(135deg, oklch(0.55 0.14 230), oklch(0.45 0.16 255))",
+    ring: "ring-1 ring-blue-300/50",
+    chip: "bg-blue-100 text-blue-800 border border-blue-300",
+    accent: "text-blue-600",
     tagline: "Asiento amplio · WiFi",
+    bgCard: "bg-gradient-to-br from-blue-50 to-indigo-50",
+    borderCard: "border-blue-200 hover:border-blue-400",
+    description: "Asiento ejecutivo reclinable · WiFi a bordo · toma USB",
   },
   Cama: {
     icon: BedDouble,
     label: "Cama",
-    gradient: "linear-gradient(135deg, oklch(0.62 0.13 150), oklch(0.5 0.14 160))",
-    ring: "ring-1 ring-primary/40",
-    chip: "bg-primary/12 text-primary border border-primary/30",
-    accent: "text-primary",
+    gradient: "linear-gradient(135deg, oklch(0.58 0.13 155), oklch(0.46 0.14 165))",
+    ring: "ring-1 ring-emerald-300/50",
+    chip: "bg-emerald-100 text-emerald-800 border border-emerald-300",
+    accent: "text-emerald-600",
     tagline: "Reclinable 160°",
+    bgCard: "bg-gradient-to-br from-emerald-50 to-teal-50",
+    borderCard: "border-emerald-200 hover:border-emerald-400",
+    description: "Semi-cama 160° · TV individual · frazada · almohada",
   },
   "Cama nocturna": {
     icon: Moon,
     label: "Cama nocturna",
-    gradient: "linear-gradient(135deg, oklch(0.4 0.1 280), oklch(0.3 0.09 270))",
-    ring: "ring-1 ring-[oklch(0.45_0.1_275)]/40",
-    chip: "bg-[oklch(0.45_0.1_275)]/15 text-[oklch(0.38_0.1_275)] border border-[oklch(0.45_0.1_275)]/35",
-    accent: "text-[oklch(0.42_0.1_275)]",
+    gradient: "linear-gradient(135deg, oklch(0.42 0.12 280), oklch(0.32 0.1 270))",
+    ring: "ring-1 ring-violet-400/50",
+    chip: "bg-violet-100 text-violet-800 border border-violet-300",
+    accent: "text-violet-700",
     tagline: "Reclinable 180° · manta",
+    bgCard: "bg-gradient-to-br from-violet-50 to-purple-50",
+    borderCard: "border-violet-200 hover:border-violet-400",
+    description: "Cama full 180° · kit de viaje · luz nocturna · snack",
   },
 };
 
 function getTripStyle(type: string) {
   return tripStyles[type] ?? tripStyles.Ejecutivo;
 }
+
+const ALL_CATEGORIES = ["Todos", "Ejecutivo", "Premium", "Cama", "Cama nocturna"];
 
 function makeSeats(): Seat[] {
   const occupied = new Set(["1A", "2B", "3C", "4D", "6A", "7C", "9B", "5A"]);
@@ -96,54 +110,42 @@ function HomeBooking() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Si el usuario logueado NO es cliente, lo redirigimos a su panel.
   useEffect(() => {
-    if (user && user.role !== "cliente") {
-      navigate({ to: roleHome(user.role) });
-    }
+    if (user && user.role !== "cliente") navigate({ to: roleHome(user.role) });
   }, [user, navigate]);
 
-  const [origin, setOrigin] = useState("Lima");
+  const [origin, setOrigin]           = useState("Lima");
   const [destination, setDestination] = useState("Trujillo");
-  const [date, setDate] = useState<Date>(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return d;
-  });
-  const [pax, setPax] = useState(1);
+  const [date, setDate]               = useState<Date>(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d; });
+  const [pax, setPax]                 = useState(1);
 
-  const [step, setStep] = useState<"search" | "trips" | "seats" | "passengers" | "payment" | "ticket">("search");
-  const [tripId, setTripId] = useState<string | null>(null);
-  const [seats, setSeats] = useState<Seat[]>(makeSeats);
-  const [authBlock, setAuthBlock] = useState(false);
+  const [step, setStep]   = useState<"search" | "trips" | "seats" | "passengers" | "payment" | "ticket">("search");
+  const [tripId, setTripId]         = useState<string | null>(null);
+  const [seats, setSeats]           = useState<Seat[]>(makeSeats);
+  const [authBlock, setAuthBlock]   = useState(false);
   const [passengers, setPassengers] = useState<{ dni: string; name: string }[]>([]);
-  const [payment, setPayment] = useState<{ method: "card" | "yape" | "plin"; card: string; exp: string; cvv: string }>({
+  const [payment, setPayment]       = useState<{ method: "card" | "yape" | "plin"; card: string; exp: string; cvv: string }>({
     method: "card", card: "", exp: "", cvv: "",
   });
 
-  const trip = useMemo(() => tripsBase.find((t) => t.id === tripId) ?? tripsBase[0], [tripId]);
+  const trip     = useMemo(() => tripsBase.find((t) => t.id === tripId) ?? tripsBase[0], [tripId]);
   const selected = seats.filter((s) => s.status === "selected");
-  const total = selected.length * trip.price;
+  const total    = selected.length * trip.price;
 
   const toggleSeat = (id: string) => {
-    setSeats((prev) =>
-      prev.map((s) =>
-        s.id === id && s.status !== "occupied"
-          ? { ...s, status: s.status === "selected" ? "free" : "selected" }
-          : s,
-      ),
-    );
+    setSeats((prev) => prev.map((s) =>
+      s.id === id && s.status !== "occupied"
+        ? { ...s, status: s.status === "selected" ? "free" : "selected" }
+        : s,
+    ));
   };
 
   const swap = () => { setOrigin(destination); setDestination(origin); };
 
   const goPay = () => {
     if (!selected.length) return;
-    if (!user || user.role !== "cliente") {
-      setAuthBlock(true);
-      return;
-    }
-    setPassengers(selected.map((s) => ({ dni: "", name: "" })));
+    if (!user || user.role !== "cliente") { setAuthBlock(true); return; }
+    setPassengers(selected.map(() => ({ dni: "", name: "" })));
     setStep("passengers");
   };
 
@@ -166,9 +168,7 @@ function HomeBooking() {
           />
         )}
 
-        {step !== "search" && (
-          <Stepper step={step} />
-        )}
+        {step !== "search" && <Stepper step={step} />}
 
         {step === "trips" && (
           <TripsList
@@ -188,27 +188,21 @@ function HomeBooking() {
 
         {step === "passengers" && (
           <PassengersStep
-            selected={selected}
-            passengers={passengers}
-            setPassengers={setPassengers}
-            total={total}
-            onBack={() => setStep("seats")}
-            onNext={() => setStep("payment")}
+            selected={selected} passengers={passengers} setPassengers={setPassengers}
+            total={total} onBack={() => setStep("seats")} onNext={() => setStep("payment")}
           />
         )}
 
         {step === "payment" && (
           <PaymentStep
-            total={total}
-            payment={payment}
-            setPayment={setPayment}
-            onBack={() => setStep("passengers")}
-            onPay={() => setStep("ticket")}
+            total={total} payment={payment} setPayment={setPayment}
+            onBack={() => setStep("passengers")} onPay={() => setStep("ticket")}
           />
         )}
 
         {step === "ticket" && (
-          <Ticket selected={selected} trip={trip} origin={origin} destination={destination} date={date}
+          <Ticket
+            selected={selected} trip={trip} origin={origin} destination={destination} date={date}
             passengers={passengers}
             onNew={() => { setStep("search"); setSeats(makeSeats()); }} user={user!}
           />
@@ -226,8 +220,7 @@ function HomeBooking() {
   );
 }
 
-/* --------------------------------- Header --------------------------------- */
-
+/* ─── Header ────────────────────────────────────────────────────────── */
 function Header({ user, onLogout }: { user: ReturnType<typeof useAuth>["user"]; onLogout: () => void }) {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/85 backdrop-blur">
@@ -240,10 +233,7 @@ function Header({ user, onLogout }: { user: ReturnType<typeof useAuth>["user"]; 
                 <ShieldCheck className="h-3.5 w-3.5 text-primary" /> {user.name} · {user.role}
               </span>
               {user.role !== "cliente" && (
-                <Link
-                  to={roleHome(user.role) as any}
-                  className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
-                >
+                <Link to={roleHome(user.role) as any} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
                   Mi panel
                 </Link>
               )}
@@ -256,8 +246,7 @@ function Header({ user, onLogout }: { user: ReturnType<typeof useAuth>["user"]; 
             </>
           ) : (
             <Link
-              to="/login"
-              search={{ redirect: "/" }}
+              to="/login" search={{ redirect: "/" }}
               className="flex items-center gap-1.5 rounded-lg bg-[image:var(--gradient-primary)] px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-elegant)]"
             >
               <LogIn className="h-4 w-4" /> Iniciar sesión
@@ -269,11 +258,11 @@ function Header({ user, onLogout }: { user: ReturnType<typeof useAuth>["user"]; 
   );
 }
 
-/* ---------------------------------- Hero ---------------------------------- */
-
+/* ─── Hero ──────────────────────────────────────────────────────────── */
 function Hero(props: {
   origin: string; destination: string; date: Date; pax: number;
-  setOrigin: (v: string) => void; setDestination: (v: string) => void; setDate: (v: Date) => void; setPax: (v: number) => void;
+  setOrigin: (v: string) => void; setDestination: (v: string) => void;
+  setDate: (v: Date) => void; setPax: (v: number) => void;
   swap: () => void; onSearch: () => void;
 }) {
   return (
@@ -293,7 +282,7 @@ function Hero(props: {
 
       <section className="mt-8 rounded-3xl border border-border bg-card p-4 shadow-[var(--shadow-elegant)] sm:p-6">
         <div className="grid gap-3 lg:grid-cols-[1fr_auto_1fr_1fr_auto]">
-          <CitySelect icon={MapPin} label="Origen" value={props.origin} onChange={props.setOrigin} />
+          <CitySelect icon={MapPin} label="Origen"  value={props.origin}      onChange={props.setOrigin} />
           <button
             onClick={props.swap}
             className="hidden h-full items-center justify-center rounded-xl border border-border bg-background px-3 text-muted-foreground transition-all hover:rotate-180 hover:border-primary hover:text-primary lg:flex"
@@ -312,11 +301,12 @@ function Hero(props: {
         </div>
       </section>
 
+      {/* Benefits */}
       <section className="mt-10 grid gap-3 sm:grid-cols-3">
         {[
-          { i: Sparkles, t: "Asientos en tiempo real", d: "Mira disponibilidad al instante." },
-          { i: ShieldCheck, t: "Compra protegida", d: "Confirmación instantánea con QR." },
-          { i: CreditCard, t: "Sin sorpresas", d: "Precio final, sin recargos ocultos." },
+          { i: Sparkles,   t: "Asientos en tiempo real", d: "Mira disponibilidad al instante." },
+          { i: ShieldCheck, t: "Compra protegida",        d: "Confirmación instantánea con QR." },
+          { i: CreditCard,  t: "Sin sorpresas",           d: "Precio final, sin recargos ocultos." },
         ].map((b) => (
           <div key={b.t} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
@@ -330,6 +320,39 @@ function Hero(props: {
         ))}
       </section>
 
+      {/* Category showcase */}
+      <section className="mt-12">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-foreground">Categorías de servicio</h2>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {Object.entries(tripStyles).map(([type, s]) => {
+            const Icon = s.icon;
+            return (
+              <div
+                key={type}
+                className={`relative overflow-hidden rounded-2xl border p-4 ${s.bgCard} ${s.borderCard} transition-all hover:-translate-y-0.5`}
+              >
+                <div className="h-1 rounded-full mb-3 w-full" style={{ background: s.gradient }} />
+                <div className="flex items-center gap-2 mb-2">
+                  <div
+                    className="flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-sm"
+                    style={{ background: s.gradient }}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${s.chip}`}>
+                    {type}
+                  </span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-muted-foreground">{s.description}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Popular routes */}
       <section className="mt-12">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-base font-semibold text-foreground">Rutas populares</h2>
@@ -364,64 +387,37 @@ function Hero(props: {
   );
 }
 
+/* ─── City Select ───────────────────────────────────────────────────── */
 function CitySelect({ icon: Icon, label, value, onChange }: { icon: any; label: string; value: string; onChange: (v: string) => void }) {
   return (
     <label className="flex flex-col gap-1 rounded-xl border border-border bg-background px-3.5 py-2.5 transition-colors focus-within:border-primary">
       <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         <Icon className="h-3 w-3" /> {label}
       </span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="bg-transparent text-base font-bold text-foreground outline-none"
-      >
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="bg-transparent text-base font-bold text-foreground outline-none">
         {cities.map((c) => <option key={c}>{c}</option>)}
       </select>
     </label>
   );
 }
 
-function Field({ icon: Icon, label, value, onChange }: { icon: any; label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <label className="flex flex-col gap-1 rounded-xl border border-border bg-background px-3.5 py-2.5 transition-colors focus-within:border-primary">
-      <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <Icon className="h-3 w-3" /> {label}
-      </span>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-transparent text-base font-bold text-foreground outline-none"
-      />
-    </label>
-  );
-}
-
+/* ─── Date Picker ───────────────────────────────────────────────────── */
 function DatePickerField({ value, onChange }: { value: Date; onChange: (v: Date) => void }) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="flex flex-col gap-1 rounded-xl border border-border bg-background px-3.5 py-2.5 text-left transition-colors hover:border-primary focus:border-primary focus:outline-none"
-        >
+        <button type="button" className="flex flex-col gap-1 rounded-xl border border-border bg-background px-3.5 py-2.5 text-left transition-colors hover:border-primary focus:border-primary focus:outline-none">
           <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             <Calendar className="h-3 w-3" /> Fecha
           </span>
-          <span className="text-base font-bold capitalize text-foreground">
-            {format(value, "EEE d MMM yyyy", { locale: es })}
-          </span>
+          <span className="text-base font-bold capitalize text-foreground">{format(value, "EEE d MMM yyyy", { locale: es })}</span>
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-0">
         <CalendarPicker
-          mode="single"
-          selected={value}
-          onSelect={(d) => d && onChange(d)}
-          disabled={(d) => d < today}
-          initialFocus
-          locale={es}
+          mode="single" selected={value} onSelect={(d) => d && onChange(d)}
+          disabled={(d) => d < today} initialFocus locale={es}
           className={cn("p-3 pointer-events-auto")}
         />
       </PopoverContent>
@@ -429,38 +425,16 @@ function DatePickerField({ value, onChange }: { value: Date; onChange: (v: Date)
   );
 }
 
-function PaxSelect({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  return (
-    <label className="flex flex-col gap-1 rounded-xl border border-border bg-background px-3.5 py-2.5 transition-colors focus-within:border-primary">
-      <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <Users className="h-3 w-3" /> Pax
-      </span>
-      <select
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="bg-transparent text-base font-bold text-foreground outline-none"
-      >
-        {[1,2,3,4].map((n) => <option key={n} value={n}>{n}</option>)}
-      </select>
-    </label>
-  );
-}
-
-/* --------------------------------- Stepper --------------------------------- */
-
+/* ─── Stepper ───────────────────────────────────────────────────────── */
 function Stepper({ step }: { step: string }) {
-  const steps = ["search", "trips", "seats", "passengers", "payment", "ticket"];
+  const steps  = ["search", "trips", "seats", "passengers", "payment", "ticket"];
   const labels = ["Buscar", "Viajes", "Asientos", "Datos", "Pago", "Boleto"];
   const idx = steps.indexOf(step);
   return (
     <div className="mt-2 flex items-center gap-2 overflow-x-auto pb-2">
       {labels.map((l, i) => (
         <div key={l} className="flex items-center gap-2">
-          <div
-            className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-              i <= idx ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-            }`}
-          >
+          <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${i <= idx ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
             {i + 1}
           </div>
           <span className={`text-sm ${i === idx ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{l}</span>
@@ -471,23 +445,61 @@ function Stepper({ step }: { step: string }) {
   );
 }
 
-/* --------------------------------- Trips --------------------------------- */
-
+/* ─── Trips List — con filtro de categorías ─────────────────────────── */
 function TripsList({ origin, destination, date, onPick, onBack }: {
   origin: string; destination: string; date: Date; onPick: (id: string) => void; onBack: () => void;
 }) {
   const dateLabel = format(date, "EEEE d 'de' MMMM, yyyy", { locale: es });
+  const [activeCategory, setActiveCategory] = useState("Todos");
+
+  const filtered = tripsBase.filter(
+    (t) => activeCategory === "Todos" || t.type === activeCategory,
+  );
+
   return (
     <div className="mt-6">
       <div className="flex items-center justify-between">
         <div>
           <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground">← Modificar búsqueda</button>
           <h2 className="mt-1 text-2xl font-bold text-foreground">{origin} → {destination}</h2>
-          <p className="text-sm capitalize text-muted-foreground">{tripsBase.length} viajes · {dateLabel}</p>
+          <p className="text-sm capitalize text-muted-foreground">{filtered.length} viaje{filtered.length !== 1 ? "s" : ""} · {dateLabel}</p>
         </div>
       </div>
+
+      {/* Filtro por categoría */}
+      <div className="mt-4 flex items-center gap-1.5 overflow-x-auto pb-1">
+        <SlidersHorizontal className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
+        {ALL_CATEGORIES.map((cat) => {
+          const s = cat !== "Todos" ? tripStyles[cat] : null;
+          const Icon = s?.icon;
+          const isActive = activeCategory === cat;
+          return (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={cn(
+                "inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
+                isActive
+                  ? s
+                    ? `${s.chip} shadow-sm`
+                    : "border-primary bg-primary text-primary-foreground shadow-sm"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+              )}
+            >
+              {Icon && <Icon className="h-3 w-3" />}
+              {cat}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="mt-4 space-y-3">
-        {tripsBase.map((t) => {
+        {filtered.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            No hay viajes de categoría <strong>{activeCategory}</strong> disponibles para esta fecha.
+          </div>
+        )}
+        {filtered.map((t) => {
           const s = getTripStyle(t.type);
           const Icon = s.icon;
           return (
@@ -495,34 +507,48 @@ function TripsList({ origin, destination, date, onPick, onBack }: {
               key={t.id}
               onClick={() => onPick(t.id)}
               className={cn(
-                "group relative flex w-full items-center justify-between overflow-hidden rounded-2xl border border-border bg-card p-5 text-left shadow-[var(--shadow-card)] transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-elegant)]",
+                "group relative flex w-full items-start justify-between overflow-hidden rounded-2xl border p-5 text-left shadow-[var(--shadow-card)] transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-elegant)]",
+                s.bgCard,
+                s.borderCard,
                 s.ring,
               )}
             >
-              {/* franja lateral con el color del servicio */}
+              {/* Franja lateral de color */}
               <span aria-hidden className="absolute inset-y-0 left-0 w-1.5" style={{ background: s.gradient }} />
-              <div className="flex items-center gap-4 pl-2">
+
+              <div className="flex items-start gap-4 pl-2">
+                {/* Icono con gradiente */}
                 <div
-                  className="flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-[var(--shadow-soft)]"
+                  className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-[var(--shadow-soft)]"
                   style={{ background: s.gradient }}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-6 w-6" />
                 </div>
+
                 <div>
+                  {/* Horarios */}
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-lg font-bold text-foreground">{t.time}</span>
+                    <span className="text-xl font-bold text-foreground">{t.time}</span>
                     <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-lg font-bold text-foreground">{t.arr}</span>
-                    <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.chip)}>
-                      <Icon className="h-3 w-3" /> {s.label}
-                    </span>
+                    <span className="text-xl font-bold text-foreground">{t.arr}</span>
                   </div>
-                  <div className="text-xs text-muted-foreground">{s.tagline} · {t.dur} · {t.seats} asientos libres</div>
+                  {/* Badge de categoría — prominente */}
+                  <span className={cn("mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider", s.chip)}>
+                    <Icon className="h-3.5 w-3.5" /> {s.label}
+                  </span>
+                  {/* Descripción del servicio */}
+                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{s.description}</p>
+                  <div className="mt-1 text-xs text-muted-foreground">{t.dur} · {t.seats} asientos libres</div>
                 </div>
               </div>
-              <div className="text-right">
+
+              {/* Precio */}
+              <div className="flex-shrink-0 text-right pl-4">
                 <div className={cn("text-2xl font-bold", s.accent)}>S/ {t.price}</div>
                 <div className="text-xs text-muted-foreground">por persona</div>
+                <div className="mt-2 rounded-lg bg-card/70 px-2.5 py-1 text-xs font-semibold text-foreground backdrop-blur transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                  Seleccionar →
+                </div>
               </div>
             </button>
           );
@@ -532,8 +558,7 @@ function TripsList({ origin, destination, date, onPick, onBack }: {
   );
 }
 
-/* --------------------------------- Seats --------------------------------- */
-
+/* ─── Seat Step ─────────────────────────────────────────────────────── */
 function SeatStep({ trip, seats, selected, total, toggleSeat, onBack, onPay, user }: {
   trip: typeof tripsBase[number]; seats: Seat[]; selected: Seat[]; total: number;
   toggleSeat: (id: string) => void; onBack: () => void; onPay: () => void;
@@ -560,8 +585,8 @@ function SeatStep({ trip, seats, selected, total, toggleSeat, onBack, onPay, use
           </span>
         </div>
         <div className="mt-4 space-y-2 text-sm">
-          <Row k="Viaje" v={`${trip.time} · ${trip.type}`} />
-          <Row k="Asientos" v={selected.length ? selected.map((s) => s.id).join(", ") : "—"} />
+          <Row k="Viaje"       v={`${trip.time} · ${trip.type}`} />
+          <Row k="Asientos"    v={selected.length ? selected.map((s) => s.id).join(", ") : "—"} />
           <Row k="Precio unit." v={`S/ ${trip.price}`} />
         </div>
         <div className="my-4 h-px bg-border" />
@@ -598,8 +623,7 @@ function Row({ k, v }: { k: string; v: string }) {
   );
 }
 
-/* ------------------------------ Auth block modal ------------------------------ */
-
+/* ─── Auth Block Modal ──────────────────────────────────────────────── */
 function AuthBlockModal({ onClose, onLogin, user }: {
   onClose: () => void; onLogin: () => void; user: ReturnType<typeof useAuth>["user"];
 }) {
@@ -613,12 +637,10 @@ function AuthBlockModal({ onClose, onLogin, user }: {
               {wrongRole ? <AlertCircle className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
             </div>
             <div>
-              <h3 className="text-lg font-bold text-foreground">
-                {wrongRole ? "Cuenta no permitida" : "Inicia sesión para pagar"}
-              </h3>
+              <h3 className="text-lg font-bold text-foreground">{wrongRole ? "Cuenta no permitida" : "Inicia sesión para pagar"}</h3>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {wrongRole
-                  ? `Tu cuenta de ${user!.role} no puede comprar pasajes. Cambia a una cuenta de cliente.`
+                  ? `Tu cuenta de ${user!.role} no puede comprar pasajes.`
                   : "Solo los clientes registrados pueden completar la compra. 🌿"}
               </p>
             </div>
@@ -628,16 +650,10 @@ function AuthBlockModal({ onClose, onLogin, user }: {
           </button>
         </div>
         <div className="mt-6 space-y-2">
-          <button
-            onClick={onLogin}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[image:var(--gradient-primary)] py-3 font-semibold text-primary-foreground shadow-[var(--shadow-soft)]"
-          >
+          <button onClick={onLogin} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[image:var(--gradient-primary)] py-3 font-semibold text-primary-foreground shadow-[var(--shadow-soft)]">
             <LogIn className="h-4 w-4" /> {wrongRole ? "Cambiar de cuenta" : "Iniciar sesión"}
           </button>
-          <button
-            onClick={onClose}
-            className="w-full rounded-xl border border-border bg-background py-3 font-semibold text-foreground transition-colors hover:bg-muted"
-          >
+          <button onClick={onClose} className="w-full rounded-xl border border-border bg-background py-3 font-semibold text-foreground transition-colors hover:bg-muted">
             Seguir explorando
           </button>
         </div>
@@ -649,8 +665,7 @@ function AuthBlockModal({ onClose, onLogin, user }: {
   );
 }
 
-/* --------------------------------- Ticket --------------------------------- */
-
+/* ─── Ticket ────────────────────────────────────────────────────────── */
 function Ticket({ selected, trip, origin, destination, date, passengers, onNew, user }: {
   selected: Seat[]; trip: typeof tripsBase[number]; origin: string; destination: string; date: Date;
   passengers?: { dni: string; name: string }[];
@@ -694,9 +709,9 @@ function Ticket({ selected, trip, origin, destination, date, passengers, onNew, 
             <QrCode className="h-3.5 w-3.5" /> Muéstralo al auxiliar
           </div>
           <div className="mt-5 grid w-full grid-cols-3 gap-3 border-t border-dashed border-border pt-5 text-center">
-            <Mini k="Asientos" v={selected.map((s) => s.id).join(", ")} />
-            <Mini k="Bus" v="JY-104" />
-            <Mini k="Total" v={`S/ ${selected.length * trip.price}`} />
+            <MiniTicket k="Asientos" v={selected.map((s) => s.id).join(", ")} />
+            <MiniTicket k="Bus"      v="JY-104" />
+            <MiniTicket k="Total"    v={`S/ ${selected.length * trip.price}`} />
           </div>
           {passengers && passengers.length > 0 && (
             <div className="mt-4 w-full rounded-xl bg-secondary p-3">
@@ -716,17 +731,14 @@ function Ticket({ selected, trip, origin, destination, date, passengers, onNew, 
           </div>
         </div>
       </div>
-      <button
-        onClick={onNew}
-        className="mt-6 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
-      >
+      <button onClick={onNew} className="mt-6 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
         Comprar otro pasaje
       </button>
     </div>
   );
 }
 
-function Mini({ k, v }: { k: string; v: string }) {
+function MiniTicket({ k, v }: { k: string; v: string }) {
   return (
     <div>
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</div>
@@ -735,15 +747,11 @@ function Mini({ k, v }: { k: string; v: string }) {
   );
 }
 
-/* ------------------------------ Passengers Step ------------------------------ */
-
+/* ─── Passengers Step ───────────────────────────────────────────────── */
 function PassengersStep({ selected, passengers, setPassengers, total, onBack, onNext }: {
-  selected: Seat[];
-  passengers: { dni: string; name: string }[];
+  selected: Seat[]; passengers: { dni: string; name: string }[];
   setPassengers: (p: { dni: string; name: string }[]) => void;
-  total: number;
-  onBack: () => void;
-  onNext: () => void;
+  total: number; onBack: () => void; onNext: () => void;
 }) {
   const update = (i: number, patch: Partial<{ dni: string; name: string }>) => {
     setPassengers(passengers.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
@@ -756,7 +764,6 @@ function PassengersStep({ selected, passengers, setPassengers, total, onBack, on
         <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground">← Volver a asientos</button>
         <h2 className="mt-1 text-2xl font-bold text-foreground">Datos de los pasajeros</h2>
         <p className="text-sm text-muted-foreground">Necesitamos esta información por requerimiento de transporte.</p>
-
         <div className="mt-5 space-y-4">
           {passengers.map((p, i) => (
             <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
@@ -767,26 +774,17 @@ function PassengersStep({ selected, passengers, setPassengers, total, onBack, on
                 </span>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <FieldInput
-                  icon={IdCard} label="DNI" placeholder="12345678" maxLength={8}
-                  value={p.dni}
-                  onChange={(v) => update(i, { dni: v.replace(/\D/g, "").slice(0, 8) })}
-                />
-                <FieldInput
-                  icon={UserIcon} label="Nombre completo" placeholder="María López"
-                  value={p.name}
-                  onChange={(v) => update(i, { name: v })}
-                />
+                <FieldInput icon={IdCard}   label="DNI"            placeholder="12345678"   maxLength={8} value={p.dni}  onChange={(v) => update(i, { dni:  v.replace(/\D/g, "").slice(0, 8) })} />
+                <FieldInput icon={UserIcon} label="Nombre completo" placeholder="María López"             value={p.name} onChange={(v) => update(i, { name: v })} />
               </div>
             </div>
           ))}
         </div>
       </div>
-
       <aside className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)] lg:sticky lg:top-24 lg:h-fit">
         <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Resumen</h3>
         <div className="mt-4 space-y-2 text-sm">
-          <Row k="Asientos" v={selected.map((s) => s.id).join(", ")} />
+          <Row k="Asientos"  v={selected.map((s) => s.id).join(", ")} />
           <Row k="Pasajeros" v={passengers.length.toString()} />
         </div>
         <div className="my-4 h-px bg-border" />
@@ -801,9 +799,7 @@ function PassengersStep({ selected, passengers, setPassengers, total, onBack, on
         >
           Continuar al pago <ArrowRight className="h-4 w-4" />
         </button>
-        {!valid && (
-          <p className="mt-2 text-center text-[11px] text-muted-foreground">Completa DNI (8 dígitos) y nombre de cada pasajero.</p>
-        )}
+        {!valid && <p className="mt-2 text-center text-[11px] text-muted-foreground">Completa DNI (8 dígitos) y nombre.</p>}
       </aside>
     </div>
   );
@@ -818,29 +814,24 @@ function FieldInput({ icon: Icon, label, value, onChange, placeholder, maxLength
         <Icon className="h-3 w-3" /> {label}
       </span>
       <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        maxLength={maxLength}
+        value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} maxLength={maxLength}
         className="w-full bg-transparent text-base font-medium text-foreground outline-none placeholder:text-muted-foreground/50"
       />
     </label>
   );
 }
 
-/* ------------------------------ Payment Step ------------------------------ */
-
+/* ─── Payment Step ──────────────────────────────────────────────────── */
 function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
   total: number;
   payment: { method: "card" | "yape" | "plin"; card: string; exp: string; cvv: string };
   setPayment: (p: typeof payment) => void;
-  onBack: () => void;
-  onPay: () => void;
+  onBack: () => void; onPay: () => void;
 }) {
   const methods: { id: "card" | "yape" | "plin"; label: string; desc: string }[] = [
     { id: "card", label: "Tarjeta", desc: "Visa · Mastercard" },
-    { id: "yape", label: "Yape", desc: "Pago instantáneo" },
-    { id: "plin", label: "Plin", desc: "Transferencia móvil" },
+    { id: "yape", label: "Yape",    desc: "Pago instantáneo" },
+    { id: "plin", label: "Plin",    desc: "Transferencia móvil" },
   ];
   const cardOk =
     payment.method !== "card" ||
@@ -852,7 +843,6 @@ function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
         <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground">← Volver a datos</button>
         <h2 className="mt-1 text-2xl font-bold text-foreground">Método de pago</h2>
         <p className="text-sm text-muted-foreground">Pago simulado · ningún cargo real.</p>
-
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
           {methods.map((m) => (
             <button
@@ -877,21 +867,13 @@ function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
             <FieldInput
               icon={CreditCard} label="Número de tarjeta" placeholder="4242 4242 4242 4242"
               value={payment.card}
-              onChange={(v) =>
-                setPayment({
-                  ...payment,
-                  card: v.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 "),
-                })
-              }
+              onChange={(v) => setPayment({ ...payment, card: v.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 ") })}
             />
             <div className="mt-3 grid grid-cols-2 gap-3">
               <FieldInput
                 icon={Calendar} label="Vencimiento" placeholder="MM/AA"
                 value={payment.exp}
-                onChange={(v) => {
-                  const d = v.replace(/\D/g, "").slice(0, 4);
-                  setPayment({ ...payment, exp: d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d });
-                }}
+                onChange={(v) => { const d = v.replace(/\D/g, "").slice(0, 4); setPayment({ ...payment, exp: d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d }); }}
               />
               <FieldInput
                 icon={Lock} label="CVV" placeholder="123" maxLength={4}

@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RoleShell } from "@/components/jaysi/RoleShell";
 import {
   Play, Pause, Flag, AlertTriangle, MapPin, Clock, Route as RouteIcon,
-  Navigation, BadgeCheck, Fuel, Gauge, ThermometerSun, Wind, Users,
-  CheckCircle2, Circle, TimerReset,
+  Navigation, BadgeCheck, Fuel, Gauge, ThermometerSun, Users,
+  CheckCircle2, Circle, TimerReset, Timer, CalendarClock, Sparkles,
+  Moon, BedDouble, Crown, Star, ArrowRight, ChevronRight, Bus,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { TripPicker, UpcomingTrips } from "./auxiliar";
@@ -40,7 +41,6 @@ function ConductorView() {
   const driverName = user?.role === "conductor" ? user.name : "Carlos Mendoza";
   const [stage, setStage] = useState<"select" | "active" | "upcoming">("select");
   const [tripId, setTripId] = useState<string | null>(null);
-
   const trip = tripId ? TRIP_LOOKUP[tripId] : null;
 
   if (stage === "select" || !trip) {
@@ -86,16 +86,40 @@ function nowHHMM() {
   return new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
-function ActiveDriverView({
-  trip, driverName, onFinish,
-}: { trip: ActiveTrip; driverName: string; onFinish: () => void }) {
-  const [status, setStatus] = useState("Sin iniciar");
-  const [sosOpen, setSosOpen] = useState(false);
+/* ─── Elapsed timer ─────────────────────────────────────────────────── */
+function useElapsed(startEpoch: number | null) {
+  const [secs, setSecs] = useState(0);
+  useEffect(() => {
+    if (!startEpoch) { setSecs(0); return; }
+    const tick = () => setSecs(Math.floor((Date.now() - startEpoch) / 1000));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [startEpoch]);
+  return secs;
+}
+
+function formatElapsed(secs: number) {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+/* ─── Active Driver View ────────────────────────────────────────────── */
+function ActiveDriverView({ trip, driverName, onFinish }: {
+  trip: ActiveTrip; driverName: string; onFinish: () => void;
+}) {
+  const [status, setStatus]       = useState("Sin iniciar");
+  const [sosOpen, setSosOpen]     = useState(false);
+  const [startEpoch, setStartEpoch] = useState<number | null>(null);
   const [startTime, setStartTime] = useState<string | null>(null);
-  const [stopTime, setStopTime] = useState<string | null>(null);
+  const [stopTime, setStopTime]   = useState<string | null>(null);
   const [paradaCount, setParadaCount] = useState(0);
-  const [log, setLog] = useState<LogEntry[]>([]);
+  const [log, setLog]             = useState<LogEntry[]>([]);
   const started = startTime !== null;
+  const elapsed = useElapsed(startEpoch);
 
   const pushLog = (label: string) => {
     const time = nowHHMM();
@@ -106,6 +130,7 @@ function ActiveDriverView({
   const handleStart = () => {
     const t = pushLog("Inicio de ruta");
     setStartTime(t);
+    setStartEpoch(Date.now());
     setStopTime(null);
     setStatus("En ruta");
   };
@@ -144,6 +169,8 @@ function ActiveDriverView({
   return (
     <RoleShell role="Conductor" rightSlot={<DriverBadge name={driverName} />}>
       <div className="mx-auto max-w-3xl pb-44">
+
+        {/* Hero card */}
         <div className="rounded-3xl bg-[image:var(--gradient-primary)] p-6 text-primary-foreground shadow-[var(--shadow-elegant)]">
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-widest opacity-80">
             <span>Bus {trip.bus} · Salida {trip.departure}</span>
@@ -155,22 +182,34 @@ function ActiveDriverView({
             <MapPin className="h-3.5 w-3.5" /> Km 248 · cerca de Chimbote
           </div>
 
-          <div className="mt-5 grid grid-cols-3 gap-3 border-t border-primary-foreground/20 pt-4">
-            <Mini icon={Clock} k="Inicio" v={startTime ?? "—"} />
-            <Mini icon={Pause} k="Últ. parada" v={stopTime ?? "—"} />
-            <Mini icon={Flag} k="Estado" v={status} />
+          <div className="mt-5 grid grid-cols-4 gap-3 border-t border-primary-foreground/20 pt-4">
+            <Mini icon={Clock}  k="Inicio"    v={startTime ?? "—"} />
+            <Mini icon={Pause}  k="Últ. parada" v={stopTime ?? "—"} />
+            <Mini icon={Flag}   k="Estado"    v={status} />
+            {/* Temporizador en vivo */}
+            <div>
+              <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider opacity-70">
+                <Timer className="h-3 w-3" /> Tiempo
+              </div>
+              <div className={`mt-0.5 font-mono text-base font-bold tabular-nums ${started ? "opacity-100" : "opacity-40"}`}>
+                {started ? formatElapsed(elapsed) : "—"}
+              </div>
+            </div>
           </div>
         </div>
 
+        {/* Info cards */}
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <InfoCard icon={Gauge} label="Velocidad" value={started ? "82 km/h" : "0 km/h"} tone="primary" />
-          <InfoCard icon={Fuel} label="Combustible" value="74%" tone="success" />
-          <InfoCard icon={ThermometerSun} label="Clima" value="22° Nublado" />
-          <InfoCard icon={Users} label="Pasajeros" value="34/40" />
+          <InfoCard icon={Gauge}         label="Velocidad"   value={started ? "82 km/h" : "0 km/h"} tone="primary" />
+          <InfoCard icon={Fuel}          label="Combustible" value="74%"          tone="success" />
+          <InfoCard icon={ThermometerSun} label="Clima"      value="22° Nublado" />
+          <InfoCard icon={Users}         label="Pasajeros"   value="34/40" />
         </div>
 
-        <RouteMap />
+        {/* Mapa de ruta */}
+        <RouteMap reachedStops={reachedStops} started={started} />
 
+        {/* Próxima parada */}
         <div className="mt-6 flex items-center justify-between rounded-2xl border border-primary/30 bg-secondary p-4 shadow-[var(--shadow-card)]">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
@@ -191,22 +230,22 @@ function ActiveDriverView({
           </div>
         </div>
 
-        <h2 className="mt-8 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Reporte rápido
-        </h2>
+        {/* Botones de reporte */}
+        <h2 className="mt-8 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Reporte rápido</h2>
         <div className="mt-3 grid grid-cols-3 gap-3">
-          <BigBtn icon={Play} label={startTime ? `Iniciado · ${startTime}` : "Inicio de ruta"} onClick={handleStart} active={status === "En ruta"} />
-          <BigBtn icon={Pause} label={stopTime ? `Parada · ${stopTime}` : "Parada técnica"} onClick={handleStop} active={status === "En parada"} disabled={!started} />
-          <BigBtn icon={MapPin} label={paradaCount > 0 ? `Parada ${paradaCount}` : "Parada 1"} onClick={handleParada} active={status.startsWith("Parada ")} disabled={!started} />
+          <BigBtn icon={Play}    label={startTime ? `Iniciado · ${startTime}` : "Inicio de ruta"} onClick={handleStart} active={status === "En ruta"} />
+          <BigBtn icon={Pause}   label={stopTime  ? `Parada · ${stopTime}`   : "Parada técnica"} onClick={handleStop}  active={status === "En parada"} disabled={!started} />
+          <BigBtn icon={MapPin}  label={paradaCount > 0 ? `Parada ${paradaCount}` : "Parada 1"}  onClick={handleParada} active={status.startsWith("Parada ")} disabled={!started} />
         </div>
 
+        {/* Plan de paradas */}
         <div className="mt-6 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
           <h3 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
             <RouteIcon className="h-3.5 w-3.5" /> Plan de paradas
           </h3>
           <ul className="space-y-2.5">
             {plannedStops.map((s, i) => {
-              const done = i < reachedStops;
+              const done    = i < reachedStops;
               const current = i === reachedStops && started;
               return (
                 <li key={s.name} className="flex items-center justify-between">
@@ -229,6 +268,7 @@ function ActiveDriverView({
           </ul>
         </div>
 
+        {/* Bitácora */}
         {log.length > 0 && (
           <div className="mt-6 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
             <h3 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -246,7 +286,14 @@ function ActiveDriverView({
         )}
       </div>
 
+      {/* Bottom bar */}
       <div className="fixed inset-x-0 bottom-0 z-40 space-y-2 border-t border-border bg-card/95 p-4 backdrop-blur">
+        {/* Temporizador prominente si está en marcha */}
+        {started && (
+          <div className="flex items-center justify-center gap-2 rounded-xl bg-secondary py-2 text-sm font-mono font-bold text-primary tabular-nums">
+            <Timer className="h-4 w-4" /> {formatElapsed(elapsed)} en ruta
+          </div>
+        )}
         {!started ? (
           <button
             onClick={handleStart}
@@ -275,7 +322,10 @@ function ActiveDriverView({
   );
 }
 
-function InfoCard({ icon: Icon, label, value, tone }: { icon: any; label: string; value: string; tone?: "primary" | "success" | "default" }) {
+/* ─── Info card ─────────────────────────────────────────────────────── */
+function InfoCard({ icon: Icon, label, value, tone }: {
+  icon: any; label: string; value: string; tone?: "primary" | "success" | "default";
+}) {
   const toneCls = tone === "primary" ? "text-primary" : tone === "success" ? "text-[var(--success)]" : "text-foreground";
   return (
     <div className="rounded-2xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
@@ -287,14 +337,15 @@ function InfoCard({ icon: Icon, label, value, tone }: { icon: any; label: string
   );
 }
 
-function RouteMap() {
+/* ─── Route Map ─────────────────────────────────────────────────────── */
+function RouteMap({ reachedStops, started }: { reachedStops: number; started: boolean }) {
   const stops = [
-    { x: 60,  y: 380, name: "Lima",     done: true },
-    { x: 180, y: 320, name: "Huacho",   done: true },
-    { x: 300, y: 280, name: "Barranca", done: true },
-    { x: 420, y: 220, name: "Chimbote", done: false, current: true },
-    { x: 560, y: 150, name: "Virú",     done: false },
-    { x: 700, y: 90,  name: "Trujillo", done: false },
+    { x: 60,  y: 380, name: "Lima"     },
+    { x: 180, y: 320, name: "Huacho"   },
+    { x: 300, y: 280, name: "Barranca" },
+    { x: 420, y: 220, name: "Chimbote" },
+    { x: 560, y: 150, name: "Virú"     },
+    { x: 700, y: 90,  name: "Trujillo" },
   ];
   const path = stops.map((s, i) => `${i === 0 ? "M" : "L"} ${s.x} ${s.y}`).join(" ");
 
@@ -307,14 +358,16 @@ function RouteMap() {
         </div>
         <div className="flex items-center gap-3 text-[11px]">
           <span className="flex items-center gap-1.5 font-semibold text-destructive">
-            <span className="h-1 w-5 rounded-full bg-destructive" /> Camino recomendado (Dijkstra)
+            <span className="h-1 w-5 rounded-full bg-destructive" /> Ruta óptima (Dijkstra)
           </span>
         </div>
       </div>
       <div className="relative h-[460px] sm:h-[560px] bg-[radial-gradient(ellipse_at_center,_var(--secondary)_0%,_var(--background)_75%)]">
         <svg viewBox="0 0 760 440" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet">
-          <path d="M 60 380 Q 250 420 420 220 T 700 90" stroke="oklch(0.7 0.02 150)" strokeWidth="3" fill="none" strokeDasharray="6 6" opacity="0.5" />
-          <path d="M 60 380 Q 200 200 700 90" stroke="oklch(0.7 0.02 150)" strokeWidth="3" fill="none" strokeDasharray="6 6" opacity="0.5" />
+          {/* Rutas alternativas */}
+          <path d="M 60 380 Q 250 420 420 220 T 700 90" stroke="oklch(0.7 0.02 150)" strokeWidth="3" fill="none" strokeDasharray="6 6" opacity="0.4" />
+          <path d="M 60 380 Q 200 200 700 90"           stroke="oklch(0.7 0.02 150)" strokeWidth="3" fill="none" strokeDasharray="6 6" opacity="0.4" />
+          {/* Ruta principal */}
           <path
             d={path}
             stroke="oklch(0.62 0.18 28)"
@@ -324,33 +377,30 @@ function RouteMap() {
             strokeLinejoin="round"
             filter="drop-shadow(0 2px 6px oklch(0.62 0.18 28 / 0.4))"
           />
-          {stops.map((s) => (
-            <g key={s.name}>
-              <circle
-                cx={s.x}
-                cy={s.y}
-                r={s.current ? 11 : 7}
-                fill={s.current ? "oklch(0.62 0.18 28)" : s.done ? "oklch(0.55 0.13 150)" : "white"}
-                stroke={s.current ? "white" : "oklch(0.55 0.13 150)"}
-                strokeWidth="3"
-              />
-              {s.current && (
-                <circle cx={s.x} cy={s.y} r="18" fill="none" stroke="oklch(0.62 0.18 28)" strokeWidth="2" opacity="0.5">
-                  <animate attributeName="r" from="11" to="26" dur="1.5s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" from="0.6" to="0" dur="1.5s" repeatCount="indefinite" />
-                </circle>
-              )}
-              <text
-                x={s.x}
-                y={s.y - 16}
-                textAnchor="middle"
-                className="fill-foreground"
-                style={{ fontSize: 13, fontWeight: 700 }}
-              >
-                {s.name}
-              </text>
-            </g>
-          ))}
+          {stops.map((s, i) => {
+            const done    = i < reachedStops;
+            const current = started && i === reachedStops;
+            return (
+              <g key={s.name}>
+                <circle
+                  cx={s.x} cy={s.y}
+                  r={current ? 11 : 7}
+                  fill={current ? "oklch(0.62 0.18 28)" : done ? "oklch(0.55 0.13 150)" : "white"}
+                  stroke={current ? "white" : "oklch(0.55 0.13 150)"}
+                  strokeWidth="3"
+                />
+                {current && (
+                  <circle cx={s.x} cy={s.y} r="18" fill="none" stroke="oklch(0.62 0.18 28)" strokeWidth="2" opacity="0.5">
+                    <animate attributeName="r"       from="11"  to="26" dur="1.5s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" from="0.6" to="0"  dur="1.5s" repeatCount="indefinite" />
+                  </circle>
+                )}
+                <text x={s.x} y={s.y - 16} textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 700 }}>
+                  {s.name}
+                </text>
+              </g>
+            );
+          })}
         </svg>
         <div className="absolute bottom-2 right-3 flex items-center gap-1.5 rounded-full bg-card/90 px-2.5 py-1 text-[10px] font-semibold text-foreground shadow-sm backdrop-blur">
           <Navigation className="h-3 w-3 text-destructive" /> Algoritmo Dijkstra · ruta óptima
@@ -360,6 +410,7 @@ function RouteMap() {
   );
 }
 
+/* ─── Mini ──────────────────────────────────────────────────────────── */
 function Mini({ icon: Icon, k, v }: { icon: any; k: string; v: string }) {
   return (
     <div>
@@ -371,7 +422,10 @@ function Mini({ icon: Icon, k, v }: { icon: any; k: string; v: string }) {
   );
 }
 
-function BigBtn({ icon: Icon, label, onClick, active, disabled }: { icon: any; label: string; onClick: () => void; active?: boolean; disabled?: boolean }) {
+/* ─── Big Button ────────────────────────────────────────────────────── */
+function BigBtn({ icon: Icon, label, onClick, active, disabled }: {
+  icon: any; label: string; onClick: () => void; active?: boolean; disabled?: boolean;
+}) {
   return (
     <button
       onClick={onClick}
@@ -390,6 +444,7 @@ function BigBtn({ icon: Icon, label, onClick, active, disabled }: { icon: any; l
   );
 }
 
+/* ─── SOS Modal ─────────────────────────────────────────────────────── */
 function SosModal({ onClose }: { onClose: () => void }) {
   const reasons = ["Avería mecánica", "Accidente", "Asalto / Seguridad", "Salud pasajero", "Otro"];
   return (
