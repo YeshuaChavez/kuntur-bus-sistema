@@ -292,7 +292,7 @@ function Hero(props: {
       </section>
 
       <section className="mt-8 rounded-3xl border border-border bg-card p-4 shadow-[var(--shadow-elegant)] sm:p-6">
-        <div className="grid gap-3 lg:grid-cols-[1fr_auto_1fr_1fr_auto_auto]">
+        <div className="grid gap-3 lg:grid-cols-[1fr_auto_1fr_1fr_auto]">
           <CitySelect icon={MapPin} label="Origen" value={props.origin} onChange={props.setOrigin} />
           <button
             onClick={props.swap}
@@ -303,7 +303,6 @@ function Hero(props: {
           </button>
           <CitySelect icon={MapPin} label="Destino" value={props.destination} onChange={props.setDestination} />
           <DatePickerField value={props.date} onChange={props.setDate} />
-          <PaxSelect value={props.pax} onChange={props.setPax} />
           <button
             onClick={props.onSearch}
             className="group flex items-center justify-center gap-2 rounded-xl bg-[image:var(--gradient-primary)] px-6 py-3.5 font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-elegant)]"
