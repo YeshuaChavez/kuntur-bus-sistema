@@ -3,7 +3,8 @@ import { useState } from "react";
 import { RoleShell } from "@/components/jaysi/RoleShell";
 import {
   Play, Pause, Flag, AlertTriangle, MapPin, Clock, Route as RouteIcon,
-  Navigation, BadgeCheck,
+  Navigation, BadgeCheck, Fuel, Gauge, ThermometerSun, Wind, Users,
+  CheckCircle2, Circle, TimerReset,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { TripPicker, UpcomingTrips } from "./auxiliar";
@@ -94,6 +95,7 @@ function ActiveDriverView({
   const [stopTime, setStopTime] = useState<string | null>(null);
   const [paradaCount, setParadaCount] = useState(0);
   const [log, setLog] = useState<LogEntry[]>([]);
+  const started = startTime !== null;
 
   const pushLog = (label: string) => {
     const time = nowHHMM();
@@ -109,12 +111,14 @@ function ActiveDriverView({
   };
 
   const handleStop = () => {
+    if (!started) return;
     const t = pushLog("Parada técnica");
     setStopTime(t);
     setStatus("En parada");
   };
 
   const handleParada = () => {
+    if (!started) return;
     const next = paradaCount + 1;
     setParadaCount(next);
     pushLog(`Parada ${next}`);
@@ -126,6 +130,16 @@ function ActiveDriverView({
     setStatus("Finalizado");
     onFinish();
   };
+
+  const plannedStops = [
+    { name: "Lima",     scheduled: trip.departure },
+    { name: "Huacho",   scheduled: "08:10" },
+    { name: "Barranca", scheduled: "09:25" },
+    { name: "Chimbote", scheduled: "11:40" },
+    { name: "Virú",     scheduled: "13:50" },
+    { name: "Trujillo", scheduled: "15:20" },
+  ];
+  const reachedStops = Math.min(paradaCount, plannedStops.length);
 
   return (
     <RoleShell role="Conductor" rightSlot={<DriverBadge name={driverName} />}>
@@ -148,20 +162,78 @@ function ActiveDriverView({
           </div>
         </div>
 
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <InfoCard icon={Gauge} label="Velocidad" value={started ? "82 km/h" : "0 km/h"} tone="primary" />
+          <InfoCard icon={Fuel} label="Combustible" value="74%" tone="success" />
+          <InfoCard icon={ThermometerSun} label="Clima" value="22° Nublado" />
+          <InfoCard icon={Users} label="Pasajeros" value="34/40" />
+        </div>
+
         <RouteMap />
+
+        <div className="mt-6 flex items-center justify-between rounded-2xl border border-primary/30 bg-secondary p-4 shadow-[var(--shadow-card)]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+              <Navigation className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Próxima parada</div>
+              <div className="text-base font-bold text-foreground">
+                {plannedStops[reachedStops]?.name ?? "Destino final"}
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Programada</div>
+            <div className="font-mono text-base font-bold text-primary">
+              {plannedStops[reachedStops]?.scheduled ?? "—"}
+            </div>
+          </div>
+        </div>
 
         <h2 className="mt-8 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Reporte rápido
         </h2>
         <div className="mt-3 grid grid-cols-3 gap-3">
-          <BigBtn icon={Play} label={startTime ? `Inicio · ${startTime}` : "Inicio de ruta"} onClick={handleStart} active={status === "En ruta"} />
-          <BigBtn icon={Pause} label={stopTime ? `Parada · ${stopTime}` : "Parada técnica"} onClick={handleStop} active={status === "En parada"} />
-          <BigBtn icon={MapPin} label={paradaCount > 0 ? `Parada ${paradaCount}` : "Parada 1"} onClick={handleParada} active={status.startsWith("Parada ")} />
+          <BigBtn icon={Play} label={startTime ? `Iniciado · ${startTime}` : "Inicio de ruta"} onClick={handleStart} active={status === "En ruta"} />
+          <BigBtn icon={Pause} label={stopTime ? `Parada · ${stopTime}` : "Parada técnica"} onClick={handleStop} active={status === "En parada"} disabled={!started} />
+          <BigBtn icon={MapPin} label={paradaCount > 0 ? `Parada ${paradaCount}` : "Parada 1"} onClick={handleParada} active={status.startsWith("Parada ")} disabled={!started} />
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
+          <h3 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <RouteIcon className="h-3.5 w-3.5" /> Plan de paradas
+          </h3>
+          <ul className="space-y-2.5">
+            {plannedStops.map((s, i) => {
+              const done = i < reachedStops;
+              const current = i === reachedStops && started;
+              return (
+                <li key={s.name} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {done ? (
+                      <CheckCircle2 className="h-4 w-4 text-[var(--success)]" />
+                    ) : current ? (
+                      <Circle className="h-4 w-4 animate-pulse fill-primary text-primary" />
+                    ) : (
+                      <Circle className="h-4 w-4 text-muted-foreground/40" />
+                    )}
+                    <span className={`text-sm font-semibold ${done ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                      {i + 1}. {s.name}
+                    </span>
+                  </div>
+                  <span className="font-mono text-xs text-muted-foreground">{s.scheduled}</span>
+                </li>
+              );
+            })}
+          </ul>
         </div>
 
         {log.length > 0 && (
           <div className="mt-6 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
-            <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Bitácora del viaje</h3>
+            <h3 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <TimerReset className="h-3.5 w-3.5" /> Bitácora del viaje
+            </h3>
             <ul className="space-y-2">
               {log.map((e, i) => (
                 <li key={i} className="flex items-center justify-between border-b border-border/60 pb-2 last:border-0 last:pb-0">
@@ -174,14 +246,22 @@ function ActiveDriverView({
         )}
       </div>
 
-      {/* Botones flotantes: Finalizar + SOS */}
       <div className="fixed inset-x-0 bottom-0 z-40 space-y-2 border-t border-border bg-card/95 p-4 backdrop-blur">
-        <button
-          onClick={handleFinish}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[image:var(--gradient-primary)] py-4 text-base font-bold text-primary-foreground shadow-[var(--shadow-soft)] transition-all active:scale-[0.98]"
-        >
-          <Flag className="h-5 w-5" /> Finalizar viaje
-        </button>
+        {!started ? (
+          <button
+            onClick={handleStart}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[image:var(--gradient-primary)] py-4 text-base font-bold text-primary-foreground shadow-[var(--shadow-soft)] transition-all active:scale-[0.98]"
+          >
+            <Play className="h-5 w-5" /> Iniciar viaje
+          </button>
+        ) : (
+          <button
+            onClick={handleFinish}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[image:var(--gradient-primary)] py-4 text-base font-bold text-primary-foreground shadow-[var(--shadow-soft)] transition-all active:scale-[0.98]"
+          >
+            <Flag className="h-5 w-5" /> Finalizar viaje · iniciado {startTime}
+          </button>
+        )}
         <button
           onClick={() => setSosOpen(true)}
           className="flex w-full items-center justify-center gap-3 rounded-2xl bg-destructive py-4 text-base font-bold tracking-wide text-destructive-foreground shadow-[0_8px_24px_-8px_oklch(0.62_0.15_28_/_0.6)] transition-all active:scale-[0.98]"
@@ -192,6 +272,18 @@ function ActiveDriverView({
 
       {sosOpen && <SosModal onClose={() => setSosOpen(false)} />}
     </RoleShell>
+  );
+}
+
+function InfoCard({ icon: Icon, label, value, tone }: { icon: any; label: string; value: string; tone?: "primary" | "success" | "default" }) {
+  const toneCls = tone === "primary" ? "text-primary" : tone === "success" ? "text-[var(--success)]" : "text-foreground";
+  return (
+    <div className="rounded-2xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
+      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <Icon className={`h-3.5 w-3.5 ${toneCls}`} /> {label}
+      </div>
+      <div className={`mt-1 text-base font-bold ${toneCls}`}>{value}</div>
+    </div>
   );
 }
 
@@ -279,12 +371,15 @@ function Mini({ icon: Icon, k, v }: { icon: any; k: string; v: string }) {
   );
 }
 
-function BigBtn({ icon: Icon, label, onClick, active }: { icon: any; label: string; onClick: () => void; active?: boolean }) {
+function BigBtn({ icon: Icon, label, onClick, active, disabled }: { icon: any; label: string; onClick: () => void; active?: boolean; disabled?: boolean }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className={`flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border-2 p-4 text-center transition-all active:scale-95 ${
-        active
+        disabled
+          ? "cursor-not-allowed border-border/50 bg-muted/40 text-muted-foreground/60"
+          : active
           ? "border-primary bg-secondary text-primary shadow-[var(--shadow-soft)]"
           : "border-border bg-card text-foreground hover:border-primary/40"
       }`}
