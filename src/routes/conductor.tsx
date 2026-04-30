@@ -1,8 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { RoleShell } from "@/components/jaysi/RoleShell";
-import { Play, Pause, Flag, AlertTriangle, MapPin, Gauge, Clock, Route as RouteIcon, Navigation, BadgeCheck } from "lucide-react";
+import {
+  Play, Pause, Flag, AlertTriangle, MapPin, Gauge, Clock, Route as RouteIcon,
+  Navigation, BadgeCheck,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { TripPicker, UpcomingTrips } from "./auxiliar";
 
 export const Route = createFileRoute("/conductor")({
   head: () => ({
@@ -14,33 +18,88 @@ export const Route = createFileRoute("/conductor")({
   component: ConductorView,
 });
 
+type ActiveTrip = {
+  id: string;
+  origin: string;
+  destination: string;
+  bus: string;
+  departure: string;
+};
+
+const TRIP_LOOKUP: Record<string, ActiveTrip> = {
+  "JY-104": { id: "JY-104", origin: "Lima",     destination: "Trujillo", bus: "JY-104", departure: "06:30" },
+  "JY-220": { id: "JY-220", origin: "Lima",     destination: "Arequipa", bus: "JY-220", departure: "14:00" },
+  "JY-318": { id: "JY-318", origin: "Trujillo", destination: "Lima",     bus: "JY-318", departure: "22:30" },
+  "JY-405": { id: "JY-405", origin: "Lima",     destination: "Ica",      bus: "JY-405", departure: "07:15" },
+  "JY-512": { id: "JY-512", origin: "Cusco",    destination: "Puno",     bus: "JY-512", departure: "09:45" },
+};
+
 function ConductorView() {
   const { user } = useAuth();
+  const driverName = user?.role === "conductor" ? user.name : "Carlos Mendoza";
+  const [stage, setStage] = useState<"select" | "active" | "upcoming">("select");
+  const [tripId, setTripId] = useState<string | null>(null);
+
+  const trip = tripId ? TRIP_LOOKUP[tripId] : null;
+
+  if (stage === "select" || !trip) {
+    return (
+      <RoleShell role="Conductor" rightSlot={<DriverBadge name={driverName} />}>
+        <TripPicker
+          title="Selecciona el viaje a conducir"
+          subtitle="Elige tu unidad para iniciar el reporte de ruta."
+          onPick={(id) => { setTripId(id); setStage("active"); }}
+        />
+      </RoleShell>
+    );
+  }
+
+  if (stage === "upcoming") {
+    return (
+      <RoleShell role="Conductor" rightSlot={<DriverBadge name={driverName} />}>
+        <UpcomingTrips
+          finishedTripLabel={`${trip.origin} → ${trip.destination}`}
+          onPickNext={(id) => { setTripId(id); setStage("active"); }}
+        />
+      </RoleShell>
+    );
+  }
+
+  return <ActiveDriverView trip={trip} driverName={driverName} onFinish={() => setStage("upcoming")} />;
+}
+
+function DriverBadge({ name }: { name: string }) {
+  return (
+    <div className="hidden flex-col items-end text-right sm:flex">
+      <span className="inline-flex items-center gap-1 text-xs font-bold text-foreground">
+        <BadgeCheck className="h-3.5 w-3.5 text-primary" /> {name}
+      </span>
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Conductor</span>
+    </div>
+  );
+}
+
+function ActiveDriverView({
+  trip, driverName, onFinish,
+}: { trip: ActiveTrip; driverName: string; onFinish: () => void }) {
   const [status, setStatus] = useState("En ruta");
   const [sosOpen, setSosOpen] = useState(false);
-  const driverName = user?.role === "conductor" ? user.name : "Carlos Mendoza";
-  const tripId = "TRP-2026-0515-104";
+
+  const handleFinish = () => {
+    setStatus("Finalizado");
+    onFinish();
+  };
 
   return (
-    <RoleShell
-      role="Conductor"
-      rightSlot={
-        <div className="hidden flex-col items-end text-right sm:flex">
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-foreground">
-            <BadgeCheck className="h-3.5 w-3.5 text-primary" /> {driverName}
-          </span>
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Viaje {tripId}</span>
-        </div>
-      }
-    >
-      <div className="mx-auto max-w-3xl pb-32">
+    <RoleShell role="Conductor" rightSlot={<DriverBadge name={driverName} />}>
+      <div className="mx-auto max-w-3xl pb-44">
         <div className="rounded-3xl bg-[image:var(--gradient-primary)] p-6 text-primary-foreground shadow-[var(--shadow-elegant)]">
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-widest opacity-80">
-            <span>Bus JY-104 · Turno mañana</span>
+            <span>Bus {trip.bus} · Salida {trip.departure}</span>
             <span>Conductor: <strong className="font-bold opacity-100">{driverName}</strong></span>
-            <span>ID: <strong className="font-mono opacity-100">{tripId}</strong></span>
+            <span>ID: <strong className="font-mono opacity-100">{trip.id}</strong></span>
           </div>
-          <h1 className="mt-3 text-3xl font-bold">Lima → Trujillo</h1>
+          <h1 className="mt-3 text-3xl font-bold">{trip.origin} → {trip.destination}</h1>
           <div className="mt-1 flex items-center gap-1.5 text-sm opacity-90">
             <MapPin className="h-3.5 w-3.5" /> Km 248 · cerca de Chimbote
           </div>
@@ -57,21 +116,26 @@ function ConductorView() {
         <h2 className="mt-8 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Reporte rápido
         </h2>
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="mt-3 grid grid-cols-3 gap-3">
           <BigBtn icon={Play} label="Inicio de ruta" onClick={() => setStatus("En ruta")} active={status === "En ruta"} />
           <BigBtn icon={Pause} label="Parada técnica" onClick={() => setStatus("En parada")} active={status === "En parada"} />
-          <BigBtn icon={MapPin} label="Llegada checkpoint" onClick={() => setStatus("Checkpoint")} active={status === "Checkpoint"} />
-          <BigBtn icon={Flag} label="Fin de ruta" onClick={() => setStatus("Finalizado")} active={status === "Finalizado"} />
+          <BigBtn icon={MapPin} label="Checkpoint" onClick={() => setStatus("Checkpoint")} active={status === "Checkpoint"} />
         </div>
       </div>
 
-      {/* Floating SOS */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-4 backdrop-blur">
+      {/* Botones flotantes: Finalizar + SOS */}
+      <div className="fixed inset-x-0 bottom-0 z-40 space-y-2 border-t border-border bg-card/95 p-4 backdrop-blur">
+        <button
+          onClick={handleFinish}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[image:var(--gradient-primary)] py-4 text-base font-bold text-primary-foreground shadow-[var(--shadow-soft)] transition-all active:scale-[0.98]"
+        >
+          <Flag className="h-5 w-5" /> Finalizar viaje
+        </button>
         <button
           onClick={() => setSosOpen(true)}
-          className="flex w-full items-center justify-center gap-3 rounded-2xl bg-destructive py-5 text-lg font-bold tracking-wide text-destructive-foreground shadow-[0_8px_24px_-8px_oklch(0.62_0.15_28_/_0.6)] transition-all active:scale-[0.98]"
+          className="flex w-full items-center justify-center gap-3 rounded-2xl bg-destructive py-4 text-base font-bold tracking-wide text-destructive-foreground shadow-[0_8px_24px_-8px_oklch(0.62_0.15_28_/_0.6)] transition-all active:scale-[0.98]"
         >
-          <AlertTriangle className="h-6 w-6" /> EMERGENCIA · S.O.S
+          <AlertTriangle className="h-5 w-5" /> EMERGENCIA · S.O.S
         </button>
       </div>
 
@@ -81,14 +145,13 @@ function ConductorView() {
 }
 
 function RouteMap() {
-  // Dijkstra-style stops along the recommended route (Lima → Trujillo)
   const stops = [
-    { x: 60,  y: 380, name: "Lima",        done: true },
-    { x: 180, y: 320, name: "Huacho",      done: true },
-    { x: 300, y: 280, name: "Barranca",    done: true },
-    { x: 420, y: 220, name: "Chimbote",    done: false, current: true },
-    { x: 560, y: 150, name: "Virú",        done: false },
-    { x: 700, y: 90,  name: "Trujillo",    done: false },
+    { x: 60,  y: 380, name: "Lima",     done: true },
+    { x: 180, y: 320, name: "Huacho",   done: true },
+    { x: 300, y: 280, name: "Barranca", done: true },
+    { x: 420, y: 220, name: "Chimbote", done: false, current: true },
+    { x: 560, y: 150, name: "Virú",     done: false },
+    { x: 700, y: 90,  name: "Trujillo", done: false },
   ];
   const path = stops.map((s, i) => `${i === 0 ? "M" : "L"} ${s.x} ${s.y}`).join(" ");
 
@@ -107,11 +170,8 @@ function RouteMap() {
       </div>
       <div className="relative h-[260px] bg-[radial-gradient(ellipse_at_center,_var(--secondary)_0%,_var(--background)_75%)]">
         <svg viewBox="0 0 760 440" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet">
-          {/* Alternative routes (gray, dashed) */}
           <path d="M 60 380 Q 250 420 420 220 T 700 90" stroke="oklch(0.7 0.02 150)" strokeWidth="3" fill="none" strokeDasharray="6 6" opacity="0.5" />
           <path d="M 60 380 Q 200 200 700 90" stroke="oklch(0.7 0.02 150)" strokeWidth="3" fill="none" strokeDasharray="6 6" opacity="0.5" />
-
-          {/* Recommended (Dijkstra) — RED */}
           <path
             d={path}
             stroke="oklch(0.62 0.18 28)"
@@ -121,8 +181,6 @@ function RouteMap() {
             strokeLinejoin="round"
             filter="drop-shadow(0 2px 6px oklch(0.62 0.18 28 / 0.4))"
           />
-
-          {/* Stops */}
           {stops.map((s) => (
             <g key={s.name}>
               <circle
