@@ -20,6 +20,7 @@ import {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 
 export const Route = createFileRoute("/")({
@@ -120,6 +121,37 @@ function HomeBooking() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    let intervalId: any;
+
+    const startAutoplay = () => {
+      intervalId = setInterval(() => {
+        if (carouselApi.canScrollNext()) {
+          carouselApi.scrollNext();
+        } else {
+          carouselApi.scrollTo(0);
+        }
+      }, 4000);
+    };
+
+    const stopAutoplay = () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+
+    startAutoplay();
+
+    carouselApi.on("select", () => {
+      stopAutoplay();
+      startAutoplay();
+    });
+    carouselApi.on("pointerDown", stopAutoplay);
+
+    return () => stopAutoplay();
+  }, [carouselApi]);
 
   const [origin, setOrigin] = useState("Lima");
   const [destination, setDestination] = useState("Trujillo");
@@ -301,7 +333,7 @@ function Hero(props: {
       {/* Destinos */}
       <section id="destinos" className="bg-background pb-16 pt-36">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16">
-          <Carousel opts={{ align: "start" }} className="w-full">
+          <Carousel opts={{ align: "start" }} setApi={setCarouselApi} className="w-full">
             <div className="mb-8 flex items-center justify-between gap-4">
               <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">Explora destinos inolvidables</h2>
               <div className="flex items-center gap-2">
