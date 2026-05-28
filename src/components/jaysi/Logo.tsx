@@ -7,7 +7,7 @@ export function Logo({ className = "" }: { className?: string }) {
         <Leaf className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
       </div>
       <div className="leading-none">
-        <div className="text-lg font-bold tracking-tight text-foreground">JAYSI</div>
+        <div className="text-lg font-bold tracking-tight text-foreground">KUNTUR</div>
         <div className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Transit OS</div>
       </div>
     </div>

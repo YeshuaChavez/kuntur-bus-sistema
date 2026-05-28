@@ -2,11 +2,12 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { SeatMap, type Seat } from "@/components/jaysi/SeatMap";
 import { Logo } from "@/components/jaysi/Logo";
-import { useAuth, roleHome } from "@/lib/auth";
+import { useAuth, roleHome, registerAccount, storeUser } from "@/lib/auth";
 import {
   ArrowRight, Calendar, MapPin, Search, Users, X, QrCode, Clock, Bus, Leaf,
   LogIn, LogOut, ShieldCheck, AlertCircle, ArrowLeftRight, Sparkles, CreditCard, ChevronRight,
   IdCard, User as UserIcon, Lock, CheckCircle2, Crown, Moon, BedDouble, Star, SlidersHorizontal,
+  Mail, ArrowUpDown, Headphones, Globe, Ticket as TicketIcon,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -14,10 +15,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/")(  {
   head: () => ({
     meta: [
-      { title: "JAYSI — Compra tu pasaje en segundos" },
+      { title: "KUNTUR — Compra tu pasaje en segundos" },
       { name: "description", content: "Busca rutas, elige tu asiento en tiempo real y obtén tu boleto digital con QR." },
     ],
   }),
@@ -106,6 +107,9 @@ function makeSeats(): Seat[] {
   return list;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ═══════════════════════════════════════════════════════════════════════ */
 function HomeBooking() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -124,6 +128,7 @@ function HomeBooking() {
   const [seats, setSeats]           = useState<Seat[]>(makeSeats);
   const [authBlock, setAuthBlock]   = useState(false);
   const [passengers, setPassengers] = useState<{ dni: string; name: string }[]>([]);
+  const [guestEmail, setGuestEmail] = useState("");
   const [payment, setPayment]       = useState<{ method: "card" | "yape" | "plin"; card: string; exp: string; cvv: string }>({
     method: "card", card: "", exp: "", cvv: "",
   });
@@ -144,7 +149,7 @@ function HomeBooking() {
 
   const goPay = () => {
     if (!selected.length) return;
-    if (!user || user.role !== "cliente") { setAuthBlock(true); return; }
+    if (user && user.role !== "cliente") { setAuthBlock(true); return; }
     setPassengers(selected.map(() => ({ dni: "", name: "" })));
     setStep("passengers");
   };
@@ -153,13 +158,7 @@ function HomeBooking() {
     <div className="min-h-screen bg-background">
       <Header user={user} onLogout={logout} />
 
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[460px] opacity-60"
-        style={{ background: "var(--gradient-soft)" }}
-      />
-
-      <main className="relative mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6">
+      <main>
         {step === "search" && (
           <Hero
             origin={origin} destination={destination} date={date} pax={pax}
@@ -168,44 +167,50 @@ function HomeBooking() {
           />
         )}
 
-        {step !== "search" && <Stepper step={step} />}
+        {step !== "search" && (
+          <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16 pb-16 pt-6">
+            <Stepper step={step} />
 
-        {step === "trips" && (
-          <TripsList
-            origin={origin} destination={destination} date={date}
-            onPick={(id) => { setTripId(id); setStep("seats"); }}
-            onBack={() => setStep("search")}
-          />
-        )}
+            {step === "trips" && (
+              <TripsList
+                origin={origin} destination={destination} date={date}
+                onPick={(id) => { setTripId(id); setStep("seats"); }}
+                onBack={() => setStep("search")}
+              />
+            )}
 
-        {step === "seats" && (
-          <SeatStep
-            trip={trip} seats={seats} selected={selected} total={total}
-            toggleSeat={toggleSeat} onBack={() => setStep("trips")} onPay={goPay}
-            user={user}
-          />
-        )}
+            {step === "seats" && (
+              <SeatStep
+                trip={trip} seats={seats} selected={selected} total={total}
+                toggleSeat={toggleSeat} onBack={() => setStep("trips")} onPay={goPay}
+                user={user}
+              />
+            )}
 
-        {step === "passengers" && (
-          <PassengersStep
-            selected={selected} passengers={passengers} setPassengers={setPassengers}
-            total={total} onBack={() => setStep("seats")} onNext={() => setStep("payment")}
-          />
-        )}
+            {step === "passengers" && (
+              <PassengersStep
+                selected={selected} passengers={passengers} setPassengers={setPassengers}
+                total={total} onBack={() => setStep("seats")} onNext={() => setStep("payment")}
+                user={user} guestEmail={guestEmail} setGuestEmail={setGuestEmail}
+              />
+            )}
 
-        {step === "payment" && (
-          <PaymentStep
-            total={total} payment={payment} setPayment={setPayment}
-            onBack={() => setStep("passengers")} onPay={() => setStep("ticket")}
-          />
-        )}
+            {step === "payment" && (
+              <PaymentStep
+                total={total} payment={payment} setPayment={setPayment}
+                onBack={() => setStep("passengers")} onPay={() => setStep("ticket")}
+              />
+            )}
 
-        {step === "ticket" && (
-          <Ticket
-            selected={selected} trip={trip} origin={origin} destination={destination} date={date}
-            passengers={passengers}
-            onNew={() => { setStep("search"); setSeats(makeSeats()); }} user={user!}
-          />
+            {step === "ticket" && (
+              <TicketResult
+                selected={selected} trip={trip} origin={origin} destination={destination} date={date}
+                passengers={passengers}
+                onNew={() => { setStep("search"); setSeats(makeSeats()); setGuestEmail(""); }}
+                user={user} guestEmail={guestEmail}
+              />
+            )}
+          </div>
         )}
       </main>
 
@@ -216,30 +221,41 @@ function HomeBooking() {
           user={user}
         />
       )}
+
+      <Footer />
     </div>
   );
 }
 
-/* ─── Header ────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════
+   HEADER — Stitch-style sticky navbar
+   ═══════════════════════════════════════════════════════════════════════ */
 function Header({ user, onLogout }: { user: ReturnType<typeof useAuth>["user"]; onLogout: () => void }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card/85 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link to="/"><Logo /></Link>
-        <nav className="flex items-center gap-2">
+    <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-md shadow-[0px_4px_20px_0px_rgba(84,95,115,0.05)]">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-16 h-20">
+        <Link to="/" className="text-2xl font-extrabold tracking-tight text-primary">KUNTUR</Link>
+
+        <nav className="hidden md:flex items-center gap-10 text-base">
+          <Link to="/" className="text-primary border-b-2 border-primary pb-1 font-semibold">Inicio</Link>
+          <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Mis Viajes</a>
+          <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Ayuda</a>
+        </nav>
+
+        <div className="flex items-center gap-3">
           {user ? (
             <>
               <span className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground sm:inline-flex">
                 <ShieldCheck className="h-3.5 w-3.5 text-primary" /> {user.name} · {user.role}
               </span>
               {user.role !== "cliente" && (
-                <Link to={roleHome(user.role) as any} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
+                <Link to={roleHome(user.role) as any} className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
                   Mi panel
                 </Link>
               )}
               <button
                 onClick={onLogout}
-                className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
+                className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
               >
                 <LogOut className="h-3.5 w-3.5" /> Salir
               </button>
@@ -247,18 +263,20 @@ function Header({ user, onLogout }: { user: ReturnType<typeof useAuth>["user"]; 
           ) : (
             <Link
               to="/login" search={{ redirect: "/" }}
-              className="flex items-center gap-1.5 rounded-lg bg-[image:var(--gradient-primary)] px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-elegant)]"
+              className="flex items-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted active:scale-95"
             >
-              <LogIn className="h-4 w-4" /> Iniciar sesión
+              <UserIcon className="h-4 w-4 text-primary" /> Ingresar
             </Link>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );
 }
 
-/* ─── Hero ──────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════
+   HERO — Full-width bg image + floating search panel + destinations + benefits
+   ═══════════════════════════════════════════════════════════════════════ */
 function Hero(props: {
   origin: string; destination: string; date: Date; pax: number;
   setOrigin: (v: string) => void; setDestination: (v: string) => void;
@@ -267,137 +285,154 @@ function Hero(props: {
 }) {
   return (
     <>
-      <section className="pt-10 text-center sm:pt-14">
-        <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-secondary px-3 py-1 text-xs font-semibold text-primary">
-          <Leaf className="h-3.5 w-3.5" /> Transporte sostenible
-        </span>
-        <h1 className="mt-5 text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-6xl">
-          Tu próximo viaje, <br className="sm:hidden" />
-          <span className="bg-[image:var(--gradient-primary)] bg-clip-text text-transparent">a un toque de distancia.</span>
-        </h1>
-        <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
-          Compara rutas, elige tu asiento en vivo y recibe tu boleto digital al instante.
-        </p>
-      </section>
-
-      <section className="mt-8 rounded-3xl border border-border bg-card p-4 shadow-[var(--shadow-elegant)] sm:p-6">
-        <div className="grid gap-3 lg:grid-cols-[1fr_auto_1fr_1fr_auto]">
-          <CitySelect icon={MapPin} label="Origen"  value={props.origin}      onChange={props.setOrigin} />
-          <button
-            onClick={props.swap}
-            className="hidden h-full items-center justify-center rounded-xl border border-border bg-background px-3 text-muted-foreground transition-all hover:rotate-180 hover:border-primary hover:text-primary lg:flex"
-            aria-label="Intercambiar"
-          >
-            <ArrowLeftRight className="h-4 w-4" />
-          </button>
-          <CitySelect icon={MapPin} label="Destino" value={props.destination} onChange={props.setDestination} />
-          <DatePickerField value={props.date} onChange={props.setDate} />
-          <button
-            onClick={props.onSearch}
-            className="group flex items-center justify-center gap-2 rounded-xl bg-[image:var(--gradient-primary)] px-6 py-3.5 font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-elegant)]"
-          >
-            <Search className="h-4 w-4" /> Buscar
-          </button>
+      {/* ── Hero Background ─── */}
+      <section className="relative pt-20 pb-48 overflow-hidden min-h-[660px] flex flex-col justify-center">
+        <div className="absolute inset-0 -z-20">
+          <img
+            alt="Flota de buses KUNTUR"
+            className="w-full h-full object-cover"
+            src="/fleet-hero.png"
+          />
         </div>
-      </section>
+        <div className="absolute inset-0 -z-10" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(247,250,248,1) 100%)" }} />
 
-      {/* Benefits */}
-      <section className="mt-10 grid gap-3 sm:grid-cols-3">
-        {[
-          { i: Sparkles,   t: "Asientos en tiempo real", d: "Mira disponibilidad al instante." },
-          { i: ShieldCheck, t: "Compra protegida",        d: "Confirmación instantánea con QR." },
-          { i: CreditCard,  t: "Sin sorpresas",           d: "Precio final, sin recargos ocultos." },
-        ].map((b) => (
-          <div key={b.t} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
-              <b.i className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-sm font-bold text-foreground">{b.t}</div>
-              <div className="text-xs text-muted-foreground">{b.d}</div>
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16 text-center relative z-10">
+          <h1 className="text-4xl sm:text-5xl lg:text-[48px] font-bold leading-tight tracking-tight text-white drop-shadow-lg">
+            Viaja con el confort y la seguridad de{" "}
+            <span className="text-[oklch(0.68_0.13_160)]">KUNTUR</span>
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-white/90 drop-shadow-md">
+            Reserva tus pasajes hacia los destinos más emblemáticos del Perú con un servicio premium diseñado para tu tranquilidad.
+          </p>
+        </div>
+
+        {/* ── Floating Search Panel ─── */}
+        <div className="mx-auto max-w-[1100px] px-5 sm:px-8 lg:px-16 -mb-28 relative z-20 mt-10">
+          <div className="bg-card rounded-[24px] shadow-[0px_20px_50px_rgba(0,0,0,0.15)] p-6 sm:p-8 lg:p-10 border border-border/30">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
+              {/* Origen / Destino */}
+              <div className="md:col-span-4 relative">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 ml-1">Origen / Destino</label>
+                <div className="flex flex-col gap-2 relative">
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <select
+                      value={props.origin} onChange={(e) => props.setOrigin(e.target.value)}
+                      className="w-full pl-11 pr-4 py-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-base font-medium text-foreground"
+                    >
+                      {cities.map((c) => <option key={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <button
+                    onClick={props.swap}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-primary text-primary-foreground p-2 rounded-full shadow-md hover:rotate-180 transition-transform duration-500 active:scale-90"
+                  >
+                    <ArrowUpDown className="h-4 w-4" />
+                  </button>
+                  <div className="relative">
+                    <Bus className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <select
+                      value={props.destination} onChange={(e) => props.setDestination(e.target.value)}
+                      className="w-full pl-11 pr-4 py-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-base font-medium text-foreground"
+                    >
+                      {cities.map((c) => <option key={c}>{c}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fecha */}
+              <div className="md:col-span-4 grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 ml-1">Ida</label>
+                  <DatePickerField value={props.date} onChange={props.setDate} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 ml-1">Pasajeros</label>
+                  <div className="relative">
+                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <select
+                      value={props.pax} onChange={(e) => props.setPax(Number(e.target.value))}
+                      className="w-full pl-11 pr-4 py-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none text-base font-medium text-foreground"
+                    >
+                      {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n} Pasajero{n > 1 ? "s" : ""}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Buscar */}
+              <div className="md:col-span-4">
+                <button
+                  onClick={props.onSearch}
+                  className="w-full py-4 bg-primary hover:brightness-110 text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 text-base"
+                >
+                  <Search className="h-5 w-5" /> Buscar viajes
+                </button>
+              </div>
             </div>
           </div>
-        ))}
+        </div>
       </section>
 
-      {/* Category showcase */}
-      <section className="mt-12">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Categorías de servicio</h2>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {Object.entries(tripStyles).map(([type, s]) => {
-            const Icon = s.icon;
-            return (
-              <div
-                key={type}
-                className={`relative overflow-hidden rounded-2xl border p-4 ${s.bgCard} ${s.borderCard} transition-all hover:-translate-y-0.5`}
+      {/* ── Destinos Populares ─── */}
+      <section className="pt-36 pb-16 bg-background">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">Explora destinos inolvidables</h2>
+            <span className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-primary hover:underline cursor-pointer">
+              Ver todos los destinos <ArrowRight className="h-4 w-4" />
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { city: "Lima", region: "Costa Central", price: 45, img: "/lima.png" },
+              { city: "Arequipa", region: "Ciudad Blanca", price: 55, img: "/arequipa.png" },
+              { city: "Cusco", region: "Valle Sagrado", price: 60, img: "/cusco.png" },
+            ].map((d) => (
+              <button
+                key={d.city}
+                onClick={() => { props.setDestination(d.city); props.onSearch(); }}
+                className="group relative bg-card rounded-[24px] overflow-hidden shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elegant)] transition-all duration-500 cursor-pointer text-left"
               >
-                <div className="h-1 rounded-full mb-3 w-full" style={{ background: s.gradient }} />
-                <div className="flex items-center gap-2 mb-2">
-                  <div
-                    className="flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-sm"
-                    style={{ background: s.gradient }}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${s.chip}`}>
-                    {type}
-                  </span>
+                <div className="h-[380px] overflow-hidden">
+                  <img alt={d.city} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src={d.img} />
                 </div>
-                <p className="text-[11px] leading-relaxed text-muted-foreground">{s.description}</p>
-              </div>
-            );
-          })}
+                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                  <p className="text-white/80 text-[11px] font-semibold uppercase tracking-widest mb-1">{d.region}</p>
+                  <h3 className="text-white text-2xl font-semibold mb-2">{d.city}</h3>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white text-base">Desde</span>
+                    <span className="text-[oklch(0.68_0.13_160)] text-2xl font-semibold">S/ {d.price}.00</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Popular routes */}
-      <section className="mt-12">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Rutas populares</h2>
-          <span className="text-xs text-muted-foreground">Toca para reservar rápido</span>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            { o: "Lima", d: "Trujillo", p: 38 },
-            { o: "Lima", d: "Arequipa", p: 65 },
-            { o: "Cusco", d: "Puno", p: 45 },
-            { o: "Lima", d: "Ica", p: 28 },
-            { o: "Trujillo", d: "Piura", p: 42 },
-            { o: "Arequipa", d: "Tacna", p: 35 },
-          ].map((r) => (
-            <button
-              key={r.o + r.d}
-              onClick={() => { props.setOrigin(r.o); props.setDestination(r.d); props.onSearch(); }}
-              className="group flex items-center justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-[var(--shadow-card)] transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[var(--shadow-elegant)]"
-            >
-              <div>
-                <div className="flex items-center gap-1.5 text-sm font-bold text-foreground">
-                  {r.o} <ArrowRight className="h-3.5 w-3.5 text-primary" /> {r.d}
+      {/* ── Beneficios ─── */}
+      <section className="py-20 bg-secondary border-y border-border/30">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {[
+              { icon: ShieldCheck, title: "Seguridad Garantizada", desc: "Sistemas de monitoreo GPS en tiempo real y conductores altamente capacitados para tu tranquilidad." },
+              { icon: Bus,         title: "Flota Moderna",         desc: "Buses de última generación con asientos de cuero, climatización y entretenimiento a bordo." },
+              { icon: Headphones,  title: "Atención 24/7",         desc: "Estamos contigo en cada kilómetro. Soporte personalizado antes, durante y después de tu viaje." },
+            ].map((b) => (
+              <div key={b.title} className="flex flex-col items-center text-center group">
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 transition-colors group-hover:bg-primary group-hover:text-primary-foreground text-primary">
+                  <b.icon className="h-8 w-8" />
                 </div>
-                <div className="text-xs text-muted-foreground">Desde S/ {r.p}</div>
+                <h4 className="text-xl font-semibold text-foreground mb-3">{b.title}</h4>
+                <p className="text-base text-muted-foreground px-4 leading-relaxed">{b.desc}</p>
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
-            </button>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
     </>
-  );
-}
-
-/* ─── City Select ───────────────────────────────────────────────────── */
-function CitySelect({ icon: Icon, label, value, onChange }: { icon: any; label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <label className="flex flex-col gap-1 rounded-xl border border-border bg-background px-3.5 py-2.5 transition-colors focus-within:border-primary">
-      <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <Icon className="h-3 w-3" /> {label}
-      </span>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="bg-transparent text-base font-bold text-foreground outline-none">
-        {cities.map((c) => <option key={c}>{c}</option>)}
-      </select>
-    </label>
   );
 }
 
@@ -407,11 +442,9 @@ function DatePickerField({ value, onChange }: { value: Date; onChange: (v: Date)
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" className="flex flex-col gap-1 rounded-xl border border-border bg-background px-3.5 py-2.5 text-left transition-colors hover:border-primary focus:border-primary focus:outline-none">
-          <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            <Calendar className="h-3 w-3" /> Fecha
-          </span>
-          <span className="text-base font-bold capitalize text-foreground">{format(value, "EEE d MMM yyyy", { locale: es })}</span>
+        <button type="button" className="flex w-full items-center gap-3 rounded-xl border border-border bg-background px-4 py-4 text-left transition-colors hover:border-primary focus:border-primary focus:outline-none">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <span className="text-base font-medium capitalize text-foreground">{format(value, "EEE d MMM", { locale: es })}</span>
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-0">
@@ -431,21 +464,26 @@ function Stepper({ step }: { step: string }) {
   const labels = ["Buscar", "Viajes", "Asientos", "Datos", "Pago", "Boleto"];
   const idx = steps.indexOf(step);
   return (
-    <div className="mt-2 flex items-center gap-2 overflow-x-auto pb-2">
+    <div className="mb-8 flex items-center gap-1 overflow-x-auto pb-2">
       {labels.map((l, i) => (
-        <div key={l} className="flex items-center gap-2">
-          <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${i <= idx ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+        <div key={l} className="flex items-center gap-1">
+          <div className={cn(
+            "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors",
+            i < idx ? "bg-primary/20 text-primary" : i === idx ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+          )}>
             {i + 1}
           </div>
-          <span className={`text-sm ${i === idx ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{l}</span>
-          {i < labels.length - 1 && <div className="h-px w-6 bg-border sm:w-10" />}
+          <span className={cn("text-sm whitespace-nowrap", i === idx ? "font-bold text-primary" : "text-muted-foreground")}>{l}</span>
+          {i < labels.length - 1 && <div className={cn("h-px w-6 sm:w-10", i < idx ? "bg-primary/40" : "bg-border")} />}
         </div>
       ))}
     </div>
   );
 }
 
-/* ─── Trips List — con filtro de categorías ─────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════
+   TRIPS LIST — Stitch-style cards with search info bar
+   ═══════════════════════════════════════════════════════════════════════ */
 function TripsList({ origin, destination, date, onPick, onBack }: {
   origin: string; destination: string; date: Date; onPick: (id: string) => void; onBack: () => void;
 }) {
@@ -457,17 +495,41 @@ function TripsList({ origin, destination, date, onPick, onBack }: {
   );
 
   return (
-    <div className="mt-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground">← Modificar búsqueda</button>
-          <h2 className="mt-1 text-2xl font-bold text-foreground">{origin} → {destination}</h2>
-          <p className="text-sm capitalize text-muted-foreground">{filtered.length} viaje{filtered.length !== 1 ? "s" : ""} · {dateLabel}</p>
+    <div>
+      {/* Search Info Bar */}
+      <div className="bg-card rounded-[24px] p-6 shadow-[var(--shadow-card)] border border-border/30 flex flex-col md:flex-row items-center gap-6 mb-8">
+        <div className="flex-1 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-4">
+            <div className="bg-background p-4 rounded-xl border border-border/30">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Origen</p>
+              <p className="text-xl font-semibold text-foreground">{origin}</p>
+            </div>
+            <button
+              onClick={onBack}
+              className="bg-primary text-primary-foreground p-3 rounded-full shadow-md hover:rotate-180 transition-transform duration-500 z-10"
+            >
+              <ArrowLeftRight className="h-4 w-4" />
+            </button>
+            <div className="bg-background p-4 rounded-xl border border-border/30">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Destino</p>
+              <p className="text-xl font-semibold text-foreground">{destination}</p>
+            </div>
+          </div>
         </div>
+        <div className="w-full md:w-auto bg-background p-4 rounded-xl border border-border/30 min-w-[200px]">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Fecha de Viaje</p>
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-primary" />
+            <p className="text-base font-semibold capitalize">{dateLabel}</p>
+          </div>
+        </div>
+        <button onClick={onBack} className="w-full md:w-auto bg-primary text-primary-foreground px-8 py-4 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg active:scale-95">
+          Modificar
+        </button>
       </div>
 
-      {/* Filtro por categoría */}
-      <div className="mt-4 flex items-center gap-1.5 overflow-x-auto pb-1">
+      {/* Category filter */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-6">
         <SlidersHorizontal className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
         {ALL_CATEGORIES.map((cat) => {
           const s = cat !== "Todos" ? tripStyles[cat] : null;
@@ -493,61 +555,83 @@ function TripsList({ origin, destination, date, onPick, onBack }: {
         })}
       </div>
 
-      <div className="mt-4 space-y-3">
+      <h2 className="text-2xl sm:text-3xl font-semibold text-foreground mb-6">Viajes Disponibles</h2>
+
+      {/* Trip Cards */}
+      <div className="space-y-4">
         {filtered.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+          <div className="rounded-[24px] border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
             No hay viajes de categoría <strong>{activeCategory}</strong> disponibles para esta fecha.
           </div>
         )}
-        {filtered.map((t) => {
+        {filtered.map((t, idx) => {
           const s = getTripStyle(t.type);
           const Icon = s.icon;
+          const isFirst = idx === 0;
           return (
             <button
               key={t.id}
               onClick={() => onPick(t.id)}
               className={cn(
-                "group relative flex w-full items-start justify-between overflow-hidden rounded-2xl border p-5 text-left shadow-[var(--shadow-card)] transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-elegant)]",
-                s.bgCard,
-                s.borderCard,
-                s.ring,
+                "group relative flex w-full flex-col md:flex-row items-start md:items-center justify-between overflow-hidden rounded-[24px] border p-6 text-left shadow-[var(--shadow-card)] transition-all hover:shadow-[var(--shadow-elegant)] hover:-translate-y-0.5",
+                isFirst ? "border-2 border-primary ring-4 ring-primary/5" : "border-border/30 hover:border-primary/50",
+                "bg-card",
               )}
             >
-              {/* Franja lateral de color */}
-              <span aria-hidden className="absolute inset-y-0 left-0 w-1.5" style={{ background: s.gradient }} />
+              {isFirst && (
+                <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-4 py-1 rounded-bl-xl text-[11px] font-bold uppercase tracking-wider">
+                  Recomendado
+                </div>
+              )}
 
-              <div className="flex items-start gap-4 pl-2">
-                {/* Icono con gradiente */}
+              <div className="flex items-start gap-4 flex-1">
                 <div
-                  className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-[var(--shadow-soft)]"
+                  className="hidden sm:flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-[var(--shadow-soft)]"
                   style={{ background: s.gradient }}
                 >
                   <Icon className="h-6 w-6" />
                 </div>
-
                 <div>
-                  {/* Horarios */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xl font-bold text-foreground">{t.time}</span>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-xl font-bold text-foreground">{t.arr}</span>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider", s.chip)}>
+                      <Icon className="h-3 w-3" /> {s.label}
+                    </span>
+                    <span className={cn("font-bold text-xs", t.seats <= 6 ? "text-destructive" : "text-primary")}>
+                      {t.seats <= 6 ? `Solo ${t.seats} disponibles` : `${t.seats} disponibles`}
+                    </span>
                   </div>
-                  {/* Badge de categoría — prominente */}
-                  <span className={cn("mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider", s.chip)}>
-                    <Icon className="h-3.5 w-3.5" /> {s.label}
-                  </span>
-                  {/* Descripción del servicio */}
-                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{s.description}</p>
-                  <div className="mt-1 text-xs text-muted-foreground">{t.dur} · {t.seats} asientos libres</div>
+                  <div className="flex items-center gap-6">
+                    <div>
+                      <p className="text-2xl font-semibold text-foreground">{t.time}</p>
+                      <p className="text-xs text-muted-foreground">{origin}</p>
+                    </div>
+                    <div className="flex flex-col items-center flex-1 max-w-[120px]">
+                      <p className="text-xs text-muted-foreground mb-1">{t.dur}</p>
+                      <div className="w-full h-[2px] bg-border relative">
+                        <div className="absolute -top-1 -left-1 w-2.5 h-2.5 rounded-full bg-border" />
+                        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-border" />
+                      </div>
+                      <Bus className="h-3.5 w-3.5 text-muted-foreground mt-1" />
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-semibold text-foreground">{t.arr}</p>
+                      <p className="text-xs text-muted-foreground">{destination}</p>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{s.description}</p>
                 </div>
               </div>
 
-              {/* Precio */}
-              <div className="flex-shrink-0 text-right pl-4">
-                <div className={cn("text-2xl font-bold", s.accent)}>S/ {t.price}</div>
-                <div className="text-xs text-muted-foreground">por persona</div>
-                <div className="mt-2 rounded-lg bg-card/70 px-2.5 py-1 text-xs font-semibold text-foreground backdrop-blur transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                  Seleccionar →
+              <div className="md:border-l border-border/30 md:pl-6 flex flex-col items-center md:items-end mt-4 md:mt-0 w-full md:w-auto">
+                <p className="text-xs text-muted-foreground mb-1">Precio por persona</p>
+                <p className={cn("text-3xl font-bold mb-4", isFirst ? "text-primary" : "text-foreground")}>S/ {t.price}.00</p>
+                <div className={cn(
+                  "w-full md:w-auto px-6 py-3 rounded-xl font-bold text-sm text-center transition-all",
+                  isFirst
+                    ? "bg-primary text-primary-foreground shadow-lg active:scale-95"
+                    : "border-2 border-primary text-primary hover:bg-primary/5",
+                )}>
+                  Seleccionar
                 </div>
               </div>
             </button>
@@ -558,56 +642,57 @@ function TripsList({ origin, destination, date, onPick, onBack }: {
   );
 }
 
-/* ─── Seat Step ─────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════
+   SEAT STEP
+   ═══════════════════════════════════════════════════════════════════════ */
 function SeatStep({ trip, seats, selected, total, toggleSeat, onBack, onPay, user }: {
   trip: typeof tripsBase[number]; seats: Seat[]; selected: Seat[]; total: number;
   toggleSeat: (id: string) => void; onBack: () => void; onPay: () => void;
   user: ReturnType<typeof useAuth>["user"];
 }) {
-  const isClient = user?.role === "cliente";
+  const isWrongRole = user && user.role !== "cliente";
   const s = getTripStyle(trip.type);
   const Icon = s.icon;
   return (
-    <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_400px] items-start">
       <div>
-        <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground">← Volver a viajes</button>
-        <h2 className="mt-1 text-2xl font-bold text-foreground">Elige tu asiento</h2>
-        <p className="text-sm text-muted-foreground">Selección libre · toca para reservar</p>
-        <div className="mt-5">
-          <SeatMap seats={seats} onSelect={toggleSeat} variant="client" />
-        </div>
+        <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground mb-2">← Volver a viajes</button>
+        <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">Selecciona tus asientos</h2>
+        <p className="text-sm text-muted-foreground mb-6">Selección libre · toca para reservar</p>
+        <SeatMap seats={seats} onSelect={toggleSeat} variant="client" />
       </div>
-      <aside className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)] lg:sticky lg:top-24 lg:h-fit">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Tu reserva</h3>
+
+      <aside className="rounded-[24px] border border-border/20 bg-card p-6 sm:p-8 shadow-[var(--shadow-card)] lg:sticky lg:top-28 lg:h-fit">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Tu reserva</h3>
           <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.chip)}>
             <Icon className="h-3 w-3" /> {s.label}
           </span>
         </div>
-        <div className="mt-4 space-y-2 text-sm">
+        <div className="space-y-3 text-sm">
           <Row k="Viaje"       v={`${trip.time} · ${trip.type}`} />
           <Row k="Asientos"    v={selected.length ? selected.map((s) => s.id).join(", ") : "—"} />
           <Row k="Precio unit." v={`S/ ${trip.price}`} />
         </div>
-        <div className="my-4 h-px bg-border" />
+        <div className="my-5 h-px bg-border" />
         <div className="flex items-baseline justify-between">
           <span className="text-sm text-muted-foreground">Total</span>
-          <span className="text-3xl font-bold text-foreground">S/ {total}</span>
+          <span className="text-3xl font-bold text-primary">S/ {total}</span>
         </div>
 
-        {!isClient && selected.length > 0 && (
+        {isWrongRole && selected.length > 0 && (
           <div className="mt-4 flex items-start gap-2 rounded-xl border border-[var(--warning)]/40 bg-[var(--warning)]/15 p-3 text-xs text-[var(--warning-foreground)]">
             <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-            <span>Para pagar necesitas iniciar sesión como <strong>cliente</strong>.</span>
+            <span>Tu cuenta de <strong>{user!.role}</strong> no puede comprar pasajes.</span>
           </div>
         )}
 
         <button
           disabled={!selected.length}
           onClick={onPay}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[image:var(--gradient-primary)] py-3 font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-elegant)] disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
         >
-          <CreditCard className="h-4 w-4" /> Pagar S/ {total}
+          <CreditCard className="h-4 w-4" /> Continuar al pago
         </button>
       </aside>
     </div>
@@ -623,25 +708,22 @@ function Row({ k, v }: { k: string; v: string }) {
   );
 }
 
-/* ─── Auth Block Modal ──────────────────────────────────────────────── */
+/* ─── Auth Block Modal (solo para roles incorrectos) ─────────────── */
 function AuthBlockModal({ onClose, onLogin, user }: {
   onClose: () => void; onLogin: () => void; user: ReturnType<typeof useAuth>["user"];
 }) {
-  const wrongRole = user && user.role !== "cliente";
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-4 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)]">
+      <div className="w-full max-w-md rounded-[24px] border border-border bg-card p-6 shadow-[var(--shadow-elegant)]">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${wrongRole ? "bg-destructive/15 text-destructive" : "bg-secondary text-primary"}`}>
-              {wrongRole ? <AlertCircle className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-destructive/15 text-destructive">
+              <AlertCircle className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-foreground">{wrongRole ? "Cuenta no permitida" : "Inicia sesión para pagar"}</h3>
+              <h3 className="text-lg font-bold text-foreground">Cuenta no permitida</h3>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {wrongRole
-                  ? `Tu cuenta de ${user!.role} no puede comprar pasajes.`
-                  : "Solo los clientes registrados pueden completar la compra. 🌿"}
+                Tu cuenta de <strong>{user?.role}</strong> no puede comprar pasajes. Necesitas una cuenta de <strong>cliente</strong>.
               </p>
             </div>
           </div>
@@ -650,40 +732,58 @@ function AuthBlockModal({ onClose, onLogin, user }: {
           </button>
         </div>
         <div className="mt-6 space-y-2">
-          <button onClick={onLogin} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[image:var(--gradient-primary)] py-3 font-semibold text-primary-foreground shadow-[var(--shadow-soft)]">
-            <LogIn className="h-4 w-4" /> {wrongRole ? "Cambiar de cuenta" : "Iniciar sesión"}
+          <button onClick={onLogin} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-primary-foreground shadow-lg">
+            <LogIn className="h-4 w-4" /> Cambiar de cuenta
           </button>
           <button onClick={onClose} className="w-full rounded-xl border border-border bg-background py-3 font-semibold text-foreground transition-colors hover:bg-muted">
             Seguir explorando
           </button>
         </div>
-        <p className="mt-4 text-center text-[11px] text-muted-foreground">
-          Demo: <code className="rounded bg-muted px-1.5 py-0.5 font-mono">cliente@jaysi.com</code> · <code className="rounded bg-muted px-1.5 py-0.5 font-mono">demo</code>
-        </p>
       </div>
     </div>
   );
 }
 
-/* ─── Ticket ────────────────────────────────────────────────────────── */
-function Ticket({ selected, trip, origin, destination, date, passengers, onNew, user }: {
+/* ═══════════════════════════════════════════════════════════════════════
+   TICKET RESULT — with optional guest registration
+   ═══════════════════════════════════════════════════════════════════════ */
+function TicketResult({
+  selected, trip, origin, destination, date, passengers, onNew, user, guestEmail,
+}: {
   selected: Seat[]; trip: typeof tripsBase[number]; origin: string; destination: string; date: Date;
   passengers?: { dni: string; name: string }[];
-  onNew: () => void; user: NonNullable<ReturnType<typeof useAuth>["user"]>;
+  onNew: () => void;
+  user: ReturnType<typeof useAuth>["user"];
+  guestEmail: string;
 }) {
   const dateLabel = format(date, "d MMM yyyy", { locale: es });
   const s = getTripStyle(trip.type);
   const Icon = s.icon;
+
+  const [regPassword, setRegPassword] = useState("");
+  const [regError, setRegError] = useState("");
+  const [regSuccess, setRegSuccess] = useState(false);
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegError("");
+    const firstName = passengers?.[0]?.name || "Invitado Kuntur";
+    const res = registerAccount({ name: firstName, email: guestEmail, password: regPassword, role: "cliente" });
+    if (!res.ok) { setRegError(res.error); return; }
+    storeUser(res.user);
+    setRegSuccess(true);
+  };
+
   return (
-    <div className="mt-6 flex flex-col items-center">
+    <div className="flex flex-col items-center">
       <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-primary">
-        <ShieldCheck className="h-3.5 w-3.5" /> Pago confirmado · {user.name}
+        <ShieldCheck className="h-3.5 w-3.5" /> Pago confirmado · {user ? user.name : (passengers?.[0]?.name || "Invitado")}
       </div>
-      <div className="w-full max-w-md overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-elegant)]">
+      <div className="w-full max-w-md overflow-hidden rounded-[24px] border border-border bg-card shadow-[var(--shadow-elegant)]">
         <div className="p-6 text-white" style={{ background: s.gradient }}>
           <div className="flex items-center justify-between text-xs uppercase tracking-widest opacity-90">
             <span className="inline-flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" /> {s.label}</span>
-            <span>JAYSI · 2026</span>
+            <span>KUNTUR · 2026</span>
           </div>
           <div className="mt-4 flex items-baseline justify-between">
             <div>
@@ -731,6 +831,52 @@ function Ticket({ selected, trip, origin, destination, date, passengers, onNew, 
           </div>
         </div>
       </div>
+
+      {/* Guest Registration */}
+      {!user && guestEmail && (
+        <div className="mt-6 w-full max-w-md bg-card border border-border/50 rounded-[24px] p-6 shadow-[var(--shadow-elegant)] transition-all">
+          {regSuccess ? (
+            <div className="text-center space-y-2 py-2">
+              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-primary">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <h4 className="text-sm font-bold text-foreground">¡Cuenta creada con éxito!</h4>
+              <p className="text-xs text-muted-foreground">
+                Te has registrado e iniciado sesión como <strong>{passengers?.[0]?.name || "Cliente"}</strong>. Podrás ver tus boletos y comprar más rápido en tus próximos viajes.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Sparkles className="h-5 w-5 animate-pulse" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground">¿Quieres guardar tu cuenta?</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Crea una contraseña para tu correo <strong className="text-foreground">{guestEmail}</strong> y regístrate al instante.
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    required type="password" placeholder="Crea una contraseña (mín. 4 caracteres)"
+                    value={regPassword} onChange={(e) => setRegPassword(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                  />
+                </div>
+                {regError && <div className="text-xs font-semibold text-destructive">{regError}</div>}
+              </div>
+              <button type="submit" className="w-full py-3 bg-primary text-primary-foreground font-bold text-sm rounded-xl shadow-lg hover:brightness-110 transition-all active:scale-[0.98]">
+                Guardar mi cuenta y acceder
+              </button>
+            </form>
+          )}
+        </div>
+      )}
+
       <button onClick={onNew} className="mt-6 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
         Comprar otro pasaje
       </button>
@@ -747,59 +893,82 @@ function MiniTicket({ k, v }: { k: string; v: string }) {
   );
 }
 
-/* ─── Passengers Step ───────────────────────────────────────────────── */
-function PassengersStep({ selected, passengers, setPassengers, total, onBack, onNext }: {
+/* ═══════════════════════════════════════════════════════════════════════
+   PASSENGERS STEP — with guest email collection
+   ═══════════════════════════════════════════════════════════════════════ */
+function PassengersStep({
+  selected, passengers, setPassengers, total, onBack, onNext, user, guestEmail, setGuestEmail,
+}: {
   selected: Seat[]; passengers: { dni: string; name: string }[];
   setPassengers: (p: { dni: string; name: string }[]) => void;
   total: number; onBack: () => void; onNext: () => void;
+  user: ReturnType<typeof useAuth>["user"];
+  guestEmail: string; setGuestEmail: (email: string) => void;
 }) {
   const update = (i: number, patch: Partial<{ dni: string; name: string }>) => {
     setPassengers(passengers.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
   };
-  const valid = passengers.every((p) => /^\d{8}$/.test(p.dni) && p.name.trim().length >= 3);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailValid = user ? true : emailRegex.test(guestEmail);
+  const valid = passengers.every((p) => /^\d{8}$/.test(p.dni) && p.name.trim().length >= 3) && emailValid;
 
   return (
-    <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <div>
-        <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground">← Volver a asientos</button>
-        <h2 className="mt-1 text-2xl font-bold text-foreground">Datos de los pasajeros</h2>
-        <p className="text-sm text-muted-foreground">Necesitamos esta información por requerimiento de transporte.</p>
-        <div className="mt-5 space-y-4">
+        <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground mb-2">← Volver a asientos</button>
+        <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">Datos de los pasajeros</h2>
+        <p className="text-sm text-muted-foreground mb-6">Necesitamos esta información por requerimiento de transporte.</p>
+        <div className="space-y-4">
+          {!user && (
+            <div className="rounded-[24px] border border-primary/20 bg-primary/5 p-6 shadow-[var(--shadow-card)]">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <Mail className="h-4 w-4" />
+                </div>
+                <span className="text-sm font-bold text-foreground">Contacto para envío de pasajes</span>
+              </div>
+              <FieldInput icon={Mail} label="Correo electrónico" placeholder="ejemplo@correo.com" value={guestEmail} onChange={setGuestEmail} />
+              <p className="mt-2 text-[11px] text-muted-foreground">Enviaremos tus boletos en PDF y tu código de abordaje QR a este correo.</p>
+            </div>
+          )}
+
           {passengers.map((p, i) => (
-            <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="inline-flex items-center gap-2 text-sm font-bold text-foreground">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">{i + 1}</span>
-                  Pasajero · Asiento {selected[i]?.id}
-                </span>
+            <div key={i} className="rounded-[24px] border border-border/20 bg-card p-6 shadow-[var(--shadow-card)]">
+              <div className="mb-4 flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{i + 1}</span>
+                <span className="text-sm font-bold text-foreground">Pasajero · Asiento {selected[i]?.id}</span>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <FieldInput icon={IdCard}   label="DNI"            placeholder="12345678"   maxLength={8} value={p.dni}  onChange={(v) => update(i, { dni:  v.replace(/\D/g, "").slice(0, 8) })} />
-                <FieldInput icon={UserIcon} label="Nombre completo" placeholder="María López"             value={p.name} onChange={(v) => update(i, { name: v })} />
+                <FieldInput icon={IdCard} label="DNI" placeholder="12345678" maxLength={8} value={p.dni} onChange={(v) => update(i, { dni: v.replace(/\D/g, "").slice(0, 8) })} />
+                <FieldInput icon={UserIcon} label="Nombre completo" placeholder="María López" value={p.name} onChange={(v) => update(i, { name: v })} />
               </div>
             </div>
           ))}
         </div>
       </div>
-      <aside className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)] lg:sticky lg:top-24 lg:h-fit">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Resumen</h3>
-        <div className="mt-4 space-y-2 text-sm">
-          <Row k="Asientos"  v={selected.map((s) => s.id).join(", ")} />
+
+      <aside className="rounded-[24px] border border-border/20 bg-card p-6 sm:p-8 shadow-[var(--shadow-card)] lg:sticky lg:top-28 lg:h-fit">
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Resumen</h3>
+        <div className="mt-4 space-y-3 text-sm">
+          <Row k="Asientos" v={selected.map((s) => s.id).join(", ")} />
           <Row k="Pasajeros" v={passengers.length.toString()} />
         </div>
-        <div className="my-4 h-px bg-border" />
+        <div className="my-5 h-px bg-border" />
         <div className="flex items-baseline justify-between">
           <span className="text-sm text-muted-foreground">Total</span>
-          <span className="text-3xl font-bold text-foreground">S/ {total}</span>
+          <span className="text-3xl font-bold text-primary">S/ {total}</span>
         </div>
         <button
-          disabled={!valid}
-          onClick={onNext}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[image:var(--gradient-primary)] py-3 font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-elegant)] disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={!valid} onClick={onNext}
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
         >
           Continuar al pago <ArrowRight className="h-4 w-4" />
         </button>
-        {!valid && <p className="mt-2 text-center text-[11px] text-muted-foreground">Completa DNI (8 dígitos) y nombre.</p>}
+        {!valid && (
+          <p className="mt-2 text-center text-[11px] text-muted-foreground">
+            {!emailValid ? "Introduce un correo válido. " : ""}Completa DNI (8 dígitos) y nombre de cada pasajero.
+          </p>
+        )}
       </aside>
     </div>
   );
@@ -809,8 +978,8 @@ function FieldInput({ icon: Icon, label, value, onChange, placeholder, maxLength
   icon: any; label: string; value: string; onChange: (v: string) => void; placeholder?: string; maxLength?: number;
 }) {
   return (
-    <label className="flex flex-col gap-1 rounded-xl border border-border bg-background px-3.5 py-2.5 transition-colors focus-within:border-primary">
-      <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+    <label className="flex flex-col gap-1 rounded-xl border border-border bg-background px-4 py-3 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+      <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         <Icon className="h-3 w-3" /> {label}
       </span>
       <input
@@ -821,7 +990,9 @@ function FieldInput({ icon: Icon, label, value, onChange, placeholder, maxLength
   );
 }
 
-/* ─── Payment Step ──────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════
+   PAYMENT STEP — Stitch-style with sidebar summary
+   ═══════════════════════════════════════════════════════════════════════ */
 function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
   total: number;
   payment: { method: "card" | "yape" | "plin"; card: string; exp: string; cvv: string };
@@ -838,24 +1009,27 @@ function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
     (payment.card.replace(/\s/g, "").length >= 13 && /^\d{2}\/\d{2}$/.test(payment.exp) && /^\d{3,4}$/.test(payment.cvv));
 
   return (
-    <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <div>
-        <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground">← Volver a datos</button>
-        <h2 className="mt-1 text-2xl font-bold text-foreground">Método de pago</h2>
-        <p className="text-sm text-muted-foreground">Pago simulado · ningún cargo real.</p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground mb-2">← Volver a datos</button>
+        <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">Método de pago</h2>
+        <p className="text-sm text-muted-foreground mb-6">Pago simulado · ningún cargo real.</p>
+
+        {/* Method Tabs */}
+        <div className="grid gap-3 sm:grid-cols-3 mb-6">
           {methods.map((m) => (
             <button
               key={m.id}
               onClick={() => setPayment({ ...payment, method: m.id })}
-              className={`rounded-2xl border-2 p-4 text-left transition-all ${
+              className={cn(
+                "rounded-[20px] border-2 p-5 text-left transition-all",
                 payment.method === m.id
-                  ? "border-primary bg-secondary shadow-[var(--shadow-soft)]"
-                  : "border-border bg-card hover:border-primary/40"
-              }`}
+                  ? "border-primary bg-primary/5 shadow-[var(--shadow-soft)]"
+                  : "border-border bg-card hover:border-primary/40",
+              )}
             >
               <div className="flex items-center gap-2 text-sm font-bold text-foreground">
-                <CreditCard className="h-4 w-4 text-primary" /> {m.label}
+                <CreditCard className="h-5 w-5 text-primary" /> {m.label}
               </div>
               <div className="mt-1 text-xs text-muted-foreground">{m.desc}</div>
             </button>
@@ -863,7 +1037,7 @@ function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
         </div>
 
         {payment.method === "card" && (
-          <div className="mt-5 rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
+          <div className="rounded-[24px] border border-border/20 bg-card p-6 shadow-[var(--shadow-card)]">
             <FieldInput
               icon={CreditCard} label="Número de tarjeta" placeholder="4242 4242 4242 4242"
               value={payment.card}
@@ -881,38 +1055,63 @@ function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
                 onChange={(v) => setPayment({ ...payment, cvv: v.replace(/\D/g, "").slice(0, 4) })}
               />
             </div>
-            <div className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <Lock className="h-3 w-3" /> Conexión segura · datos cifrados
+            <div className="mt-4 flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/20 p-3 text-xs text-primary font-medium">
+              <Lock className="h-4 w-4" /> Pago 100% seguro · datos cifrados
             </div>
           </div>
         )}
 
         {payment.method !== "card" && (
-          <div className="mt-5 rounded-2xl border border-border bg-card p-8 text-center shadow-[var(--shadow-card)]">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-primary">
-              <QrCode className="h-7 w-7" />
+          <div className="rounded-[24px] border border-border/20 bg-card p-8 text-center shadow-[var(--shadow-card)]">
+            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-primary">
+              <QrCode className="h-8 w-8" />
             </div>
-            <div className="font-bold text-foreground">Escanea con {payment.method === "yape" ? "Yape" : "Plin"}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Confirma el pago de S/ {total} desde tu app.</div>
+            <div className="text-lg font-bold text-foreground">Escanea con {payment.method === "yape" ? "Yape" : "Plin"}</div>
+            <div className="mt-1 text-sm text-muted-foreground">Confirma el pago de S/ {total} desde tu app.</div>
           </div>
         )}
       </div>
 
-      <aside className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)] lg:sticky lg:top-24 lg:h-fit">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">A pagar</h3>
-        <div className="mt-4 flex items-baseline justify-between">
+      <aside className="rounded-[24px] border border-border/20 bg-card p-6 sm:p-8 shadow-[var(--shadow-card)] lg:sticky lg:top-28 lg:h-fit">
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">A pagar</h3>
+        <div className="my-5 h-px bg-border" />
+        <div className="flex items-baseline justify-between">
           <span className="text-sm text-muted-foreground">Total</span>
-          <span className="text-3xl font-bold text-foreground">S/ {total}</span>
+          <span className="text-3xl font-bold text-primary">S/ {total}</span>
         </div>
         <button
-          disabled={!cardOk}
-          onClick={onPay}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[image:var(--gradient-primary)] py-3 font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-elegant)] disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={!cardOk} onClick={onPay}
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
         >
           <CheckCircle2 className="h-4 w-4" /> Confirmar pago
         </button>
         <p className="mt-3 text-center text-[11px] text-muted-foreground">Pago ficticio para demostración.</p>
       </aside>
     </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════════════════════ */
+function Footer() {
+  return (
+    <footer className="bg-muted border-t border-border">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16 py-10 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="flex flex-col gap-2 items-center md:items-start">
+          <span className="text-xl font-bold text-foreground">KUNTUR</span>
+          <p className="text-xs text-muted-foreground max-w-sm text-center md:text-left">
+            © 2026 KUNTUR. Todos los derechos reservados. Movilidad premium con puntualidad garantizada.
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-6 text-sm">
+          {["Legal", "Privacidad", "Soporte", "Términos", "Contacto"].map((link) => (
+            <a key={link} href="#" className="text-muted-foreground hover:text-primary transition-colors hover:underline decoration-primary decoration-2 underline-offset-4">
+              {link}
+            </a>
+          ))}
+        </div>
+      </div>
+    </footer>
   );
 }

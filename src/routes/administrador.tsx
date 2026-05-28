@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth";
 export const Route = createFileRoute("/administrador")({
   head: () => ({
     meta: [
-      { title: "Administrador · JAYSI" },
+      { title: "Administrador · KUNTUR" },
       { name: "description", content: "Dashboard ejecutivo: KPIs, recaudación, ocupación y auditoría." },
     ],
   }),

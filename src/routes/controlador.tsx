@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth";
 export const Route = createFileRoute("/controlador")({
   head: () => ({
     meta: [
-      { title: "Controlador · JAYSI" },
+      { title: "Controlador · KUNTUR" },
       { name: "description", content: "Monitoreo en tiempo real de la flota y los despachos del día." },
     ],
   }),

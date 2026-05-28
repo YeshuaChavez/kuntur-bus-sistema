@@ -12,7 +12,7 @@ import { useAuth } from "@/lib/auth";
 export const Route = createFileRoute("/auxiliar")({
   head: () => ({
     meta: [
-      { title: "Auxiliar · JAYSI" },
+      { title: "Auxiliar · KUNTUR" },
       { name: "description", content: "Validación de tickets QR y mapa operativo de abordaje." },
     ],
   }),

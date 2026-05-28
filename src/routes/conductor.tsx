@@ -13,7 +13,7 @@ import { TripPicker, UpcomingTrips } from "./auxiliar";
 export const Route = createFileRoute("/conductor")({
   head: () => ({
     meta: [
-      { title: "Conductor · JAYSI" },
+      { title: "Conductor · KUNTUR" },
       { name: "description", content: "Reporte de ruta minimalista con botón S.O.S de emergencia." },
     ],
   }),
