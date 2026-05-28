@@ -236,11 +236,7 @@ function Hero(props: {
 
     const startAutoplay = () => {
       intervalId = setInterval(() => {
-        if (carouselApi.canScrollNext()) {
-          carouselApi.scrollNext();
-        } else {
-          carouselApi.scrollTo(0);
-        }
+        carouselApi.scrollNext();
       }, 4000);
     };
 
@@ -333,7 +329,7 @@ function Hero(props: {
       {/* Destinos */}
       <section id="destinos" className="bg-background pb-16 pt-36">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16">
-          <Carousel opts={{ align: "start" }} setApi={setCarouselApi} className="w-full">
+          <Carousel opts={{ align: "start", loop: true }} setApi={setCarouselApi} className="w-full">
             <div className="mb-8 flex items-center justify-between gap-4">
               <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">Explora destinos inolvidables</h2>
               <div className="flex items-center gap-2">
