@@ -323,10 +323,10 @@ function Hero(props: {
         </div>
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0.5)_0%,rgba(0,0,0,0.15)_60%,rgba(247,250,248,0.4)_85%,rgba(247,250,248,1)_100%)]" />
         <div className="relative z-10 mx-auto max-w-7xl px-5 text-center sm:px-8 lg:px-16">
-          <h1 className="mx-auto max-w-4xl text-4xl font-bold leading-tight tracking-tight text-white drop-shadow-lg sm:text-5xl lg:text-[48px]">
-            Viaja con el confort y la seguridad de <span className="text-[oklch(0.78_0.13_160)]">KUNTUR</span>
+          <h1 className="mx-auto max-w-4xl text-4xl font-extrabold leading-tight tracking-tight text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.6)] sm:text-5xl lg:text-[54px] lg:leading-[1.15]">
+            Viaja con el confort y la seguridad de <span className="text-[oklch(0.78_0.13_160)] font-black">KUNTUR</span>
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-white/90 drop-shadow-md">
+          <p className="mx-auto mt-6 max-w-2xl text-lg sm:text-xl font-normal leading-relaxed text-white/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
             Reserva tus pasajes hacia los destinos m&aacute;s emblem&aacute;ticos del Per&uacute; con un servicio premium dise&ntilde;ado para tu tranquilidad.
           </p>
         </div>
@@ -404,9 +404,12 @@ function Hero(props: {
       <section id="destinos" className="bg-background pb-16 pt-36">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16">
           <Carousel opts={{ align: "start", loop: true }} setApi={setCarouselApi} className="w-full">
-            <div className="mb-8 flex items-center justify-between gap-4">
-              <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">Explora destinos inolvidables</h2>
-              <div className="flex items-center gap-2">
+            <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest text-primary mb-1.5 block">Rutas destacadas</span>
+                <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">Explora destinos inolvidables</h2>
+              </div>
+              <div className="flex items-center gap-2 self-end sm:self-auto">
                 <CarouselPrevious className="static translate-y-0 left-auto top-auto" />
                 <CarouselNext className="static translate-y-0 right-auto top-auto" />
               </div>
@@ -474,6 +477,49 @@ function Hero(props: {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Métodos de Pago */}
+      <section className="border-t border-border/30 bg-background py-16">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16 text-center">
+          <div className="mb-10">
+            <span className="text-xs font-bold uppercase tracking-widest text-primary mb-1.5 block">Pago 100% Seguro</span>
+            <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">Métodos de pago aceptados</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Elige el método que prefieras para comprar tu pasaje de forma segura y rápida.</p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
+            {/* Card Yape */}
+            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-[#742484]/10 border border-[#742484]/20 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-[#742484]/15 cursor-default">
+              <span className="text-[#742484] font-black text-xl tracking-tight">yape</span>
+            </div>
+            {/* Card Plin */}
+            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-[#00D1C4]/10 border border-[#00D1C4]/20 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-[#00D1C4]/15 cursor-default">
+              <span className="text-[#00B4A9] font-black text-xl tracking-tight">plin</span>
+            </div>
+            {/* Visa */}
+            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-[#1A1F71]/10 border border-[#1A1F71]/20 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-[#1A1F71]/15 cursor-default">
+              <span className="text-[#1A1F71] font-black text-xl italic tracking-tight">VISA</span>
+            </div>
+            {/* Mastercard */}
+            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-card border border-border/60 transition-all hover:scale-105 shadow-sm hover:shadow-md p-2 cursor-default">
+              <div className="flex items-center gap-1.5">
+                <div className="flex -space-x-2">
+                  <div className="h-6 w-6 rounded-full bg-[#EB001B] opacity-90" />
+                  <div className="h-6 w-6 rounded-full bg-[#F79E1B] opacity-90" />
+                </div>
+                <span className="text-foreground font-bold text-xs tracking-tight">mastercard</span>
+              </div>
+            </div>
+            {/* American Express */}
+            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-[#0070CD]/10 border border-[#0070CD]/20 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-[#0070CD]/15 cursor-default">
+              <span className="text-[#0070CD] font-bold text-sm tracking-tighter">AMEX</span>
+            </div>
+            {/* Diners Club */}
+            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-[#004B87]/10 border border-[#004B87]/20 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-[#004B87]/15 cursor-default">
+              <span className="text-[#004B87] font-bold text-xs tracking-wider">Diners Club</span>
+            </div>
           </div>
         </div>
       </section>
