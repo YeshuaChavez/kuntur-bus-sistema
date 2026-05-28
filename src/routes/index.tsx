@@ -332,17 +332,17 @@ function Hero(props: {
         </div>
         {/* Floating Search Panel */}
         <div className="relative z-20 mx-auto mt-10 -mb-24 w-full max-w-[1150px] px-5 sm:px-8 lg:px-12">
-          <div className="rounded-[28px] md:rounded-full border border-white/20 bg-white/95 p-3.5 pl-6 md:pl-8 shadow-[0px_25px_60px_rgba(0,0,0,0.2)] backdrop-blur-xl dark:border-white/10 dark:bg-card/90">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center">
+          <div className="rounded-[28px] md:rounded-full border border-white/20 bg-white/95 p-2 pl-6 md:pl-8 md:pr-2 shadow-[0px_25px_60px_rgba(0,0,0,0.2)] backdrop-blur-xl dark:border-white/10 dark:bg-card/90">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-3 lg:gap-5 w-full justify-between">
               
               {/* Title label */}
-              <div className="flex items-center gap-2 pr-2">
-                <span className="text-sm font-extrabold uppercase tracking-wider text-muted-foreground whitespace-nowrap md:text-base md:text-foreground">Compra tu pasaje:</span>
+              <div className="hidden lg:flex items-center gap-2 pr-2">
+                <span className="text-sm font-extrabold uppercase tracking-wider text-muted-foreground whitespace-nowrap lg:text-foreground">Compra tu pasaje:</span>
               </div>
-              <div className="hidden h-10 w-px bg-border/60 md:block" />
+              <div className="hidden lg:block h-10 w-px bg-border/60" />
 
               {/* Origen */}
-              <div className="relative flex-1 min-w-[140px] pl-2 md:pl-0">
+              <div className="relative flex-1 min-w-[110px] pl-2 md:pl-0">
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Origen:</label>
                 <div className="relative flex items-center">
                   <select value={props.origin} onChange={(e) => props.setOrigin(e.target.value)} className="w-full appearance-none bg-transparent text-sm font-extrabold text-foreground outline-none cursor-pointer pr-6 py-1 border-0 focus:ring-0 focus:outline-none transition-colors hover:text-primary">
@@ -355,7 +355,7 @@ function Hero(props: {
               <div className="hidden h-10 w-px bg-border/60 md:block" />
 
               {/* Destino */}
-              <div className="relative flex-1 min-w-[140px]">
+              <div className="relative flex-1 min-w-[110px]">
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Destino:</label>
                 <div className="relative flex items-center">
                   <select value={props.destination} onChange={(e) => props.setDestination(e.target.value)} className="w-full appearance-none bg-transparent text-sm font-extrabold text-foreground outline-none cursor-pointer pr-6 py-1 border-0 focus:ring-0 focus:outline-none transition-colors hover:text-primary">
@@ -368,7 +368,7 @@ function Hero(props: {
               <div className="hidden h-10 w-px bg-border/60 md:block" />
 
               {/* Fecha salida */}
-              <div className="relative flex-1 min-w-[150px]">
+              <div className="relative flex-1 min-w-[125px]">
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Fecha salida:</label>
                 <div className="relative flex items-center">
                   <DatePickerField value={props.date} onChange={props.setDate} borderless />
@@ -378,7 +378,7 @@ function Hero(props: {
               <div className="hidden h-10 w-px bg-border/60 md:block" />
 
               {/* Pasajeros */}
-              <div className="relative flex-1 min-w-[130px]">
+              <div className="relative flex-1 min-w-[115px]">
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">N° pasajeros:</label>
                 <div className="relative flex items-center">
                   <select value={props.pax} onChange={(e) => props.setPax(Number(e.target.value))} className="w-full appearance-none bg-transparent text-sm font-extrabold text-foreground outline-none cursor-pointer pr-6 py-1 border-0 focus:ring-0 focus:outline-none transition-colors hover:text-primary">
@@ -389,8 +389,8 @@ function Hero(props: {
               </div>
               
               {/* Buscar Button */}
-              <div className="md:pl-4 w-full md:w-auto">
-                <button onClick={props.onSearch} className="w-full rounded-full bg-primary hover:bg-primary/90 active:scale-95 px-10 py-4 text-sm font-extrabold uppercase tracking-wider text-primary-foreground shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30 md:w-auto">
+              <div className="md:pl-2 w-full md:w-auto">
+                <button onClick={props.onSearch} className="w-full rounded-full bg-primary hover:bg-primary/90 active:scale-95 px-8 py-3.5 text-sm font-extrabold uppercase tracking-wider text-primary-foreground shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30 md:w-auto">
                   BUSCAR
                 </button>
               </div>
