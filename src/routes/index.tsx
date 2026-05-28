@@ -2,22 +2,31 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { SeatMap, type Seat } from "@/components/jaysi/SeatMap";
 import { Logo } from "@/components/jaysi/Logo";
-import { useAuth, roleHome } from "@/lib/auth";
+import { useAuth, roleHome, registerAccount, storeUser } from "@/lib/auth";
 import {
   ArrowRight, Calendar, MapPin, Search, Users, X, QrCode, Clock, Bus, Leaf,
   LogIn, LogOut, ShieldCheck, AlertCircle, ArrowLeftRight, Sparkles, CreditCard, ChevronRight,
   IdCard, User as UserIcon, Lock, CheckCircle2, Crown, Moon, BedDouble, Star, SlidersHorizontal,
+  Mail, ArrowUpDown, Headphones, Globe, Ticket as TicketIcon,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "JAYSI — Compra tu pasaje en segundos" },
+      { title: "KUNTUR — Compra tu pasaje en segundos" },
       { name: "description", content: "Busca rutas, elige tu asiento en tiempo real y obtén tu boleto digital con QR." },
     ],
   }),
@@ -33,65 +42,45 @@ const tripsBase = [
   { id: "4", time: "22:30", arr: "03:45", price: 36, type: "Cama nocturna", seats: 11, dur: "5h 15m" },
 ];
 
-/* ─── Trip styles — visually distinct per category ─────────────────── */
 export const tripStyles: Record<string, {
   icon: any; label: string; gradient: string; ring: string; chip: string; accent: string;
   tagline: string; bgCard: string; borderCard: string; description: string;
 }> = {
   Premium: {
-    icon: Crown,
-    label: "Premium",
+    icon: Crown, label: "Premium",
     gradient: "linear-gradient(135deg, oklch(0.78 0.14 85), oklch(0.65 0.18 45))",
-    ring: "ring-2 ring-amber-300/50",
-    chip: "bg-amber-100 text-amber-800 border border-amber-300",
-    accent: "text-amber-600",
-    tagline: "VIP · snack incluido",
-    bgCard: "bg-gradient-to-br from-amber-50 to-orange-50",
+    ring: "ring-2 ring-amber-300/50", chip: "bg-amber-100 text-amber-800 border border-amber-300",
+    accent: "text-amber-600", tagline: "VIP", bgCard: "bg-gradient-to-br from-amber-50 to-orange-50",
     borderCard: "border-amber-200 hover:border-amber-400",
-    description: "Asiento VIP reclinable · snack · almohada · cargador USB",
+    description: "Asiento VIP reclinable \u00b7 snack \u00b7 almohada \u00b7 cargador USB",
   },
   Ejecutivo: {
-    icon: Star,
-    label: "Ejecutivo",
+    icon: Star, label: "Ejecutivo",
     gradient: "linear-gradient(135deg, oklch(0.55 0.14 230), oklch(0.45 0.16 255))",
-    ring: "ring-1 ring-blue-300/50",
-    chip: "bg-blue-100 text-blue-800 border border-blue-300",
-    accent: "text-blue-600",
-    tagline: "Asiento amplio · WiFi",
-    bgCard: "bg-gradient-to-br from-blue-50 to-indigo-50",
+    ring: "ring-1 ring-blue-300/50", chip: "bg-blue-100 text-blue-800 border border-blue-300",
+    accent: "text-blue-600", tagline: "Asiento amplio", bgCard: "bg-gradient-to-br from-blue-50 to-indigo-50",
     borderCard: "border-blue-200 hover:border-blue-400",
-    description: "Asiento ejecutivo reclinable · WiFi a bordo · toma USB",
+    description: "Asiento ejecutivo reclinable \u00b7 WiFi a bordo \u00b7 toma USB",
   },
   Cama: {
-    icon: BedDouble,
-    label: "Cama",
+    icon: BedDouble, label: "Cama",
     gradient: "linear-gradient(135deg, oklch(0.58 0.13 155), oklch(0.46 0.14 165))",
-    ring: "ring-1 ring-emerald-300/50",
-    chip: "bg-emerald-100 text-emerald-800 border border-emerald-300",
-    accent: "text-emerald-600",
-    tagline: "Reclinable 160°",
-    bgCard: "bg-gradient-to-br from-emerald-50 to-teal-50",
+    ring: "ring-1 ring-emerald-300/50", chip: "bg-emerald-100 text-emerald-800 border border-emerald-300",
+    accent: "text-emerald-600", tagline: "Reclinable 160\u00b0", bgCard: "bg-gradient-to-br from-emerald-50 to-teal-50",
     borderCard: "border-emerald-200 hover:border-emerald-400",
-    description: "Semi-cama 160° · TV individual · frazada · almohada",
+    description: "Semi-cama 160\u00b0 \u00b7 TV individual \u00b7 frazada \u00b7 almohada",
   },
   "Cama nocturna": {
-    icon: Moon,
-    label: "Cama nocturna",
+    icon: Moon, label: "Cama nocturna",
     gradient: "linear-gradient(135deg, oklch(0.42 0.12 280), oklch(0.32 0.1 270))",
-    ring: "ring-1 ring-violet-400/50",
-    chip: "bg-violet-100 text-violet-800 border border-violet-300",
-    accent: "text-violet-700",
-    tagline: "Reclinable 180° · manta",
-    bgCard: "bg-gradient-to-br from-violet-50 to-purple-50",
+    ring: "ring-1 ring-violet-400/50", chip: "bg-violet-100 text-violet-800 border border-violet-300",
+    accent: "text-violet-700", tagline: "Reclinable 180\u00b0", bgCard: "bg-gradient-to-br from-violet-50 to-purple-50",
     borderCard: "border-violet-200 hover:border-violet-400",
-    description: "Cama full 180° · kit de viaje · luz nocturna · snack",
+    description: "Cama full 180\u00b0 \u00b7 kit de viaje \u00b7 luz nocturna \u00b7 snack",
   },
 };
 
-function getTripStyle(type: string) {
-  return tripStyles[type] ?? tripStyles.Ejecutivo;
-}
-
+function getTripStyle(type: string) { return tripStyles[type] ?? tripStyles.Ejecutivo; }
 const ALL_CATEGORIES = ["Todos", "Ejecutivo", "Premium", "Cama", "Cama nocturna"];
 
 function makeSeats(): Seat[] {
@@ -106,449 +95,409 @@ function makeSeats(): Seat[] {
   return list;
 }
 
+/* ====== MAIN ====== */
 function HomeBooking() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  useEffect(() => { if (user && user.role !== "cliente") navigate({ to: roleHome(user.role) }); }, [user, navigate]);
+
+  const [activeSection, setActiveSection] = useState("inicio");
 
   useEffect(() => {
-    if (user && user.role !== "cliente") navigate({ to: roleHome(user.role) });
-  }, [user, navigate]);
+    const handleScroll = () => {
+      const scrollPos = window.scrollY + 250;
+      const destinosEl = document.getElementById("destinos");
+      const beneficiosEl = document.getElementById("beneficios");
 
-  const [origin, setOrigin]           = useState("Lima");
+      if (beneficiosEl && scrollPos >= beneficiosEl.offsetTop) {
+        setActiveSection("beneficios");
+      } else if (destinosEl && scrollPos >= destinosEl.offsetTop) {
+        setActiveSection("destinos");
+      } else {
+        setActiveSection("inicio");
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const [origin, setOrigin] = useState("Lima");
   const [destination, setDestination] = useState("Trujillo");
-  const [date, setDate]               = useState<Date>(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d; });
-  const [pax, setPax]                 = useState(1);
-
-  const [step, setStep]   = useState<"search" | "trips" | "seats" | "passengers" | "payment" | "ticket">("search");
-  const [tripId, setTripId]         = useState<string | null>(null);
-  const [seats, setSeats]           = useState<Seat[]>(makeSeats);
-  const [authBlock, setAuthBlock]   = useState(false);
+  const [date, setDate] = useState<Date>(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d; });
+  const [pax, setPax] = useState(1);
+  const [step, setStep] = useState<"search" | "trips" | "seats" | "passengers" | "payment" | "ticket">("search");
+  const [tripId, setTripId] = useState<string | null>(null);
+  const [seats, setSeats] = useState<Seat[]>(makeSeats);
+  const [authBlock, setAuthBlock] = useState(false);
   const [passengers, setPassengers] = useState<{ dni: string; name: string }[]>([]);
-  const [payment, setPayment]       = useState<{ method: "card" | "yape" | "plin"; card: string; exp: string; cvv: string }>({
-    method: "card", card: "", exp: "", cvv: "",
-  });
+  const [guestEmail, setGuestEmail] = useState("");
+  const [payment, setPayment] = useState<{ method: "card" | "yape" | "plin"; card: string; exp: string; cvv: string }>({ method: "card", card: "", exp: "", cvv: "" });
 
-  const trip     = useMemo(() => tripsBase.find((t) => t.id === tripId) ?? tripsBase[0], [tripId]);
+  const trip = useMemo(() => tripsBase.find((t) => t.id === tripId) ?? tripsBase[0], [tripId]);
   const selected = seats.filter((s) => s.status === "selected");
-  const total    = selected.length * trip.price;
+  const total = selected.length * trip.price;
+
+  useEffect(() => { setSeats((prev) => { let kept = 0; return prev.map((seat) => { if (seat.status !== "selected") return seat; kept += 1; return kept <= pax ? seat : { ...seat, status: "free" }; }); }); }, [pax]);
 
   const toggleSeat = (id: string) => {
-    setSeats((prev) => prev.map((s) =>
-      s.id === id && s.status !== "occupied"
-        ? { ...s, status: s.status === "selected" ? "free" : "selected" }
-        : s,
-    ));
+    setSeats((prev) => {
+      const target = prev.find((seat) => seat.id === id);
+      if (!target || target.status === "occupied") return prev;
+      if (target.status === "free" && prev.filter((seat) => seat.status === "selected").length >= pax) return prev;
+      return prev.map((seat) => seat.id === id ? { ...seat, status: seat.status === "selected" ? "free" : "selected" } : seat);
+    });
   };
 
   const swap = () => { setOrigin(destination); setDestination(origin); };
-
   const goPay = () => {
     if (!selected.length) return;
-    if (!user || user.role !== "cliente") { setAuthBlock(true); return; }
+    if (user && user.role !== "cliente") { setAuthBlock(true); return; }
     setPassengers(selected.map(() => ({ dni: "", name: "" })));
     setStep("passengers");
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <Header user={user} onLogout={logout} />
-
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[460px] opacity-60"
-        style={{ background: "var(--gradient-soft)" }}
-      />
-
-      <main className="relative mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6">
+      <Header user={user} onLogout={logout} activeSection={activeSection} setActiveSection={setActiveSection} />
+      <main>
         {step === "search" && (
-          <Hero
-            origin={origin} destination={destination} date={date} pax={pax}
+          <Hero origin={origin} destination={destination} date={date} pax={pax}
             setOrigin={setOrigin} setDestination={setDestination} setDate={setDate} setPax={setPax}
-            swap={swap} onSearch={() => setStep("trips")}
-          />
+            swap={swap} onSearch={() => setStep("trips")} />
         )}
-
-        {step !== "search" && <Stepper step={step} />}
-
-        {step === "trips" && (
-          <TripsList
-            origin={origin} destination={destination} date={date}
-            onPick={(id) => { setTripId(id); setStep("seats"); }}
-            onBack={() => setStep("search")}
-          />
-        )}
-
-        {step === "seats" && (
-          <SeatStep
-            trip={trip} seats={seats} selected={selected} total={total}
-            toggleSeat={toggleSeat} onBack={() => setStep("trips")} onPay={goPay}
-            user={user}
-          />
-        )}
-
-        {step === "passengers" && (
-          <PassengersStep
-            selected={selected} passengers={passengers} setPassengers={setPassengers}
-            total={total} onBack={() => setStep("seats")} onNext={() => setStep("payment")}
-          />
-        )}
-
-        {step === "payment" && (
-          <PaymentStep
-            total={total} payment={payment} setPayment={setPayment}
-            onBack={() => setStep("passengers")} onPay={() => setStep("ticket")}
-          />
-        )}
-
-        {step === "ticket" && (
-          <Ticket
-            selected={selected} trip={trip} origin={origin} destination={destination} date={date}
-            passengers={passengers}
-            onNew={() => { setStep("search"); setSeats(makeSeats()); }} user={user!}
-          />
+        {step !== "search" && (
+          <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16 pb-16 pt-6">
+            <Stepper step={step} />
+            {step === "trips" && <TripsList origin={origin} destination={destination} date={date} onPick={(id) => { setTripId(id); setStep("seats"); }} onBack={() => setStep("search")} />}
+            {step === "seats" && <SeatStep trip={trip} seats={seats} selected={selected} total={total} toggleSeat={toggleSeat} onBack={() => setStep("trips")} onPay={goPay} user={user} pax={pax} />}
+            {step === "passengers" && <PassengersStep selected={selected} passengers={passengers} setPassengers={setPassengers} total={total} onBack={() => setStep("seats")} onNext={() => setStep("payment")} user={user} guestEmail={guestEmail} setGuestEmail={setGuestEmail} />}
+            {step === "payment" && <PaymentStep total={total} payment={payment} setPayment={setPayment} onBack={() => setStep("passengers")} onPay={() => setStep("ticket")} />}
+            {step === "ticket" && <TicketResult selected={selected} trip={trip} origin={origin} destination={destination} date={date} passengers={passengers} onNew={() => { setStep("search"); setSeats(makeSeats()); setGuestEmail(""); }} user={user} guestEmail={guestEmail} />}
+          </div>
         )}
       </main>
-
-      {authBlock && (
-        <AuthBlockModal
-          onClose={() => setAuthBlock(false)}
-          onLogin={() => navigate({ to: "/login", search: { redirect: "/" } })}
-          user={user}
-        />
-      )}
+      {authBlock && <AuthBlockModal onClose={() => setAuthBlock(false)} onLogin={() => navigate({ to: "/login", search: { redirect: "/" } })} user={user} />}
+      <Footer />
     </div>
   );
 }
 
-/* ─── Header ────────────────────────────────────────────────────────── */
-function Header({ user, onLogout }: { user: ReturnType<typeof useAuth>["user"]; onLogout: () => void }) {
+/* ====== HEADER ====== */
+function Header({ user, onLogout, activeSection, setActiveSection }: {
+  user: ReturnType<typeof useAuth>["user"];
+  onLogout: () => void;
+  activeSection: string;
+  setActiveSection: (v: string) => void;
+}) {
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card/85 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link to="/"><Logo /></Link>
-        <nav className="flex items-center gap-2">
+    <header className="sticky top-0 z-50 border-b border-border/40 bg-card/85 shadow-[0px_4px_20px_0px_rgba(84,95,115,0.05)] backdrop-blur-md">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-16">
+        <Link to="/" onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setActiveSection("inicio"); }} className="text-2xl font-extrabold tracking-tight text-primary">KUNTUR</Link>
+        <nav className="hidden items-center gap-10 text-base md:flex">
+          <button onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setActiveSection("inicio"); }} className={cn("pb-1 font-semibold transition-colors hover:text-primary bg-transparent border-0 cursor-pointer", activeSection === "inicio" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Inicio</button>
+          <a href="#destinos" onClick={() => setActiveSection("destinos")} className={cn("pb-1 font-semibold transition-colors hover:text-primary", activeSection === "destinos" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Destinos</a>
+          <a href="#beneficios" onClick={() => setActiveSection("beneficios")} className={cn("pb-1 font-semibold transition-colors hover:text-primary", activeSection === "beneficios" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Beneficios</a>
+        </nav>
+        <div className="flex items-center gap-3">
           {user ? (
             <>
               <span className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground sm:inline-flex">
-                <ShieldCheck className="h-3.5 w-3.5 text-primary" /> {user.name} · {user.role}
+                <ShieldCheck className="h-3.5 w-3.5 text-primary" /> {user.name} &middot; {user.role}
               </span>
-              {user.role !== "cliente" && (
-                <Link to={roleHome(user.role) as any} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
-                  Mi panel
-                </Link>
-              )}
-              <button
-                onClick={onLogout}
-                className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
-              >
+              {user.role !== "cliente" && <Link to={roleHome(user.role) as any} className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">Mi panel</Link>}
+              <button onClick={onLogout} className="flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted">
                 <LogOut className="h-3.5 w-3.5" /> Salir
               </button>
             </>
           ) : (
-            <Link
-              to="/login" search={{ redirect: "/" }}
-              className="flex items-center gap-1.5 rounded-lg bg-[image:var(--gradient-primary)] px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-elegant)]"
-            >
-              <LogIn className="h-4 w-4" /> Iniciar sesión
+            <Link to="/login" search={{ redirect: "/" }} className="flex items-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted active:scale-95">
+              <UserIcon className="h-4 w-4 text-primary" /> Ingresar
             </Link>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );
 }
 
-/* ─── Hero ──────────────────────────────────────────────────────────── */
+/* ====== HERO ====== */
 function Hero(props: {
   origin: string; destination: string; date: Date; pax: number;
   setOrigin: (v: string) => void; setDestination: (v: string) => void;
   setDate: (v: Date) => void; setPax: (v: number) => void;
   swap: () => void; onSearch: () => void;
 }) {
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    let intervalId: any;
+
+    const startAutoplay = () => {
+      intervalId = setInterval(() => {
+        carouselApi.scrollNext();
+      }, 4000);
+    };
+
+    const stopAutoplay = () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+
+    startAutoplay();
+
+    carouselApi.on("select", () => {
+      stopAutoplay();
+      startAutoplay();
+    });
+    carouselApi.on("pointerDown", stopAutoplay);
+
+    return () => stopAutoplay();
+  }, [carouselApi]);
+
+  const destinations = [
+    { city: "Lima", region: "Costa Central", price: 45, img: "/lima.png" },
+    { city: "Arequipa", region: "Ciudad Blanca", price: 55, img: "/arequipa.png" },
+    { city: "Cusco", region: "Valle Sagrado", price: 60, img: "/cusco.png" },
+    { city: "Trujillo", region: "Norte Colonial", price: 42, img: "/trujillo.png" },
+    { city: "Piura", region: "Costa Norte", price: 50, img: "/piura.png" },
+    { city: "Ica", region: "Sol y Dunas", price: 35, img: "/ica.png" },
+  ];
   return (
     <>
-      <section className="pt-10 text-center sm:pt-14">
-        <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-secondary px-3 py-1 text-xs font-semibold text-primary">
-          <Leaf className="h-3.5 w-3.5" /> Transporte sostenible
-        </span>
-        <h1 className="mt-5 text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-6xl">
-          Tu próximo viaje, <br className="sm:hidden" />
-          <span className="bg-[image:var(--gradient-primary)] bg-clip-text text-transparent">a un toque de distancia.</span>
-        </h1>
-        <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
-          Compara rutas, elige tu asiento en vivo y recibe tu boleto digital al instante.
-        </p>
-      </section>
-
-      <section className="mt-8 rounded-3xl border border-border bg-card p-4 shadow-[var(--shadow-elegant)] sm:p-6">
-        <div className="grid gap-3 lg:grid-cols-[1fr_auto_1fr_1fr_auto]">
-          <CitySelect icon={MapPin} label="Origen"  value={props.origin}      onChange={props.setOrigin} />
-          <button
-            onClick={props.swap}
-            className="hidden h-full items-center justify-center rounded-xl border border-border bg-background px-3 text-muted-foreground transition-all hover:rotate-180 hover:border-primary hover:text-primary lg:flex"
-            aria-label="Intercambiar"
-          >
-            <ArrowLeftRight className="h-4 w-4" />
-          </button>
-          <CitySelect icon={MapPin} label="Destino" value={props.destination} onChange={props.setDestination} />
-          <DatePickerField value={props.date} onChange={props.setDate} />
-          <button
-            onClick={props.onSearch}
-            className="group flex items-center justify-center gap-2 rounded-xl bg-[image:var(--gradient-primary)] px-6 py-3.5 font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-elegant)]"
-          >
-            <Search className="h-4 w-4" /> Buscar
-          </button>
+      <section className="relative z-0 flex min-h-[700px] flex-col justify-center overflow-hidden pb-48 pt-20">
+        <div className="absolute inset-0 -z-20">
+          <img alt="Flota de buses KUNTUR" className="h-full w-full object-cover" src="/fleet-hero.png" />
         </div>
-      </section>
-
-      {/* Benefits */}
-      <section className="mt-10 grid gap-3 sm:grid-cols-3">
-        {[
-          { i: Sparkles,   t: "Asientos en tiempo real", d: "Mira disponibilidad al instante." },
-          { i: ShieldCheck, t: "Compra protegida",        d: "Confirmación instantánea con QR." },
-          { i: CreditCard,  t: "Sin sorpresas",           d: "Precio final, sin recargos ocultos." },
-        ].map((b) => (
-          <div key={b.t} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
-              <b.i className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-sm font-bold text-foreground">{b.t}</div>
-              <div className="text-xs text-muted-foreground">{b.d}</div>
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0.5)_0%,rgba(0,0,0,0.15)_60%,rgba(247,250,248,0.4)_85%,rgba(247,250,248,1)_100%)]" />
+        <div className="relative z-10 mx-auto max-w-7xl px-5 text-center sm:px-8 lg:px-16">
+          <h1 className="mx-auto max-w-4xl text-4xl font-bold leading-tight tracking-tight text-white drop-shadow-lg sm:text-5xl lg:text-[48px]">
+            Viaja con el confort y la seguridad de <span className="text-[oklch(0.78_0.13_160)]">KUNTUR</span>
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-white/90 drop-shadow-md">
+            Reserva tus pasajes hacia los destinos m&aacute;s emblem&aacute;ticos del Per&uacute; con un servicio premium dise&ntilde;ado para tu tranquilidad.
+          </p>
+        </div>
+        {/* Floating Search Panel */}
+        <div className="relative z-20 mx-auto mt-10 -mb-28 w-full max-w-[1100px] px-5 sm:px-8 lg:px-16">
+          <div className="rounded-[24px] border border-white/20 bg-white/70 p-6 shadow-[0px_25px_50px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:p-8 lg:p-10 dark:border-white/10 dark:bg-card/60">
+            <div className="grid grid-cols-1 items-end gap-6 md:grid-cols-12">
+              <div className="relative md:col-span-4">
+                <label className="mb-2 ml-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Origen / Destino</label>
+                <div className="relative flex flex-col gap-2">
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <select value={props.origin} onChange={(e) => props.setOrigin(e.target.value)} className="w-full rounded-xl border border-border/60 bg-background/80 backdrop-blur-sm py-4 pl-11 pr-4 text-base font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 transition-colors duration-200">
+                      {cities.map((c) => <option key={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <button onClick={props.swap} className="absolute right-4 top-1/2 z-10 rounded-full bg-primary p-2 text-primary-foreground shadow-md transition-transform duration-500 hover:rotate-180 active:scale-90">
+                    <ArrowUpDown className="h-4 w-4" />
+                  </button>
+                  <div className="relative">
+                    <Bus className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <select value={props.destination} onChange={(e) => props.setDestination(e.target.value)} className="w-full rounded-xl border border-border/60 bg-background/80 backdrop-blur-sm py-4 pl-11 pr-4 text-base font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 transition-colors duration-200">
+                      {cities.map((c) => <option key={c}>{c}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 md:col-span-4">
+                <div>
+                  <label className="mb-2 ml-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ida</label>
+                  <DatePickerField value={props.date} onChange={props.setDate} />
+                </div>
+                <div>
+                  <label className="mb-2 ml-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pasajeros</label>
+                  <div className="relative">
+                    <Users className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <select value={props.pax} onChange={(e) => props.setPax(Number(e.target.value))} className="w-full appearance-none rounded-xl border border-border/60 bg-background/80 backdrop-blur-sm py-4 pl-11 pr-4 text-base font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 transition-colors duration-200">
+                      {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n} Pasajero{n > 1 ? "s" : ""}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div className="md:col-span-4">
+                <button onClick={props.onSearch} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-base font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 hover:brightness-110 active:scale-95">
+                  <Search className="h-5 w-5" /> Buscar viajes
+                </button>
+              </div>
             </div>
           </div>
-        ))}
-      </section>
-
-      {/* Category showcase */}
-      <section className="mt-12">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Categorías de servicio</h2>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {Object.entries(tripStyles).map(([type, s]) => {
-            const Icon = s.icon;
-            return (
-              <div
-                key={type}
-                className={`relative overflow-hidden rounded-2xl border p-4 ${s.bgCard} ${s.borderCard} transition-all hover:-translate-y-0.5`}
-              >
-                <div className="h-1 rounded-full mb-3 w-full" style={{ background: s.gradient }} />
-                <div className="flex items-center gap-2 mb-2">
-                  <div
-                    className="flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-sm"
-                    style={{ background: s.gradient }}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${s.chip}`}>
-                    {type}
-                  </span>
-                </div>
-                <p className="text-[11px] leading-relaxed text-muted-foreground">{s.description}</p>
-              </div>
-            );
-          })}
         </div>
       </section>
-
-      {/* Popular routes */}
-      <section className="mt-12">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Rutas populares</h2>
-          <span className="text-xs text-muted-foreground">Toca para reservar rápido</span>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            { o: "Lima", d: "Trujillo", p: 38 },
-            { o: "Lima", d: "Arequipa", p: 65 },
-            { o: "Cusco", d: "Puno", p: 45 },
-            { o: "Lima", d: "Ica", p: 28 },
-            { o: "Trujillo", d: "Piura", p: 42 },
-            { o: "Arequipa", d: "Tacna", p: 35 },
-          ].map((r) => (
-            <button
-              key={r.o + r.d}
-              onClick={() => { props.setOrigin(r.o); props.setDestination(r.d); props.onSearch(); }}
-              className="group flex items-center justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-[var(--shadow-card)] transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[var(--shadow-elegant)]"
-            >
-              <div>
-                <div className="flex items-center gap-1.5 text-sm font-bold text-foreground">
-                  {r.o} <ArrowRight className="h-3.5 w-3.5 text-primary" /> {r.d}
-                </div>
-                <div className="text-xs text-muted-foreground">Desde S/ {r.p}</div>
+      {/* Destinos */}
+      <section id="destinos" className="bg-background pb-16 pt-36">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16">
+          <Carousel opts={{ align: "start", loop: true }} setApi={setCarouselApi} className="w-full">
+            <div className="mb-8 flex items-center justify-between gap-4">
+              <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">Explora destinos inolvidables</h2>
+              <div className="flex items-center gap-2">
+                <CarouselPrevious className="static translate-y-0 left-auto top-auto" />
+                <CarouselNext className="static translate-y-0 right-auto top-auto" />
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
-            </button>
-          ))}
+            </div>
+            <CarouselContent className="-ml-6">
+              {destinations.map((d) => (
+                <CarouselItem key={d.city} className="pl-6 basis-full sm:basis-1/2 lg:basis-1/3">
+                  <button onClick={() => { props.setDestination(d.city); props.onSearch(); }} className="group relative w-full overflow-hidden rounded-[24px] bg-card text-left shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-elegant)]">
+                    <div className="h-[400px] overflow-hidden">
+                      <img alt={d.city} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" src={d.img} />
+                    </div>
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6">
+                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-white/80">{d.region}</p>
+                      <h3 className="mb-2 text-2xl font-semibold text-white">{d.city}</h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-base text-white">Desde</span>
+                        <span className="text-2xl font-semibold text-[oklch(0.78_0.13_160)]">S/ {d.price}.00</span>
+                      </div>
+                    </div>
+                  </button>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
+      </section>
+      {/* Beneficios */}
+      <section id="beneficios" className="border-y border-border/30 bg-secondary py-20">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16">
+          <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
+            {([
+              { icon: ShieldCheck, title: "Seguridad garantizada", desc: "Monitoreo GPS en tiempo real y conductores capacitados para viajar con tranquilidad." },
+              { icon: Bus, title: "Flota moderna", desc: "Buses equipados con asientos de cuero, climatizaci\u00f3n y entretenimiento a bordo." },
+              { icon: Headphones, title: "Atenci\u00f3n 24/7", desc: "Soporte antes, durante y despu\u00e9s del viaje, siempre cerca cuando lo necesites." },
+            ] as const).map((b) => (
+              <div key={b.title} className="group flex flex-col items-center text-center">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                  <b.icon className="h-8 w-8" />
+                </div>
+                <h3 className="mb-3 text-xl font-semibold text-foreground">{b.title}</h3>
+                <p className="max-w-sm text-base leading-7 text-muted-foreground">{b.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </>
   );
 }
 
-/* ─── City Select ───────────────────────────────────────────────────── */
-function CitySelect({ icon: Icon, label, value, onChange }: { icon: any; label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <label className="flex flex-col gap-1 rounded-xl border border-border bg-background px-3.5 py-2.5 transition-colors focus-within:border-primary">
-      <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <Icon className="h-3 w-3" /> {label}
-      </span>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="bg-transparent text-base font-bold text-foreground outline-none">
-        {cities.map((c) => <option key={c}>{c}</option>)}
-      </select>
-    </label>
-  );
-}
-
-/* ─── Date Picker ───────────────────────────────────────────────────── */
+/* ====== DATE PICKER ====== */
 function DatePickerField({ value, onChange }: { value: Date; onChange: (v: Date) => void }) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" className="flex flex-col gap-1 rounded-xl border border-border bg-background px-3.5 py-2.5 text-left transition-colors hover:border-primary focus:border-primary focus:outline-none">
-          <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            <Calendar className="h-3 w-3" /> Fecha
-          </span>
-          <span className="text-base font-bold capitalize text-foreground">{format(value, "EEE d MMM yyyy", { locale: es })}</span>
+        <button type="button" className="flex w-full items-center gap-3 rounded-xl border border-border/60 bg-background/80 backdrop-blur-sm px-4 py-4 text-left transition-colors hover:border-primary/50 focus:border-primary focus:outline-none">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <span className="text-base font-medium capitalize text-foreground">{format(value, "EEE d MMM", { locale: es })}</span>
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-0">
-        <CalendarPicker
-          mode="single" selected={value} onSelect={(d) => d && onChange(d)}
-          disabled={(d) => d < today} initialFocus locale={es}
-          className={cn("p-3 pointer-events-auto")}
-        />
+        <CalendarPicker mode="single" selected={value} onSelect={(d) => d && onChange(d)} disabled={(d) => d < today} initialFocus locale={es} className={cn("p-3 pointer-events-auto")} />
       </PopoverContent>
     </Popover>
   );
 }
 
-/* ─── Stepper ───────────────────────────────────────────────────────── */
+/* ====== STEPPER ====== */
 function Stepper({ step }: { step: string }) {
-  const steps  = ["search", "trips", "seats", "passengers", "payment", "ticket"];
+  const steps = ["search", "trips", "seats", "passengers", "payment", "ticket"];
   const labels = ["Buscar", "Viajes", "Asientos", "Datos", "Pago", "Boleto"];
   const idx = steps.indexOf(step);
   return (
-    <div className="mt-2 flex items-center gap-2 overflow-x-auto pb-2">
+    <div className="mb-8 flex items-center gap-1 overflow-x-auto pb-2">
       {labels.map((l, i) => (
-        <div key={l} className="flex items-center gap-2">
-          <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${i <= idx ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-            {i + 1}
-          </div>
-          <span className={`text-sm ${i === idx ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{l}</span>
-          {i < labels.length - 1 && <div className="h-px w-6 bg-border sm:w-10" />}
+        <div key={l} className="flex items-center gap-1">
+          <div className={cn("flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors", i < idx ? "bg-primary/20 text-primary" : i === idx ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{i + 1}</div>
+          <span className={cn("text-sm whitespace-nowrap", i === idx ? "font-bold text-primary" : "text-muted-foreground")}>{l}</span>
+          {i < labels.length - 1 && <div className={cn("h-px w-6 sm:w-10", i < idx ? "bg-primary/40" : "bg-border")} />}
         </div>
       ))}
     </div>
   );
 }
 
-/* ─── Trips List — con filtro de categorías ─────────────────────────── */
+/* ====== TRIPS LIST ====== */
 function TripsList({ origin, destination, date, onPick, onBack }: {
   origin: string; destination: string; date: Date; onPick: (id: string) => void; onBack: () => void;
 }) {
   const dateLabel = format(date, "EEEE d 'de' MMMM, yyyy", { locale: es });
   const [activeCategory, setActiveCategory] = useState("Todos");
-
-  const filtered = tripsBase.filter(
-    (t) => activeCategory === "Todos" || t.type === activeCategory,
-  );
+  const filtered = tripsBase.filter((t) => activeCategory === "Todos" || t.type === activeCategory);
 
   return (
-    <div className="mt-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground">← Modificar búsqueda</button>
-          <h2 className="mt-1 text-2xl font-bold text-foreground">{origin} → {destination}</h2>
-          <p className="text-sm capitalize text-muted-foreground">{filtered.length} viaje{filtered.length !== 1 ? "s" : ""} · {dateLabel}</p>
+    <div>
+      {/* Search Info Bar */}
+      <div className="bg-card rounded-[24px] p-6 shadow-[var(--shadow-card)] border border-border/30 flex flex-col md:flex-row items-center gap-6 mb-8">
+        <div className="flex-1 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-4">
+            <div className="bg-background p-4 rounded-xl border border-border/30">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Origen</p>
+              <p className="text-xl font-semibold text-foreground">{origin}</p>
+            </div>
+            <button onClick={onBack} className="bg-primary text-primary-foreground p-3 rounded-full shadow-md hover:rotate-180 transition-transform duration-500 z-10">
+              <ArrowLeftRight className="h-4 w-4" />
+            </button>
+            <div className="bg-background p-4 rounded-xl border border-border/30">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Destino</p>
+              <p className="text-xl font-semibold text-foreground">{destination}</p>
+            </div>
+          </div>
         </div>
+        <div className="w-full md:w-auto bg-background p-4 rounded-xl border border-border/30 min-w-[200px]">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Fecha de Viaje</p>
+          <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" /><p className="text-base font-semibold capitalize">{dateLabel}</p></div>
+        </div>
+        <button onClick={onBack} className="w-full md:w-auto bg-primary text-primary-foreground px-8 py-4 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg active:scale-95">Modificar</button>
       </div>
-
-      {/* Filtro por categoría */}
-      <div className="mt-4 flex items-center gap-1.5 overflow-x-auto pb-1">
+      {/* Category filter */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-6">
         <SlidersHorizontal className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
         {ALL_CATEGORIES.map((cat) => {
           const s = cat !== "Todos" ? tripStyles[cat] : null;
           const Icon = s?.icon;
-          const isActive = activeCategory === cat;
           return (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={cn(
-                "inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
-                isActive
-                  ? s
-                    ? `${s.chip} shadow-sm`
-                    : "border-primary bg-primary text-primary-foreground shadow-sm"
-                  : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
-              )}
-            >
-              {Icon && <Icon className="h-3 w-3" />}
-              {cat}
+            <button key={cat} onClick={() => setActiveCategory(cat)} className={cn("inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all", activeCategory === cat ? s ? `${s.chip} shadow-sm` : "border-primary bg-primary text-primary-foreground shadow-sm" : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground")}>
+              {Icon && <Icon className="h-3 w-3" />}{cat}
             </button>
           );
         })}
       </div>
-
-      <div className="mt-4 space-y-3">
-        {filtered.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-            No hay viajes de categoría <strong>{activeCategory}</strong> disponibles para esta fecha.
-          </div>
-        )}
-        {filtered.map((t) => {
+      <h2 className="text-2xl sm:text-3xl font-semibold text-foreground mb-6">Viajes Disponibles</h2>
+      <div className="space-y-4">
+        {filtered.length === 0 && <div className="rounded-[24px] border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">No hay viajes de esta categor&iacute;a disponibles.</div>}
+        {filtered.map((t, idx) => {
           const s = getTripStyle(t.type);
           const Icon = s.icon;
+          const isFirst = idx === 0;
           return (
-            <button
-              key={t.id}
-              onClick={() => onPick(t.id)}
-              className={cn(
-                "group relative flex w-full items-start justify-between overflow-hidden rounded-2xl border p-5 text-left shadow-[var(--shadow-card)] transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-elegant)]",
-                s.bgCard,
-                s.borderCard,
-                s.ring,
-              )}
-            >
-              {/* Franja lateral de color */}
-              <span aria-hidden className="absolute inset-y-0 left-0 w-1.5" style={{ background: s.gradient }} />
-
-              <div className="flex items-start gap-4 pl-2">
-                {/* Icono con gradiente */}
-                <div
-                  className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-[var(--shadow-soft)]"
-                  style={{ background: s.gradient }}
-                >
-                  <Icon className="h-6 w-6" />
-                </div>
-
+            <button key={t.id} onClick={() => onPick(t.id)} className={cn("group relative flex w-full flex-col md:flex-row items-start md:items-center justify-between overflow-hidden rounded-[24px] border p-6 text-left shadow-[var(--shadow-card)] transition-all hover:shadow-[var(--shadow-elegant)] hover:-translate-y-0.5 bg-card", isFirst ? "border-2 border-primary ring-4 ring-primary/5" : "border-border/30 hover:border-primary/50")}>
+              {isFirst && <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-4 py-1 rounded-bl-xl text-[11px] font-bold uppercase tracking-wider">Recomendado</div>}
+              <div className="flex items-start gap-4 flex-1">
+                <div className="hidden sm:flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-[var(--shadow-soft)]" style={{ background: s.gradient }}><Icon className="h-6 w-6" /></div>
                 <div>
-                  {/* Horarios */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xl font-bold text-foreground">{t.time}</span>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-xl font-bold text-foreground">{t.arr}</span>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider", s.chip)}><Icon className="h-3 w-3" /> {s.label}</span>
+                    <span className={cn("font-bold text-xs", t.seats <= 6 ? "text-destructive" : "text-primary")}>{t.seats <= 6 ? `Solo ${t.seats} disponibles` : `${t.seats} disponibles`}</span>
                   </div>
-                  {/* Badge de categoría — prominente */}
-                  <span className={cn("mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider", s.chip)}>
-                    <Icon className="h-3.5 w-3.5" /> {s.label}
-                  </span>
-                  {/* Descripción del servicio */}
-                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{s.description}</p>
-                  <div className="mt-1 text-xs text-muted-foreground">{t.dur} · {t.seats} asientos libres</div>
+                  <div className="flex items-center gap-6">
+                    <div><p className="text-2xl font-semibold text-foreground">{t.time}</p><p className="text-xs text-muted-foreground">{origin}</p></div>
+                    <div className="flex flex-col items-center flex-1 max-w-[120px]">
+                      <p className="text-xs text-muted-foreground mb-1">{t.dur}</p>
+                      <div className="w-full h-[2px] bg-border relative"><div className="absolute -top-1 -left-1 w-2.5 h-2.5 rounded-full bg-border" /><div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-border" /></div>
+                      <Bus className="h-3.5 w-3.5 text-muted-foreground mt-1" />
+                    </div>
+                    <div className="text-right"><p className="text-2xl font-semibold text-foreground">{t.arr}</p><p className="text-xs text-muted-foreground">{destination}</p></div>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{s.description}</p>
                 </div>
               </div>
-
-              {/* Precio */}
-              <div className="flex-shrink-0 text-right pl-4">
-                <div className={cn("text-2xl font-bold", s.accent)}>S/ {t.price}</div>
-                <div className="text-xs text-muted-foreground">por persona</div>
-                <div className="mt-2 rounded-lg bg-card/70 px-2.5 py-1 text-xs font-semibold text-foreground backdrop-blur transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                  Seleccionar →
-                </div>
+              <div className="md:border-l border-border/30 md:pl-6 flex flex-col items-center md:items-end mt-4 md:mt-0 w-full md:w-auto">
+                <p className="text-xs text-muted-foreground mb-1">Precio por persona</p>
+                <p className={cn("text-3xl font-bold mb-4", isFirst ? "text-primary" : "text-foreground")}>S/ {t.price}.00</p>
+                <div className={cn("w-full md:w-auto px-6 py-3 rounded-xl font-bold text-sm text-center transition-all", isFirst ? "bg-primary text-primary-foreground shadow-lg active:scale-95" : "border-2 border-primary text-primary hover:bg-primary/5")}>Seleccionar</div>
               </div>
             </button>
           );
@@ -558,248 +507,236 @@ function TripsList({ origin, destination, date, onPick, onBack }: {
   );
 }
 
-/* ─── Seat Step ─────────────────────────────────────────────────────── */
-function SeatStep({ trip, seats, selected, total, toggleSeat, onBack, onPay, user }: {
+/* ====== SEAT STEP ====== */
+function SeatStep({ trip, seats, selected, total, toggleSeat, onBack, onPay, user, pax }: {
   trip: typeof tripsBase[number]; seats: Seat[]; selected: Seat[]; total: number;
   toggleSeat: (id: string) => void; onBack: () => void; onPay: () => void;
-  user: ReturnType<typeof useAuth>["user"];
+  user: ReturnType<typeof useAuth>["user"]; pax: number;
 }) {
-  const isClient = user?.role === "cliente";
+  const isWrongRole = user && user.role !== "cliente";
   const s = getTripStyle(trip.type);
   const Icon = s.icon;
   return (
-    <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_400px] items-start">
       <div>
-        <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground">← Volver a viajes</button>
-        <h2 className="mt-1 text-2xl font-bold text-foreground">Elige tu asiento</h2>
-        <p className="text-sm text-muted-foreground">Selección libre · toca para reservar</p>
-        <div className="mt-5">
-          <SeatMap seats={seats} onSelect={toggleSeat} variant="client" />
-        </div>
+        <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground mb-2">&larr; Volver a viajes</button>
+        <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">Selecciona tus asientos</h2>
+        <p className="text-sm text-muted-foreground mb-6">Selecci&oacute;n libre &middot; toca para reservar</p>
+        <SeatMap seats={seats} onSelect={toggleSeat} variant="client" />
       </div>
-      <aside className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)] lg:sticky lg:top-24 lg:h-fit">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Tu reserva</h3>
-          <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.chip)}>
-            <Icon className="h-3 w-3" /> {s.label}
-          </span>
+      <aside className="rounded-[24px] border border-border/20 bg-card p-6 sm:p-8 shadow-[var(--shadow-card)] lg:sticky lg:top-28 lg:h-fit">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Tu reserva</h3>
+          <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.chip)}><Icon className="h-3 w-3" /> {s.label}</span>
         </div>
-        <div className="mt-4 space-y-2 text-sm">
-          <Row k="Viaje"       v={`${trip.time} · ${trip.type}`} />
-          <Row k="Asientos"    v={selected.length ? selected.map((s) => s.id).join(", ") : "—"} />
+        <div className="space-y-3 text-sm">
+          <Row k="Viaje" v={`${trip.time} \u00b7 ${trip.type}`} />
+          <Row k="Asientos" v={selected.length ? selected.map((s) => s.id).join(", ") : "\u2014"} />
           <Row k="Precio unit." v={`S/ ${trip.price}`} />
+          <Row k="Pasajeros" v={`${selected.length}/${pax}`} />
         </div>
-        <div className="my-4 h-px bg-border" />
+        <div className="my-5 h-px bg-border" />
         <div className="flex items-baseline justify-between">
           <span className="text-sm text-muted-foreground">Total</span>
-          <span className="text-3xl font-bold text-foreground">S/ {total}</span>
+          <span className="text-3xl font-bold text-primary">S/ {total}</span>
         </div>
-
-        {!isClient && selected.length > 0 && (
+        {isWrongRole && selected.length > 0 && (
           <div className="mt-4 flex items-start gap-2 rounded-xl border border-[var(--warning)]/40 bg-[var(--warning)]/15 p-3 text-xs text-[var(--warning-foreground)]">
             <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-            <span>Para pagar necesitas iniciar sesión como <strong>cliente</strong>.</span>
+            <span>Tu cuenta de <strong>{user!.role}</strong> no puede comprar pasajes.</span>
           </div>
         )}
-
-        <button
-          disabled={!selected.length}
-          onClick={onPay}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[image:var(--gradient-primary)] py-3 font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-elegant)] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <CreditCard className="h-4 w-4" /> Pagar S/ {total}
+        <button disabled={selected.length !== pax} onClick={onPay} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95">
+          <CreditCard className="h-4 w-4" /> Continuar al pago
         </button>
+        {selected.length !== pax && <p className="mt-2 text-center text-[11px] text-muted-foreground">Selecciona exactamente {pax} asiento{pax > 1 ? "s" : ""} para continuar.</p>}
       </aside>
     </div>
   );
 }
 
 function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="flex justify-between">
-      <span className="text-muted-foreground">{k}</span>
-      <span className="font-medium text-foreground">{v}</span>
-    </div>
-  );
+  return (<div className="flex justify-between"><span className="text-muted-foreground">{k}</span><span className="font-medium text-foreground">{v}</span></div>);
 }
 
-/* ─── Auth Block Modal ──────────────────────────────────────────────── */
-function AuthBlockModal({ onClose, onLogin, user }: {
-  onClose: () => void; onLogin: () => void; user: ReturnType<typeof useAuth>["user"];
-}) {
-  const wrongRole = user && user.role !== "cliente";
+/* ====== AUTH BLOCK MODAL ====== */
+function AuthBlockModal({ onClose, onLogin, user }: { onClose: () => void; onLogin: () => void; user: ReturnType<typeof useAuth>["user"]; }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-4 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)]">
+      <div className="w-full max-w-md rounded-[24px] border border-border bg-card p-6 shadow-[var(--shadow-elegant)]">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${wrongRole ? "bg-destructive/15 text-destructive" : "bg-secondary text-primary"}`}>
-              {wrongRole ? <AlertCircle className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
-            </div>
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-destructive/15 text-destructive"><AlertCircle className="h-5 w-5" /></div>
             <div>
-              <h3 className="text-lg font-bold text-foreground">{wrongRole ? "Cuenta no permitida" : "Inicia sesión para pagar"}</h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {wrongRole
-                  ? `Tu cuenta de ${user!.role} no puede comprar pasajes.`
-                  : "Solo los clientes registrados pueden completar la compra. 🌿"}
-              </p>
+              <h3 className="text-lg font-bold text-foreground">Cuenta no permitida</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">Tu cuenta de <strong>{user?.role}</strong> no puede comprar pasajes.</p>
             </div>
           </div>
-          <button onClick={onClose} className="rounded-full p-1 text-muted-foreground hover:bg-muted">
-            <X className="h-4 w-4" />
-          </button>
+          <button onClick={onClose} className="rounded-full p-1 text-muted-foreground hover:bg-muted"><X className="h-4 w-4" /></button>
         </div>
         <div className="mt-6 space-y-2">
-          <button onClick={onLogin} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[image:var(--gradient-primary)] py-3 font-semibold text-primary-foreground shadow-[var(--shadow-soft)]">
-            <LogIn className="h-4 w-4" /> {wrongRole ? "Cambiar de cuenta" : "Iniciar sesión"}
-          </button>
-          <button onClick={onClose} className="w-full rounded-xl border border-border bg-background py-3 font-semibold text-foreground transition-colors hover:bg-muted">
-            Seguir explorando
-          </button>
+          <button onClick={onLogin} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-primary-foreground shadow-lg"><LogIn className="h-4 w-4" /> Cambiar de cuenta</button>
+          <button onClick={onClose} className="w-full rounded-xl border border-border bg-background py-3 font-semibold text-foreground transition-colors hover:bg-muted">Seguir explorando</button>
         </div>
-        <p className="mt-4 text-center text-[11px] text-muted-foreground">
-          Demo: <code className="rounded bg-muted px-1.5 py-0.5 font-mono">cliente@jaysi.com</code> · <code className="rounded bg-muted px-1.5 py-0.5 font-mono">demo</code>
-        </p>
       </div>
     </div>
   );
 }
 
-/* ─── Ticket ────────────────────────────────────────────────────────── */
-function Ticket({ selected, trip, origin, destination, date, passengers, onNew, user }: {
+/* ====== TICKET RESULT ====== */
+function TicketResult({ selected, trip, origin, destination, date, passengers, onNew, user, guestEmail }: {
   selected: Seat[]; trip: typeof tripsBase[number]; origin: string; destination: string; date: Date;
-  passengers?: { dni: string; name: string }[];
-  onNew: () => void; user: NonNullable<ReturnType<typeof useAuth>["user"]>;
+  passengers?: { dni: string; name: string }[]; onNew: () => void;
+  user: ReturnType<typeof useAuth>["user"]; guestEmail: string;
 }) {
   const dateLabel = format(date, "d MMM yyyy", { locale: es });
   const s = getTripStyle(trip.type);
   const Icon = s.icon;
+  const [regPassword, setRegPassword] = useState("");
+  const [regError, setRegError] = useState("");
+  const [regSuccess, setRegSuccess] = useState(false);
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault(); setRegError("");
+    const firstName = passengers?.[0]?.name || "Invitado Kuntur";
+    const res = registerAccount({ name: firstName, email: guestEmail, password: regPassword, role: "cliente" });
+    if (!res.ok) { setRegError(res.error); return; }
+    storeUser(res.user); setRegSuccess(true);
+  };
+
   return (
-    <div className="mt-6 flex flex-col items-center">
+    <div className="flex flex-col items-center">
       <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-primary">
-        <ShieldCheck className="h-3.5 w-3.5" /> Pago confirmado · {user.name}
+        <ShieldCheck className="h-3.5 w-3.5" /> Pago confirmado &middot; {user ? user.name : (passengers?.[0]?.name || "Invitado")}
       </div>
-      <div className="w-full max-w-md overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-elegant)]">
+      <div className="w-full max-w-md overflow-hidden rounded-[24px] border border-border bg-card shadow-[var(--shadow-elegant)]">
         <div className="p-6 text-white" style={{ background: s.gradient }}>
           <div className="flex items-center justify-between text-xs uppercase tracking-widest opacity-90">
             <span className="inline-flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" /> {s.label}</span>
-            <span>JAYSI · 2026</span>
+            <span>KUNTUR &middot; 2026</span>
           </div>
           <div className="mt-4 flex items-baseline justify-between">
-            <div>
-              <div className="text-3xl font-bold">{origin}</div>
-              <div className="text-xs opacity-90">{trip.time} · {dateLabel}</div>
-            </div>
+            <div><div className="text-3xl font-bold">{origin}</div><div className="text-xs opacity-90">{trip.time} &middot; {dateLabel}</div></div>
             <ArrowRight className="h-5 w-5" />
-            <div className="text-right">
-              <div className="text-3xl font-bold">{destination}</div>
-              <div className="text-xs opacity-90">{trip.arr} · {dateLabel}</div>
-            </div>
+            <div className="text-right"><div className="text-3xl font-bold">{destination}</div><div className="text-xs opacity-90">{trip.arr} &middot; {dateLabel}</div></div>
           </div>
         </div>
         <div className="flex flex-col items-center p-6">
           <div className="rounded-2xl border-2 border-dashed border-primary/40 bg-secondary p-5">
             <div className="grid h-44 w-44 grid-cols-8 grid-rows-8 gap-0.5">
-              {Array.from({ length: 64 }).map((_, i) => (
-                <div key={i} className={`${(i * 7) % 3 === 0 ? "bg-foreground" : "bg-transparent"} rounded-[2px]`} />
-              ))}
+              {Array.from({ length: 64 }).map((_, i) => (<div key={i} className={`${(i * 7) % 3 === 0 ? "bg-foreground" : "bg-transparent"} rounded-[2px]`} />))}
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <QrCode className="h-3.5 w-3.5" /> Muéstralo al auxiliar
-          </div>
+          <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground"><QrCode className="h-3.5 w-3.5" /> Mu&eacute;stralo al auxiliar</div>
           <div className="mt-5 grid w-full grid-cols-3 gap-3 border-t border-dashed border-border pt-5 text-center">
             <MiniTicket k="Asientos" v={selected.map((s) => s.id).join(", ")} />
-            <MiniTicket k="Bus"      v="JY-104" />
-            <MiniTicket k="Total"    v={`S/ ${selected.length * trip.price}`} />
+            <MiniTicket k="Bus" v="JY-104" />
+            <MiniTicket k="Total" v={`S/ ${selected.length * trip.price}`} />
           </div>
           {passengers && passengers.length > 0 && (
             <div className="mt-4 w-full rounded-xl bg-secondary p-3">
               <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Pasajeros</div>
               <ul className="mt-1 space-y-0.5 text-xs font-medium text-foreground">
-                {passengers.map((p, i) => (
-                  <li key={i} className="flex items-center justify-between gap-2">
-                    <span className="truncate">{p.name || "—"}</span>
-                    <span className="whitespace-nowrap text-muted-foreground">DNI {p.dni || "—"} · {selected[i]?.id}</span>
-                  </li>
-                ))}
+                {passengers.map((p, i) => (<li key={i} className="flex items-center justify-between gap-2"><span className="truncate">{p.name || "\u2014"}</span><span className="whitespace-nowrap text-muted-foreground">DNI {p.dni || "\u2014"} &middot; {selected[i]?.id}</span></li>))}
               </ul>
             </div>
           )}
-          <div className="mt-4 flex items-center gap-1.5 text-xs text-[var(--success)]">
-            <Clock className="h-3.5 w-3.5" /> Llega 30 min antes de la salida
-          </div>
+          <div className="mt-4 flex items-center gap-1.5 text-xs text-[var(--success)]"><Clock className="h-3.5 w-3.5" /> Llega 30 min antes de la salida</div>
         </div>
       </div>
-      <button onClick={onNew} className="mt-6 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
-        Comprar otro pasaje
-      </button>
+      {!user && guestEmail && (
+        <div className="mt-6 w-full max-w-md bg-card border border-border/50 rounded-[24px] p-6 shadow-[var(--shadow-elegant)] transition-all">
+          {regSuccess ? (
+            <div className="text-center space-y-2 py-2">
+              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-primary"><CheckCircle2 className="h-5 w-5" /></div>
+              <h4 className="text-sm font-bold text-foreground">&iexcl;Cuenta creada con &eacute;xito!</h4>
+              <p className="text-xs text-muted-foreground">Te has registrado como <strong>{passengers?.[0]?.name || "Cliente"}</strong>.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Sparkles className="h-5 w-5 animate-pulse" /></div>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground">&iquest;Quieres guardar tu cuenta?</h4>
+                  <p className="text-xs text-muted-foreground">Crea una contrase&ntilde;a para <strong className="text-foreground">{guestEmail}</strong>.</p>
+                </div>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input required type="password" placeholder="Crea una contrase\u00f1a" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" />
+              </div>
+              {regError && <div className="text-xs font-semibold text-destructive">{regError}</div>}
+              <button type="submit" className="w-full py-3 bg-primary text-primary-foreground font-bold text-sm rounded-xl shadow-lg hover:brightness-110 transition-all active:scale-[0.98]">Guardar mi cuenta</button>
+            </form>
+          )}
+        </div>
+      )}
+      <button onClick={onNew} className="mt-6 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted">Comprar otro pasaje</button>
     </div>
   );
 }
 
 function MiniTicket({ k, v }: { k: string; v: string }) {
-  return (
-    <div>
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</div>
-      <div className="mt-0.5 text-sm font-bold text-foreground">{v}</div>
-    </div>
-  );
+  return (<div><div className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</div><div className="mt-0.5 text-sm font-bold text-foreground">{v}</div></div>);
 }
 
-/* ─── Passengers Step ───────────────────────────────────────────────── */
-function PassengersStep({ selected, passengers, setPassengers, total, onBack, onNext }: {
+/* ====== PASSENGERS STEP ====== */
+function PassengersStep({ selected, passengers, setPassengers, total, onBack, onNext, user, guestEmail, setGuestEmail }: {
   selected: Seat[]; passengers: { dni: string; name: string }[];
   setPassengers: (p: { dni: string; name: string }[]) => void;
   total: number; onBack: () => void; onNext: () => void;
+  user: ReturnType<typeof useAuth>["user"]; guestEmail: string; setGuestEmail: (email: string) => void;
 }) {
-  const update = (i: number, patch: Partial<{ dni: string; name: string }>) => {
-    setPassengers(passengers.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
-  };
-  const valid = passengers.every((p) => /^\d{8}$/.test(p.dni) && p.name.trim().length >= 3);
+  const update = (i: number, patch: Partial<{ dni: string; name: string }>) => { setPassengers(passengers.map((p, idx) => (idx === i ? { ...p, ...patch } : p))); };
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailValid = user ? true : emailRegex.test(guestEmail);
+  const valid = passengers.every((p) => /^\d{8}$/.test(p.dni) && p.name.trim().length >= 3) && emailValid;
 
   return (
-    <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <div>
-        <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground">← Volver a asientos</button>
-        <h2 className="mt-1 text-2xl font-bold text-foreground">Datos de los pasajeros</h2>
-        <p className="text-sm text-muted-foreground">Necesitamos esta información por requerimiento de transporte.</p>
-        <div className="mt-5 space-y-4">
+        <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground mb-2">&larr; Volver a asientos</button>
+        <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">Datos de los pasajeros</h2>
+        <p className="text-sm text-muted-foreground mb-6">Necesitamos esta informaci&oacute;n por requerimiento de transporte.</p>
+        <div className="space-y-4">
+          {!user && (
+            <div className="rounded-[24px] border border-primary/20 bg-primary/5 p-6 shadow-[var(--shadow-card)]">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><Mail className="h-4 w-4" /></div>
+                <span className="text-sm font-bold text-foreground">Contacto para env&iacute;o de pasajes</span>
+              </div>
+              <FieldInput icon={Mail} label="Correo electr&oacute;nico" placeholder="ejemplo@correo.com" value={guestEmail} onChange={setGuestEmail} />
+              <p className="mt-2 text-[11px] text-muted-foreground">Enviaremos tus boletos en PDF y tu c&oacute;digo QR a este correo.</p>
+            </div>
+          )}
           {passengers.map((p, i) => (
-            <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="inline-flex items-center gap-2 text-sm font-bold text-foreground">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">{i + 1}</span>
-                  Pasajero · Asiento {selected[i]?.id}
-                </span>
+            <div key={i} className="rounded-[24px] border border-border/20 bg-card p-6 shadow-[var(--shadow-card)]">
+              <div className="mb-4 flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{i + 1}</span>
+                <span className="text-sm font-bold text-foreground">Pasajero &middot; Asiento {selected[i]?.id}</span>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <FieldInput icon={IdCard}   label="DNI"            placeholder="12345678"   maxLength={8} value={p.dni}  onChange={(v) => update(i, { dni:  v.replace(/\D/g, "").slice(0, 8) })} />
-                <FieldInput icon={UserIcon} label="Nombre completo" placeholder="María López"             value={p.name} onChange={(v) => update(i, { name: v })} />
+                <FieldInput icon={IdCard} label="DNI" placeholder="12345678" maxLength={8} value={p.dni} onChange={(v) => update(i, { dni: v.replace(/\D/g, "").slice(0, 8) })} />
+                <FieldInput icon={UserIcon} label="Nombre completo" placeholder="Mar&iacute;a L&oacute;pez" value={p.name} onChange={(v) => update(i, { name: v })} />
               </div>
             </div>
           ))}
         </div>
       </div>
-      <aside className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)] lg:sticky lg:top-24 lg:h-fit">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Resumen</h3>
-        <div className="mt-4 space-y-2 text-sm">
-          <Row k="Asientos"  v={selected.map((s) => s.id).join(", ")} />
+      <aside className="rounded-[24px] border border-border/20 bg-card p-6 sm:p-8 shadow-[var(--shadow-card)] lg:sticky lg:top-28 lg:h-fit">
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Resumen</h3>
+        <div className="mt-4 space-y-3 text-sm">
+          <Row k="Asientos" v={selected.map((s) => s.id).join(", ")} />
           <Row k="Pasajeros" v={passengers.length.toString()} />
         </div>
-        <div className="my-4 h-px bg-border" />
+        <div className="my-5 h-px bg-border" />
         <div className="flex items-baseline justify-between">
           <span className="text-sm text-muted-foreground">Total</span>
-          <span className="text-3xl font-bold text-foreground">S/ {total}</span>
+          <span className="text-3xl font-bold text-primary">S/ {total}</span>
         </div>
-        <button
-          disabled={!valid}
-          onClick={onNext}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[image:var(--gradient-primary)] py-3 font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-elegant)] disabled:cursor-not-allowed disabled:opacity-40"
-        >
+        <button disabled={!valid} onClick={onNext} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95">
           Continuar al pago <ArrowRight className="h-4 w-4" />
         </button>
-        {!valid && <p className="mt-2 text-center text-[11px] text-muted-foreground">Completa DNI (8 dígitos) y nombre.</p>}
+        {!valid && <p className="mt-2 text-center text-[11px] text-muted-foreground">{!emailValid ? "Introduce un correo v\u00e1lido. " : ""}Completa DNI (8 d\u00edgitos) y nombre de cada pasajero.</p>}
       </aside>
     </div>
   );
@@ -809,110 +746,88 @@ function FieldInput({ icon: Icon, label, value, onChange, placeholder, maxLength
   icon: any; label: string; value: string; onChange: (v: string) => void; placeholder?: string; maxLength?: number;
 }) {
   return (
-    <label className="flex flex-col gap-1 rounded-xl border border-border bg-background px-3.5 py-2.5 transition-colors focus-within:border-primary">
-      <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <Icon className="h-3 w-3" /> {label}
-      </span>
-      <input
-        value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} maxLength={maxLength}
-        className="w-full bg-transparent text-base font-medium text-foreground outline-none placeholder:text-muted-foreground/50"
-      />
+    <label className="flex flex-col gap-1 rounded-xl border border-border bg-background px-4 py-3 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+      <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"><Icon className="h-3 w-3" /> {label}</span>
+      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} maxLength={maxLength} className="w-full bg-transparent text-base font-medium text-foreground outline-none placeholder:text-muted-foreground/50" />
     </label>
   );
 }
 
-/* ─── Payment Step ──────────────────────────────────────────────────── */
+/* ====== PAYMENT STEP ====== */
 function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
-  total: number;
-  payment: { method: "card" | "yape" | "plin"; card: string; exp: string; cvv: string };
-  setPayment: (p: typeof payment) => void;
-  onBack: () => void; onPay: () => void;
+  total: number; payment: { method: "card" | "yape" | "plin"; card: string; exp: string; cvv: string };
+  setPayment: (p: typeof payment) => void; onBack: () => void; onPay: () => void;
 }) {
   const methods: { id: "card" | "yape" | "plin"; label: string; desc: string }[] = [
-    { id: "card", label: "Tarjeta", desc: "Visa · Mastercard" },
-    { id: "yape", label: "Yape",    desc: "Pago instantáneo" },
-    { id: "plin", label: "Plin",    desc: "Transferencia móvil" },
+    { id: "card", label: "Tarjeta", desc: "Visa \u00b7 Mastercard" },
+    { id: "yape", label: "Yape", desc: "Pago instant\u00e1neo" },
+    { id: "plin", label: "Plin", desc: "Transferencia m\u00f3vil" },
   ];
-  const cardOk =
-    payment.method !== "card" ||
-    (payment.card.replace(/\s/g, "").length >= 13 && /^\d{2}\/\d{2}$/.test(payment.exp) && /^\d{3,4}$/.test(payment.cvv));
+  const cardOk = payment.method !== "card" || (payment.card.replace(/\s/g, "").length >= 13 && /^\d{2}\/\d{2}$/.test(payment.exp) && /^\d{3,4}$/.test(payment.cvv));
 
   return (
-    <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <div>
-        <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground">← Volver a datos</button>
-        <h2 className="mt-1 text-2xl font-bold text-foreground">Método de pago</h2>
-        <p className="text-sm text-muted-foreground">Pago simulado · ningún cargo real.</p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground mb-2">&larr; Volver a datos</button>
+        <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">M&eacute;todo de pago</h2>
+        <p className="text-sm text-muted-foreground mb-6">Pago simulado &middot; ning&uacute;n cargo real.</p>
+        <div className="grid gap-3 sm:grid-cols-3 mb-6">
           {methods.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => setPayment({ ...payment, method: m.id })}
-              className={`rounded-2xl border-2 p-4 text-left transition-all ${
-                payment.method === m.id
-                  ? "border-primary bg-secondary shadow-[var(--shadow-soft)]"
-                  : "border-border bg-card hover:border-primary/40"
-              }`}
-            >
-              <div className="flex items-center gap-2 text-sm font-bold text-foreground">
-                <CreditCard className="h-4 w-4 text-primary" /> {m.label}
-              </div>
+            <button key={m.id} onClick={() => setPayment({ ...payment, method: m.id })} className={cn("rounded-[20px] border-2 p-5 text-left transition-all", payment.method === m.id ? "border-primary bg-primary/5 shadow-[var(--shadow-soft)]" : "border-border bg-card hover:border-primary/40")}>
+              <div className="flex items-center gap-2 text-sm font-bold text-foreground"><CreditCard className="h-5 w-5 text-primary" /> {m.label}</div>
               <div className="mt-1 text-xs text-muted-foreground">{m.desc}</div>
             </button>
           ))}
         </div>
-
         {payment.method === "card" && (
-          <div className="mt-5 rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
-            <FieldInput
-              icon={CreditCard} label="Número de tarjeta" placeholder="4242 4242 4242 4242"
-              value={payment.card}
-              onChange={(v) => setPayment({ ...payment, card: v.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 ") })}
-            />
+          <div className="rounded-[24px] border border-border/20 bg-card p-6 shadow-[var(--shadow-card)]">
+            <FieldInput icon={CreditCard} label="N\u00famero de tarjeta" placeholder="4242 4242 4242 4242" value={payment.card} onChange={(v) => setPayment({ ...payment, card: v.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 ") })} />
             <div className="mt-3 grid grid-cols-2 gap-3">
-              <FieldInput
-                icon={Calendar} label="Vencimiento" placeholder="MM/AA"
-                value={payment.exp}
-                onChange={(v) => { const d = v.replace(/\D/g, "").slice(0, 4); setPayment({ ...payment, exp: d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d }); }}
-              />
-              <FieldInput
-                icon={Lock} label="CVV" placeholder="123" maxLength={4}
-                value={payment.cvv}
-                onChange={(v) => setPayment({ ...payment, cvv: v.replace(/\D/g, "").slice(0, 4) })}
-              />
+              <FieldInput icon={Calendar} label="Vencimiento" placeholder="MM/AA" value={payment.exp} onChange={(v) => { const d = v.replace(/\D/g, "").slice(0, 4); setPayment({ ...payment, exp: d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d }); }} />
+              <FieldInput icon={Lock} label="CVV" placeholder="123" maxLength={4} value={payment.cvv} onChange={(v) => setPayment({ ...payment, cvv: v.replace(/\D/g, "").slice(0, 4) })} />
             </div>
-            <div className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <Lock className="h-3 w-3" /> Conexión segura · datos cifrados
-            </div>
+            <div className="mt-4 flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/20 p-3 text-xs text-primary font-medium"><Lock className="h-4 w-4" /> Pago 100% seguro &middot; datos cifrados</div>
           </div>
         )}
-
         {payment.method !== "card" && (
-          <div className="mt-5 rounded-2xl border border-border bg-card p-8 text-center shadow-[var(--shadow-card)]">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-primary">
-              <QrCode className="h-7 w-7" />
-            </div>
-            <div className="font-bold text-foreground">Escanea con {payment.method === "yape" ? "Yape" : "Plin"}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Confirma el pago de S/ {total} desde tu app.</div>
+          <div className="rounded-[24px] border border-border/20 bg-card p-8 text-center shadow-[var(--shadow-card)]">
+            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-primary"><QrCode className="h-8 w-8" /></div>
+            <div className="text-lg font-bold text-foreground">Escanea con {payment.method === "yape" ? "Yape" : "Plin"}</div>
+            <div className="mt-1 text-sm text-muted-foreground">Confirma el pago de S/ {total} desde tu app.</div>
           </div>
         )}
       </div>
-
-      <aside className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)] lg:sticky lg:top-24 lg:h-fit">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">A pagar</h3>
-        <div className="mt-4 flex items-baseline justify-between">
+      <aside className="rounded-[24px] border border-border/20 bg-card p-6 sm:p-8 shadow-[var(--shadow-card)] lg:sticky lg:top-28 lg:h-fit">
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">A pagar</h3>
+        <div className="my-5 h-px bg-border" />
+        <div className="flex items-baseline justify-between">
           <span className="text-sm text-muted-foreground">Total</span>
-          <span className="text-3xl font-bold text-foreground">S/ {total}</span>
+          <span className="text-3xl font-bold text-primary">S/ {total}</span>
         </div>
-        <button
-          disabled={!cardOk}
-          onClick={onPay}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[image:var(--gradient-primary)] py-3 font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-elegant)] disabled:cursor-not-allowed disabled:opacity-40"
-        >
+        <button disabled={!cardOk} onClick={onPay} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95">
           <CheckCircle2 className="h-4 w-4" /> Confirmar pago
         </button>
-        <p className="mt-3 text-center text-[11px] text-muted-foreground">Pago ficticio para demostración.</p>
+        <p className="mt-3 text-center text-[11px] text-muted-foreground">Pago ficticio para demostraci&oacute;n.</p>
       </aside>
     </div>
+  );
+}
+
+/* ====== FOOTER ====== */
+function Footer() {
+  return (
+    <footer className="bg-muted border-t border-border">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16 py-10 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="flex flex-col gap-2 items-center md:items-start">
+          <span className="text-xl font-bold text-foreground">KUNTUR</span>
+          <p className="text-xs text-muted-foreground max-w-sm text-center md:text-left">&copy; 2026 KUNTUR. Todos los derechos reservados. Movilidad premium con puntualidad garantizada.</p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-6 text-sm">
+          {["Legal", "Privacidad", "Soporte", "T\u00e9rminos", "Contacto"].map((link) => (
+            <a key={link} href="#" className="text-muted-foreground hover:text-primary transition-colors hover:underline decoration-primary decoration-2 underline-offset-4">{link}</a>
+          ))}
+        </div>
+      </div>
+    </footer>
   );
 }
