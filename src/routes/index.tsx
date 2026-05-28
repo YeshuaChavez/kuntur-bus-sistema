@@ -205,7 +205,7 @@ function Hero(props: {
         <div className="absolute inset-0 -z-20">
           <img alt="Flota de buses KUNTUR" className="h-full w-full object-cover" src="/fleet-hero.png" />
         </div>
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0.42)_0%,rgba(0,0,0,0.24)_42%,rgba(247,250,248,1)_100%)]" />
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0.5)_0%,rgba(0,0,0,0.15)_60%,rgba(247,250,248,0.4)_85%,rgba(247,250,248,1)_100%)]" />
         <div className="relative z-10 mx-auto max-w-7xl px-5 text-center sm:px-8 lg:px-16">
           <h1 className="mx-auto max-w-4xl text-4xl font-bold leading-tight tracking-tight text-white drop-shadow-lg sm:text-5xl lg:text-[48px]">
             Viaja con el confort y la seguridad de <span className="text-[oklch(0.78_0.13_160)]">KUNTUR</span>
@@ -216,14 +216,14 @@ function Hero(props: {
         </div>
         {/* Floating Search Panel */}
         <div className="relative z-20 mx-auto mt-10 -mb-28 w-full max-w-[1100px] px-5 sm:px-8 lg:px-16">
-          <div className="rounded-[24px] border border-border/30 bg-card p-6 shadow-[0px_20px_50px_rgba(0,0,0,0.15)] sm:p-8 lg:p-10">
+          <div className="rounded-[24px] border border-white/20 bg-white/70 p-6 shadow-[0px_25px_50px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:p-8 lg:p-10 dark:border-white/10 dark:bg-card/60">
             <div className="grid grid-cols-1 items-end gap-6 md:grid-cols-12">
               <div className="relative md:col-span-4">
                 <label className="mb-2 ml-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Origen / Destino</label>
                 <div className="relative flex flex-col gap-2">
                   <div className="relative">
                     <MapPin className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <select value={props.origin} onChange={(e) => props.setOrigin(e.target.value)} className="w-full rounded-xl border border-border bg-background py-4 pl-11 pr-4 text-base font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20">
+                    <select value={props.origin} onChange={(e) => props.setOrigin(e.target.value)} className="w-full rounded-xl border border-border/60 bg-background/80 backdrop-blur-sm py-4 pl-11 pr-4 text-base font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 transition-colors duration-200">
                       {cities.map((c) => <option key={c}>{c}</option>)}
                     </select>
                   </div>
@@ -232,7 +232,7 @@ function Hero(props: {
                   </button>
                   <div className="relative">
                     <Bus className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <select value={props.destination} onChange={(e) => props.setDestination(e.target.value)} className="w-full rounded-xl border border-border bg-background py-4 pl-11 pr-4 text-base font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20">
+                    <select value={props.destination} onChange={(e) => props.setDestination(e.target.value)} className="w-full rounded-xl border border-border/60 bg-background/80 backdrop-blur-sm py-4 pl-11 pr-4 text-base font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 transition-colors duration-200">
                       {cities.map((c) => <option key={c}>{c}</option>)}
                     </select>
                   </div>
@@ -247,7 +247,7 @@ function Hero(props: {
                   <label className="mb-2 ml-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pasajeros</label>
                   <div className="relative">
                     <Users className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <select value={props.pax} onChange={(e) => props.setPax(Number(e.target.value))} className="w-full appearance-none rounded-xl border border-border bg-background py-4 pl-11 pr-4 text-base font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20">
+                    <select value={props.pax} onChange={(e) => props.setPax(Number(e.target.value))} className="w-full appearance-none rounded-xl border border-border/60 bg-background/80 backdrop-blur-sm py-4 pl-11 pr-4 text-base font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 transition-colors duration-200">
                       {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n} Pasajero{n > 1 ? "s" : ""}</option>)}
                     </select>
                   </div>
@@ -318,7 +318,7 @@ function DatePickerField({ value, onChange }: { value: Date; onChange: (v: Date)
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" className="flex w-full items-center gap-3 rounded-xl border border-border bg-background px-4 py-4 text-left transition-colors hover:border-primary focus:border-primary focus:outline-none">
+        <button type="button" className="flex w-full items-center gap-3 rounded-xl border border-border/60 bg-background/80 backdrop-blur-sm px-4 py-4 text-left transition-colors hover:border-primary/50 focus:border-primary focus:outline-none">
           <Calendar className="h-4 w-4 text-muted-foreground" />
           <span className="text-base font-medium capitalize text-foreground">{format(value, "EEE d MMM", { locale: es })}</span>
         </button>
