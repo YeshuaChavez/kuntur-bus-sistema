@@ -446,20 +446,32 @@ function Hero(props: {
         </div>
       </section>
       {/* Beneficios */}
-      <section id="beneficios" className="border-y border-border/30 bg-secondary py-20">
+      <section id="beneficios" className="border-y border-border/30 bg-secondary py-24">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16">
-          <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">¿Por qué viajar con KUNTUR?</h2>
+            <p className="mt-4 text-lg text-muted-foreground">Ofrecemos un servicio interprovincial premium de primer nivel, cuidando cada detalle de tu viaje.</p>
+          </div>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             {([
-              { icon: ShieldCheck, title: "Seguridad garantizada", desc: "Monitoreo GPS en tiempo real y conductores capacitados para viajar con tranquilidad." },
-              { icon: Bus, title: "Flota moderna", desc: "Buses equipados con asientos de cuero, climatizaci\u00f3n y entretenimiento a bordo." },
-              { icon: Headphones, title: "Atenci\u00f3n 24/7", desc: "Soporte antes, durante y despu\u00e9s del viaje, siempre cerca cuando lo necesites." },
+              { icon: ShieldCheck, title: "Seguridad garantizada", desc: "Monitoreo GPS en tiempo real y conductores altamente capacitados para tu tranquilidad en ruta.", img: "/benefit_safety.png" },
+              { icon: Bus, title: "Flota moderna", desc: "Buses de última generación equipados con asientos ergonómicos, climatización y pantallas de entretenimiento individual.", img: "/benefit_fleet.png" },
+              { icon: Headphones, title: "Atención 24/7", desc: "Canales de soporte directo disponibles antes, durante y después del viaje, siempre listos para ayudarte.", img: "/benefit_support.png" },
             ] as const).map((b) => (
-              <div key={b.title} className="group flex flex-col items-center text-center">
-                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                  <b.icon className="h-8 w-8" />
+              <div key={b.title} className="group relative flex flex-col rounded-[24px] border border-border/40 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[var(--shadow-elegant)] overflow-hidden">
+                <div className="h-56 overflow-hidden relative">
+                  <img alt={b.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" src={b.img} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                  <div className="absolute top-4 left-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/90 text-primary shadow-md backdrop-blur-md transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                    <b.icon className="h-6 w-6" />
+                  </div>
                 </div>
-                <h3 className="mb-3 text-xl font-semibold text-foreground">{b.title}</h3>
-                <p className="max-w-sm text-base leading-7 text-muted-foreground">{b.desc}</p>
+                <div className="p-6 flex-1 flex flex-col justify-between bg-card">
+                  <div>
+                    <h3 className="mb-3 text-xl font-bold text-foreground transition-colors group-hover:text-primary">{b.title}</h3>
+                    <p className="text-sm leading-relaxed text-muted-foreground">{b.desc}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
