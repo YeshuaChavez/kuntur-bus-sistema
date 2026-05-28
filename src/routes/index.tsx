@@ -122,37 +122,6 @@ function HomeBooking() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
-
-  useEffect(() => {
-    if (!carouselApi) return;
-    let intervalId: any;
-
-    const startAutoplay = () => {
-      intervalId = setInterval(() => {
-        if (carouselApi.canScrollNext()) {
-          carouselApi.scrollNext();
-        } else {
-          carouselApi.scrollTo(0);
-        }
-      }, 4000);
-    };
-
-    const stopAutoplay = () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-
-    startAutoplay();
-
-    carouselApi.on("select", () => {
-      stopAutoplay();
-      startAutoplay();
-    });
-    carouselApi.on("pointerDown", stopAutoplay);
-
-    return () => stopAutoplay();
-  }, [carouselApi]);
-
   const [origin, setOrigin] = useState("Lima");
   const [destination, setDestination] = useState("Trujillo");
   const [date, setDate] = useState<Date>(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d; });
@@ -259,6 +228,37 @@ function Hero(props: {
   setDate: (v: Date) => void; setPax: (v: number) => void;
   swap: () => void; onSearch: () => void;
 }) {
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    let intervalId: any;
+
+    const startAutoplay = () => {
+      intervalId = setInterval(() => {
+        if (carouselApi.canScrollNext()) {
+          carouselApi.scrollNext();
+        } else {
+          carouselApi.scrollTo(0);
+        }
+      }, 4000);
+    };
+
+    const stopAutoplay = () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+
+    startAutoplay();
+
+    carouselApi.on("select", () => {
+      stopAutoplay();
+      startAutoplay();
+    });
+    carouselApi.on("pointerDown", stopAutoplay);
+
+    return () => stopAutoplay();
+  }, [carouselApi]);
+
   const destinations = [
     { city: "Lima", region: "Costa Central", price: 45, img: "/lima.png" },
     { city: "Arequipa", region: "Ciudad Blanca", price: 55, img: "/arequipa.png" },
