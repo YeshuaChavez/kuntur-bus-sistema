@@ -7,13 +7,20 @@ import {
   ArrowRight, Calendar, MapPin, Search, Users, X, QrCode, Clock, Bus, Leaf,
   LogIn, LogOut, ShieldCheck, AlertCircle, ArrowLeftRight, Sparkles, CreditCard, ChevronRight,
   IdCard, User as UserIcon, Lock, CheckCircle2, Crown, Moon, BedDouble, Star, SlidersHorizontal,
-  Mail, ArrowUpDown, Headphones, Globe, Ticket as TicketIcon,
+  Mail, ArrowUpDown, Headphones, Globe, Ticket as TicketIcon, Utensils, Sun, Compass,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import {
   Carousel,
   CarouselContent,
@@ -221,6 +228,50 @@ function Header({ user, onLogout, activeSection, setActiveSection }: {
   );
 }
 
+const destinationDetails: Record<string, {
+  history: string;
+  weather: string;
+  food: string;
+  fact: string;
+}> = {
+  Lima: {
+    history: "Fundada en 1535 como la 'Ciudad de los Reyes', Lima fue la capital del Virreinato del Per\u00fa. Hoy es una metr\u00f3polis vibrante que combina historia colonial en su centro hist\u00f3rico y modernidad a orillas del Pac\u00edfico en Miraflores y Barranco.",
+    weather: "Templado, h\u00famedo (15\u00b0C - 27\u00b0C). Agradable todo el a\u00f1o.",
+    food: "Ceviche lime\u00f1o, Causa rellena, Lomo saltado y Anticuchos.",
+    fact: "Alberga la Huaca Pucllana, un imponente templo ceremonial preinca construido de adobe en pleno coraz\u00f3n de la ciudad."
+  },
+  Arequipa: {
+    history: "Conocida como la 'Ciudad Blanca' debido a sus hermosas construcciones hechas de sillar (piedra volc\u00e1nica). Fundada en 1540, cuenta con un centro hist\u00f3rico declarado Patrimonio de la Humanidad.",
+    weather: "Seco y templado, con sol radiante casi todo el a\u00f1o (10\u00b0C - 24\u00b0C).",
+    food: "Rocoto relleno, Chupe de camarones, Ocopa arequipe\u00f1a y Adobo.",
+    fact: "Posee el Ca\u00f1\u00f3n del Colca, uno de los m\u00e1s profundos del mundo y hogar del majestuoso C\u00f3ndor Andino."
+  },
+  Cusco: {
+    history: "Antigua capital del Imperio Incaico y el 'Ombligo del Mundo'. Es una de las ciudades m\u00e1s fascinantes de Am\u00e9rica por su impresionante mezcla de cimientos de piedra inca y templos coloniales espa\u00f1oles.",
+    weather: "Clima andino, templado y seco, con noches fr\u00edas (5\u00b0C - 20\u00b0C).",
+    food: "Chiri Uchu, Sopa de trigo, Cuy chactado y lech\u00f3n cusque\u00f1o.",
+    fact: "Es la puerta de entrada a Machu Picchu, una de las nuevas siete maravillas del mundo moderno."
+  },
+  Trujillo: {
+    history: "Fundada en 1534, Trujillo es la 'Capital de la Primavera' y de la Marinera norte\u00f1a. Fue el centro de las civilizaciones Mochica y Chim\u00fa, destacadas por su orfebrer\u00eda y arquitectura.",
+    weather: "C\u00e1lido y templado, sumamente primaveral todo el a\u00f1o (16\u00b0C - 26\u00b0C).",
+    food: "Shambar (sopa tradicional de los lunes), Seco de cabrito y Pescado a la brasa.",
+    fact: "Alberga las ruinas de Chan Chan, la ciudad de barro precolombina m\u00e1s grande de Am\u00e9rica."
+  },
+  Piura: {
+    history: "La primera ciudad espa\u00f1ola fundada en Sudam\u00e9rica en 1532 por Francisco Pizarro. Es famosa por su fervor cultural, su hermosa cer\u00e1mica en Chulucanas y sus espectaculares playas como M\u00e1ncora.",
+    weather: "C\u00e1lido, tropical y soleado todo el a\u00f1o (20\u00b0C - 34\u00b0C).",
+    food: "Seco de chabelo, Cebiche de mero con zarandaja y Tamalitos verdes.",
+    fact: "Sus costas son el paso de ballenas jorobadas entre julio y octubre, ofreciendo un avistamiento natural inolvidable."
+  },
+  Ica: {
+    history: "Un oasis f\u00e9rtil en medio del desierto. Ica destaca por su milenaria agricultura (hogar de las culturas Nazca y Paracas), su producci\u00f3n de Pisco de alta calidad y sus misteriosas dunas.",
+    weather: "C\u00e1lido, soleado y des\u00e9rtico durante todo el a\u00f1o (18\u00b0C - 32\u00b0C).",
+    food: "Carapulcra con Sopa seca, Ensalada de pallares y Tejas ique\u00f1as.",
+    fact: "Su desierto esconde la Huacachina, el \u00fanico oasis natural rodeado de dunas gigantes en toda Sudam\u00e9rica."
+  }
+};
+
 /* ====== HERO ====== */
 function Hero(props: {
   origin: string; destination: string; date: Date; pax: number;
@@ -229,6 +280,7 @@ function Hero(props: {
   swap: () => void; onSearch: () => void;
 }) {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [selectedCityInfo, setSelectedCityInfo] = useState<{ city: string; region: string; price: number; img: string } | null>(null);
 
   useEffect(() => {
     if (!carouselApi) return;
@@ -279,53 +331,75 @@ function Hero(props: {
           </p>
         </div>
         {/* Floating Search Panel */}
-        <div className="relative z-20 mx-auto mt-10 -mb-28 w-full max-w-[1100px] px-5 sm:px-8 lg:px-16">
-          <div className="rounded-[24px] border border-white/20 bg-white/70 p-6 shadow-[0px_25px_50px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:p-8 lg:p-10 dark:border-white/10 dark:bg-card/60">
-            <div className="grid grid-cols-1 items-end gap-6 md:grid-cols-12">
-              <div className="relative md:col-span-4">
-                <label className="mb-2 ml-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Origen / Destino</label>
-                <div className="relative flex flex-col gap-2">
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <select value={props.origin} onChange={(e) => props.setOrigin(e.target.value)} className="w-full rounded-xl border border-border/60 bg-background/80 backdrop-blur-sm py-4 pl-11 pr-4 text-base font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 transition-colors duration-200">
-                      {cities.map((c) => <option key={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <button onClick={props.swap} className="absolute right-4 top-1/2 z-10 rounded-full bg-primary p-2 text-primary-foreground shadow-md transition-transform duration-500 hover:rotate-180 active:scale-90">
-                    <ArrowUpDown className="h-4 w-4" />
-                  </button>
-                  <div className="relative">
-                    <Bus className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <select value={props.destination} onChange={(e) => props.setDestination(e.target.value)} className="w-full rounded-xl border border-border/60 bg-background/80 backdrop-blur-sm py-4 pl-11 pr-4 text-base font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 transition-colors duration-200">
-                      {cities.map((c) => <option key={c}>{c}</option>)}
-                    </select>
-                  </div>
+        <div className="relative z-20 mx-auto mt-10 -mb-24 w-full max-w-[1150px] px-5 sm:px-8 lg:px-12">
+          <div className="rounded-[28px] md:rounded-full border border-white/20 bg-white/95 p-3.5 pl-6 md:pl-8 shadow-[0px_25px_60px_rgba(0,0,0,0.2)] backdrop-blur-xl dark:border-white/10 dark:bg-card/90">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center">
+              
+              {/* Title label */}
+              <div className="flex items-center gap-2 pr-2">
+                <span className="text-sm font-extrabold uppercase tracking-wider text-muted-foreground whitespace-nowrap md:text-base md:text-foreground">Compra tu pasaje:</span>
+              </div>
+              <div className="hidden h-10 w-px bg-border/60 md:block" />
+
+              {/* Origen */}
+              <div className="relative flex-1 min-w-[140px] pl-2 md:pl-0">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Origen:</label>
+                <div className="relative flex items-center">
+                  <select value={props.origin} onChange={(e) => props.setOrigin(e.target.value)} className="w-full appearance-none bg-transparent text-sm font-extrabold text-foreground outline-none cursor-pointer pr-6 py-1 border-0 focus:ring-0 focus:outline-none transition-colors hover:text-primary">
+                    {cities.map((c) => <option key={c} value={c} className="text-black bg-white">{c.toUpperCase()}</option>)}
+                  </select>
+                  <ChevronRight className="absolute right-2 h-4 w-4 rotate-90 text-muted-foreground pointer-events-none" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4 md:col-span-4">
-                <div>
-                  <label className="mb-2 ml-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ida</label>
-                  <DatePickerField value={props.date} onChange={props.setDate} />
-                </div>
-                <div>
-                  <label className="mb-2 ml-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pasajeros</label>
-                  <div className="relative">
-                    <Users className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <select value={props.pax} onChange={(e) => props.setPax(Number(e.target.value))} className="w-full appearance-none rounded-xl border border-border/60 bg-background/80 backdrop-blur-sm py-4 pl-11 pr-4 text-base font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 transition-colors duration-200">
-                      {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n} Pasajero{n > 1 ? "s" : ""}</option>)}
-                    </select>
-                  </div>
+              <div className="h-px w-full bg-border/40 md:hidden" />
+              <div className="hidden h-10 w-px bg-border/60 md:block" />
+
+              {/* Destino */}
+              <div className="relative flex-1 min-w-[140px]">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Destino:</label>
+                <div className="relative flex items-center">
+                  <select value={props.destination} onChange={(e) => props.setDestination(e.target.value)} className="w-full appearance-none bg-transparent text-sm font-extrabold text-foreground outline-none cursor-pointer pr-6 py-1 border-0 focus:ring-0 focus:outline-none transition-colors hover:text-primary">
+                    {cities.map((c) => <option key={c} value={c} className="text-black bg-white">{c.toUpperCase()}</option>)}
+                  </select>
+                  <ChevronRight className="absolute right-2 h-4 w-4 rotate-90 text-muted-foreground pointer-events-none" />
                 </div>
               </div>
-              <div className="md:col-span-4">
-                <button onClick={props.onSearch} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-base font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 hover:brightness-110 active:scale-95">
-                  <Search className="h-5 w-5" /> Buscar viajes
+              <div className="h-px w-full bg-border/40 md:hidden" />
+              <div className="hidden h-10 w-px bg-border/60 md:block" />
+
+              {/* Fecha salida */}
+              <div className="relative flex-1 min-w-[150px]">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Fecha salida:</label>
+                <div className="relative flex items-center">
+                  <DatePickerField value={props.date} onChange={props.setDate} borderless />
+                </div>
+              </div>
+              <div className="h-px w-full bg-border/40 md:hidden" />
+              <div className="hidden h-10 w-px bg-border/60 md:block" />
+
+              {/* Pasajeros */}
+              <div className="relative flex-1 min-w-[130px]">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">N° pasajeros:</label>
+                <div className="relative flex items-center">
+                  <select value={props.pax} onChange={(e) => props.setPax(Number(e.target.value))} className="w-full appearance-none bg-transparent text-sm font-extrabold text-foreground outline-none cursor-pointer pr-6 py-1 border-0 focus:ring-0 focus:outline-none transition-colors hover:text-primary">
+                    {[1, 2, 3, 4].map((n) => <option key={n} value={n} className="text-black bg-white">{n} PASAJERO{n > 1 ? "S" : ""}</option>)}
+                  </select>
+                  <ChevronRight className="absolute right-2 h-4 w-4 rotate-90 text-muted-foreground pointer-events-none" />
+                </div>
+              </div>
+              
+              {/* Buscar Button */}
+              <div className="md:pl-4 w-full md:w-auto">
+                <button onClick={props.onSearch} className="w-full rounded-full bg-primary hover:bg-primary/90 active:scale-95 px-10 py-4 text-sm font-extrabold uppercase tracking-wider text-primary-foreground shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30 md:w-auto">
+                  BUSCAR
                 </button>
               </div>
+
             </div>
           </div>
         </div>
       </section>
+
       {/* Destinos */}
       <section id="destinos" className="bg-background pb-16 pt-36">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16">
@@ -340,19 +414,31 @@ function Hero(props: {
             <CarouselContent className="-ml-6">
               {destinations.map((d) => (
                 <CarouselItem key={d.city} className="pl-6 basis-full sm:basis-1/2 lg:basis-1/3">
-                  <button onClick={() => { props.setDestination(d.city); props.onSearch(); }} className="group relative w-full overflow-hidden rounded-[24px] bg-card text-left shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-elegant)]">
+                  <div
+                    onClick={() => { props.setDestination(d.city); props.onSearch(); }}
+                    className="group relative w-full overflow-hidden rounded-[24px] bg-card text-left shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-elegant)] cursor-pointer"
+                  >
                     <div className="h-[400px] overflow-hidden">
                       <img alt={d.city} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" src={d.img} />
                     </div>
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6">
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6">
                       <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-white/80">{d.region}</p>
                       <h3 className="mb-2 text-2xl font-semibold text-white">{d.city}</h3>
-                      <div className="flex items-center justify-between">
-                        <span className="text-base text-white">Desde</span>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm text-white">Desde</span>
                         <span className="text-2xl font-semibold text-[oklch(0.78_0.13_160)]">S/ {d.price}.00</span>
                       </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCityInfo(d);
+                        }}
+                        className="w-full rounded-full border-2 border-white bg-black/25 hover:bg-white hover:text-black text-white font-bold py-2.5 text-center text-xs uppercase tracking-wider transition-all duration-300 active:scale-95 shadow-md"
+                      >
+                        CONOCE MÁS
+                      </button>
                     </div>
-                  </button>
+                  </div>
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -379,19 +465,95 @@ function Hero(props: {
           </div>
         </div>
       </section>
+
+      {/* Dialog for details */}
+      <Dialog open={!!selectedCityInfo} onOpenChange={(open) => !open && setSelectedCityInfo(null)}>
+        <DialogContent className="max-w-2xl p-0 overflow-hidden rounded-[28px] border border-border/40 shadow-2xl bg-card [&>button]:bg-black/40 [&>button]:text-white [&>button]:hover:bg-black/60 [&>button]:rounded-full [&>button]:p-2 [&>button]:border [&>button]:border-white/20 [&>button]:transition-all">
+          {selectedCityInfo && (() => {
+            const details = destinationDetails[selectedCityInfo.city];
+            return (
+              <>
+                <div className="relative h-[240px] w-full">
+                  <img alt={selectedCityInfo.city} className="h-full w-full object-cover" src={selectedCityInfo.img} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+                  <div className="absolute bottom-6 left-6 text-white">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[oklch(0.78_0.13_160)]">{selectedCityInfo.region}</p>
+                    <DialogTitle asChild>
+                      <h2 className="text-3xl font-extrabold mt-1 text-white">{selectedCityInfo.city}</h2>
+                    </DialogTitle>
+                  </div>
+                </div>
+                <div className="p-8 space-y-6">
+                  <div>
+                    <h3 className="text-base font-bold text-foreground flex items-center gap-2 mb-2">
+                      <Compass className="h-5 w-5 text-primary" /> Historia y Cultura
+                    </h3>
+                    <DialogDescription asChild>
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        {details?.history}
+                      </p>
+                    </DialogDescription>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-2xl bg-secondary/50 border border-border/20 flex flex-col items-center text-center">
+                      <Sun className="h-6 w-6 text-orange-500 mb-2" />
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Clima</span>
+                      <span className="text-xs font-semibold text-foreground">{details?.weather}</span>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-secondary/50 border border-border/20 flex flex-col items-center text-center">
+                      <Utensils className="h-6 w-6 text-green-600 mb-2" />
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Plato Bandera</span>
+                      <span className="text-xs font-semibold text-foreground">{details?.food}</span>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-secondary/50 border border-border/20 flex flex-col items-center text-center">
+                      <Sparkles className="h-6 w-6 text-amber-500 mb-2" />
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">¿Sabías que...?</span>
+                      <span className="text-xs font-semibold text-foreground leading-snug">{details?.fact}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6 border-t border-border/40 bg-secondary/30 flex items-center justify-between gap-4 flex-col sm:flex-row">
+                  <div className="flex flex-col text-center sm:text-left">
+                    <span className="text-xs text-muted-foreground">Pasajes de ida desde</span>
+                    <span className="text-2xl font-extrabold text-foreground">S/ {selectedCityInfo.price}.00</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      props.setDestination(selectedCityInfo.city);
+                      props.onSearch();
+                      setSelectedCityInfo(null);
+                    }}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-full bg-primary hover:bg-primary/90 active:scale-95 px-8 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30"
+                  >
+                    Buscar Pasajes <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
 
 /* ====== DATE PICKER ====== */
-function DatePickerField({ value, onChange }: { value: Date; onChange: (v: Date) => void }) {
+function DatePickerField({ value, onChange, borderless }: { value: Date; onChange: (v: Date) => void; borderless?: boolean }) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" className="flex w-full items-center gap-3 rounded-xl border border-border/60 bg-background/80 backdrop-blur-sm px-4 py-4 text-left transition-colors hover:border-primary/50 focus:border-primary focus:outline-none">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <span className="text-base font-medium capitalize text-foreground">{format(value, "EEE d MMM", { locale: es })}</span>
+        <button
+          type="button"
+          className={cn(
+            "flex w-full items-center justify-between gap-2 text-left transition-colors focus:outline-none",
+            borderless
+              ? "bg-transparent border-0 p-0 py-1 text-sm font-extrabold text-foreground hover:text-primary"
+              : "rounded-xl border border-border/60 bg-background/80 backdrop-blur-sm px-4 py-4 hover:border-primary/50"
+          )}
+        >
+          <span className="capitalize">{format(value, "EEE d MMM", { locale: es })}</span>
+          <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-0">
