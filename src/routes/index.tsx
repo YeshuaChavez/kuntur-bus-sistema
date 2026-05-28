@@ -14,6 +14,13 @@ import { es } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -93,6 +100,27 @@ function HomeBooking() {
   const navigate = useNavigate();
   useEffect(() => { if (user && user.role !== "cliente") navigate({ to: roleHome(user.role) }); }, [user, navigate]);
 
+  const [activeSection, setActiveSection] = useState("inicio");
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPos = window.scrollY + 250;
+      const destinosEl = document.getElementById("destinos");
+      const beneficiosEl = document.getElementById("beneficios");
+
+      if (beneficiosEl && scrollPos >= beneficiosEl.offsetTop) {
+        setActiveSection("beneficios");
+      } else if (destinosEl && scrollPos >= destinosEl.offsetTop) {
+        setActiveSection("destinos");
+      } else {
+        setActiveSection("inicio");
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const [origin, setOrigin] = useState("Lima");
   const [destination, setDestination] = useState("Trujillo");
   const [date, setDate] = useState<Date>(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d; });
@@ -130,7 +158,7 @@ function HomeBooking() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header user={user} onLogout={logout} />
+      <Header user={user} onLogout={logout} activeSection={activeSection} setActiveSection={setActiveSection} />
       <main>
         {step === "search" && (
           <Hero origin={origin} destination={destination} date={date} pax={pax}
@@ -155,15 +183,20 @@ function HomeBooking() {
 }
 
 /* ====== HEADER ====== */
-function Header({ user, onLogout }: { user: ReturnType<typeof useAuth>["user"]; onLogout: () => void }) {
+function Header({ user, onLogout, activeSection, setActiveSection }: {
+  user: ReturnType<typeof useAuth>["user"];
+  onLogout: () => void;
+  activeSection: string;
+  setActiveSection: (v: string) => void;
+}) {
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-card/85 shadow-[0px_4px_20px_0px_rgba(84,95,115,0.05)] backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-16">
-        <Link to="/" className="text-2xl font-extrabold tracking-tight text-primary">KUNTUR</Link>
+        <Link to="/" onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setActiveSection("inicio"); }} className="text-2xl font-extrabold tracking-tight text-primary">KUNTUR</Link>
         <nav className="hidden items-center gap-10 text-base md:flex">
-          <Link to="/" className="border-b-2 border-primary pb-1 font-semibold text-primary">Inicio</Link>
-          <a href="#destinos" className="text-muted-foreground transition-colors hover:text-primary">Destinos</a>
-          <a href="#beneficios" className="text-muted-foreground transition-colors hover:text-primary">Beneficios</a>
+          <button onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setActiveSection("inicio"); }} className={cn("pb-1 font-semibold transition-colors hover:text-primary bg-transparent border-0 cursor-pointer", activeSection === "inicio" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Inicio</button>
+          <a href="#destinos" onClick={() => setActiveSection("destinos")} className={cn("pb-1 font-semibold transition-colors hover:text-primary", activeSection === "destinos" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Destinos</a>
+          <a href="#beneficios" onClick={() => setActiveSection("beneficios")} className={cn("pb-1 font-semibold transition-colors hover:text-primary", activeSection === "beneficios" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Beneficios</a>
         </nav>
         <div className="flex items-center gap-3">
           {user ? (
@@ -198,6 +231,9 @@ function Hero(props: {
     { city: "Lima", region: "Costa Central", price: 45, img: "/lima.png" },
     { city: "Arequipa", region: "Ciudad Blanca", price: 55, img: "/arequipa.png" },
     { city: "Cusco", region: "Valle Sagrado", price: 60, img: "/cusco.png" },
+    { city: "Trujillo", region: "Norte Colonial", price: 42, img: "/trujillo.png" },
+    { city: "Piura", region: "Costa Norte", price: 50, img: "/piura.png" },
+    { city: "Ica", region: "Sol y Dunas", price: 35, img: "/ica.png" },
   ];
   return (
     <>
@@ -265,27 +301,34 @@ function Hero(props: {
       {/* Destinos */}
       <section id="destinos" className="bg-background pb-16 pt-36">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16">
-          <div className="mb-8 flex items-center justify-between gap-4">
-            <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">Explora destinos inolvidables</h2>
-            <button className="hidden items-center gap-2 text-sm font-semibold text-primary hover:underline sm:flex">Ver todos <ArrowRight className="h-4 w-4" /></button>
-          </div>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {destinations.map((d) => (
-              <button key={d.city} onClick={() => { props.setDestination(d.city); props.onSearch(); }} className="group relative overflow-hidden rounded-[24px] bg-card text-left shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-elegant)]">
-                <div className="h-[400px] overflow-hidden">
-                  <img alt={d.city} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" src={d.img} />
-                </div>
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6">
-                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-white/80">{d.region}</p>
-                  <h3 className="mb-2 text-2xl font-semibold text-white">{d.city}</h3>
-                  <div className="flex items-center justify-between">
-                    <span className="text-base text-white">Desde</span>
-                    <span className="text-2xl font-semibold text-[oklch(0.78_0.13_160)]">S/ {d.price}.00</span>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
+          <Carousel opts={{ align: "start" }} className="w-full">
+            <div className="mb-8 flex items-center justify-between gap-4">
+              <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">Explora destinos inolvidables</h2>
+              <div className="flex items-center gap-2">
+                <CarouselPrevious className="static translate-y-0 left-auto top-auto" />
+                <CarouselNext className="static translate-y-0 right-auto top-auto" />
+              </div>
+            </div>
+            <CarouselContent className="-ml-6">
+              {destinations.map((d) => (
+                <CarouselItem key={d.city} className="pl-6 basis-full sm:basis-1/2 lg:basis-1/3">
+                  <button onClick={() => { props.setDestination(d.city); props.onSearch(); }} className="group relative w-full overflow-hidden rounded-[24px] bg-card text-left shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-elegant)]">
+                    <div className="h-[400px] overflow-hidden">
+                      <img alt={d.city} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" src={d.img} />
+                    </div>
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6">
+                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-white/80">{d.region}</p>
+                      <h3 className="mb-2 text-2xl font-semibold text-white">{d.city}</h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-base text-white">Desde</span>
+                        <span className="text-2xl font-semibold text-[oklch(0.78_0.13_160)]">S/ {d.price}.00</span>
+                      </div>
+                    </div>
+                  </button>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
         </div>
       </section>
       {/* Beneficios */}
