@@ -58,7 +58,7 @@ function TripsPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header user={user} onLogout={logout} activeSection={activeSection} setActiveSection={setActiveSection} />
-      <main className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16 pb-16 pt-6">
+      <main className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16 pb-16 pt-14">
         <Stepper step="trips" />
         <TripsList
           origin={origin}
