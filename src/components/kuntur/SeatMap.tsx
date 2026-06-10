@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Compass, Eye, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type SeatStatus = "free" | "selected" | "occupied" | "sold" | "boarded";
@@ -52,7 +53,7 @@ export function SeatMap({ seats, onSelect, variant = "client" }: SeatMapProps) {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <span>{f === 1 ? "🪑" : "🏔️"}</span>
+                {f === 1 ? <Layers className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 <span>Piso {f}</span>
                 {count > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-black text-primary-foreground ring-2 ring-card">
@@ -66,7 +67,9 @@ export function SeatMap({ seats, onSelect, variant = "client" }: SeatMapProps) {
       )}
 
       <div className="mx-auto mb-4 flex w-full max-w-[260px] items-center justify-between rounded-t-3xl border border-border bg-secondary px-4 py-2 text-xs font-medium text-secondary-foreground">
-        {activeFloor === 1 ? <><span>🧭 Conductor</span><span>Frente</span></> : <><span>🏔️ Piso Superior</span><span>Vista Panorámica</span></>}
+        {activeFloor === 1
+          ? <><span className="flex items-center gap-1"><Compass className="h-3 w-3" /> Conductor</span><span>Frente</span></>
+          : <><span className="flex items-center gap-1"><Eye className="h-3 w-3" /> Piso Superior</span><span>Vista Panorámica</span></>}
       </div>
 
       <div className="flex flex-col items-center gap-2">

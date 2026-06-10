@@ -7,6 +7,7 @@ import {
   LogIn, LogOut, ShieldCheck, AlertCircle, ArrowLeftRight, Sparkles, CreditCard, ChevronRight,
   IdCard, User as UserIcon, Lock, CheckCircle2, Crown, Moon, BedDouble, Star, SlidersHorizontal,
   Mail, ArrowUpDown, Headphones, Globe, Ticket as TicketIcon, Utensils, Sun, Compass,
+  Timer, Smartphone,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -773,7 +774,12 @@ export function TripsList({ origin, destination, date, onPick, onBack }: {
                 <div>
                   <div className="flex items-center gap-3 mb-3">
                     <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider", s.chip)}><Icon className="h-3 w-3" /> {s.label}</span>
-                    <span className={cn("font-bold text-xs", t.seats <= 6 ? "text-destructive" : "text-primary")}>{t.seats <= 6 ? `Solo ${t.seats} disponibles` : `${t.seats} disponibles`}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={cn("font-bold text-xs", t.seats <= 6 ? "text-destructive" : "text-primary")}>{t.seats <= 6 ? `¡Solo ${t.seats}!` : `${t.seats} disponibles`}</span>
+                      <div className="w-20 h-1.5 bg-secondary rounded-full overflow-hidden">
+                        <div className={cn("h-full rounded-full transition-all duration-500", t.seats <= 6 ? "bg-destructive" : t.seats <= 12 ? "bg-[var(--warning)]" : "bg-primary")} style={{ width: `${Math.round((t.seats / 44) * 100)}%` }} />
+                      </div>
+                    </div>
                   </div>
                   <div className="flex items-center gap-6">
                     <div><p className="text-2xl font-semibold text-foreground">{t.time}</p><p className="text-xs text-muted-foreground">{origin}</p></div>
@@ -809,6 +815,16 @@ export function SeatStep({ trip, seats, selected, total, toggleSeat, onBack, onP
   const isWrongRole = user && user.role !== "cliente";
   const s = getTripStyle(trip.type);
   const Icon = s.icon;
+  const [timeLeft, setTimeLeft] = useState(10 * 60);
+  useEffect(() => {
+    if (timeLeft === 0) return;
+    const id = setTimeout(() => setTimeLeft(t => t - 1), 1000);
+    return () => clearTimeout(id);
+  }, [timeLeft]);
+  const mins = String(Math.floor(timeLeft / 60)).padStart(2, "0");
+  const secs = String(timeLeft % 60).padStart(2, "0");
+  const expired = timeLeft === 0;
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_400px] items-start">
       <div>
@@ -818,6 +834,10 @@ export function SeatStep({ trip, seats, selected, total, toggleSeat, onBack, onP
         <SeatMap seats={seats} onSelect={toggleSeat} variant="client" />
       </div>
       <aside className="rounded-[24px] border border-border/20 bg-card p-6 sm:p-8 shadow-[var(--shadow-card)] lg:sticky lg:top-28 lg:h-fit">
+        <div className={cn("flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold mb-5 tabular-nums", expired ? "bg-destructive/10 text-destructive border border-destructive/20" : timeLeft < 120 ? "bg-[var(--warning)]/15 text-[var(--warning-foreground)] border border-[var(--warning)]/30" : "bg-secondary text-muted-foreground")}>
+          <Timer className={cn("h-3.5 w-3.5", !expired && timeLeft < 120 && "animate-pulse")} />
+          {expired ? "Tiempo agotado — recarga la página" : `Tiempo para completar: ${mins}:${secs}`}
+        </div>
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Tu reserva</h3>
           <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.chip)}><Icon className="h-3 w-3" /> {s.label}</span>
@@ -1051,10 +1071,10 @@ export function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
   total: number; payment: { method: "card" | "yape" | "plin"; card: string; exp: string; cvv: string };
   setPayment: (p: typeof payment) => void; onBack: () => void; onPay: () => void;
 }) {
-  const methods: { id: "card" | "yape" | "plin"; label: string; desc: string }[] = [
-    { id: "card", label: "Tarjeta", desc: "Visa \u00b7 Mastercard" },
-    { id: "yape", label: "Yape", desc: "Pago instant\u00e1neo" },
-    { id: "plin", label: "Plin", desc: "Transferencia m\u00f3vil" },
+  const methods: { id: "card" | "yape" | "plin"; label: string; desc: string; icon: any }[] = [
+    { id: "card",  label: "Tarjeta", desc: "Visa \u00b7 Mastercard",     icon: CreditCard  },
+    { id: "yape",  label: "Yape",    desc: "Pago instant\u00e1neo",      icon: Smartphone  },
+    { id: "plin",  label: "Plin",    desc: "Transferencia m\u00f3vil",   icon: Smartphone  },
   ];
   const cardOk = payment.method !== "card" || (payment.card.replace(/\s/g, "").length >= 13 && /^\d{2}\/\d{2}$/.test(payment.exp) && /^\d{3,4}$/.test(payment.cvv));
 
@@ -1066,8 +1086,8 @@ export function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
         <p className="text-sm text-muted-foreground mb-6">Pago simulado &middot; ning&uacute;n cargo real.</p>
         <div className="grid gap-3 sm:grid-cols-3 mb-6">
           {methods.map((m) => (
-            <button key={m.id} onClick={() => setPayment({ ...payment, method: m.id })} className={cn("rounded-[20px] border-2 p-5 text-left transition-all", payment.method === m.id ? "border-primary bg-primary/5 shadow-[var(--shadow-soft)]" : "border-border bg-card hover:border-primary/40")}>
-              <div className="flex items-center gap-2 text-sm font-bold text-foreground"><CreditCard className="h-5 w-5 text-primary" /> {m.label}</div>
+            <button key={m.id} onClick={() => setPayment({ ...payment, method: m.id })} className={cn("rounded-[20px] border-2 p-5 text-left transition-all bg-background", payment.method === m.id ? "border-primary shadow-[var(--shadow-soft)]" : "border-border hover:border-primary/40")}>
+              <div className="flex items-center gap-2 text-sm font-bold text-foreground"><m.icon className="h-5 w-5 text-primary" /> {m.label}</div>
               <div className="mt-1 text-xs text-muted-foreground">{m.desc}</div>
             </button>
           ))}
