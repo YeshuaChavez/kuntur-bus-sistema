@@ -216,11 +216,6 @@ function LoginPage() {
               </>
             ) : (
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="mb-6 p-4 rounded-2xl bg-secondary/30 border border-border">
-                  <h3 className="text-sm font-bold text-foreground mb-1">Entorno de Pruebas KUNTUR</h3>
-                  <p className="text-xs text-muted-foreground">Selecciona un rol operativo para acceder directamente al sistema sin contraseña.</p>
-                </div>
-                
                 <div className="space-y-3">
                   {Object.entries(DEMO_ACCOUNTS).filter(([mail]) => mail !== "cliente@kuntur.com").map(([mail, { user }]) => {
                     const Icon = roleIcons[user.role];
