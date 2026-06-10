@@ -51,7 +51,7 @@ export function RoleShell({
                 </Link>
               </div>
             )}
-            <Logo />
+            <Link to="/" aria-label="Inicio"><Logo /></Link>
             <span className="hidden rounded-full bg-secondary px-3 py-1 text-xs font-semibold uppercase tracking-wider text-secondary-foreground sm:inline">
               {role}
             </span>
