@@ -49,6 +49,7 @@ function TicketPage() {
       id,
       row: 0,
       col: 0,
+      floor: 1 as const,
       status: "selected" as const,
     }));
   }, [booking.selectedSeats]);

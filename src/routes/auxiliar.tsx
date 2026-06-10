@@ -93,7 +93,7 @@ function buildSeats(): Seat[] {
     (["A", "B", "C", "D"] as const).forEach((c, i) => {
       const id = `${r}${c}`;
       const status: Seat["status"] = boarded.has(id) ? "boarded" : sold.has(id) ? "sold" : "free";
-      list.push({ id, row: r, col: i + 1, status, passenger: sold.has(id) || boarded.has(id) ? "Pasajero #" + id : undefined });
+      list.push({ id, row: r, col: i + 1, floor: 1, status, passenger: sold.has(id) || boarded.has(id) ? "Pasajero #" + id : undefined });
     });
   }
   return list;
