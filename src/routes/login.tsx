@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Logo } from "@/components/jaysi/Logo";
+import { Logo } from "@/components/kuntur/Logo";
 import { DEMO_ACCOUNTS, getAccount, registerAccount, roleHome, storeUser, type Role } from "@/lib/auth";
 import { Mail, Lock, ArrowRight, User, ScanLine, Bus, MonitorPlay, BarChart3, Eye, EyeOff } from "lucide-react";
 

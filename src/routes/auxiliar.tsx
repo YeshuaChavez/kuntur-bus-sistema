@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { RoleShell } from "@/components/jaysi/RoleShell";
-import { SeatMap, type Seat } from "@/components/jaysi/SeatMap";
+import { RoleShell } from "@/components/kuntur/RoleShell";
+import { SeatMap, type Seat } from "@/components/kuntur/SeatMap";
 import {
   ScanLine, Grid3x3, Wifi, WifiOff, CheckCircle2, Users, Phone, BadgeCheck,
   Bus, ArrowRight, Clock, CalendarClock, Flag, ChevronRight, LogOut, MapPin,

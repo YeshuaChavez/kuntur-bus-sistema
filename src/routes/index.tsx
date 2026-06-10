@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { SeatMap, type Seat } from "@/components/jaysi/SeatMap";
+import { SeatMap, type Seat } from "@/components/kuntur/SeatMap";
 import { useAuth, roleHome, registerAccount, storeUser } from "@/lib/auth";
 import {
   ArrowRight, Calendar, MapPin, Search, Users, X, QrCode, Clock, Bus, Leaf,
