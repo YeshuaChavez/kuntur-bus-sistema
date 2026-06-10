@@ -475,7 +475,7 @@ function Hero(props: {
                       <h3 className="mb-2 text-2xl font-semibold text-white">{d.city}</h3>
                       <div className="flex items-center justify-between mb-4">
                         <span className="text-sm text-white">Desde</span>
-                        <span className="text-2xl font-semibold text-[oklch(0.78_0.13_160)]">S/ {d.price}.00</span>
+                        <span className="text-2xl font-semibold text-white">S/ {d.price}.00</span>
                       </div>
                       <button
                         onClick={(e) => {

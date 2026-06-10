@@ -367,6 +367,21 @@ function InfoCard({ icon: Icon, label, value, tone }: {
 
 /* ─── Route Map ─────────────────────────────────────────────────────── */
 function RouteMap({ reachedStops, started }: { reachedStops: number; started: boolean }) {
+  const [animProgress, setAnimProgress] = useState(0);
+
+  useEffect(() => {
+    if (!started) { setAnimProgress(0); return; }
+    const DURATION = 10000; // 10 segundos por vuelta
+    const startTime = performance.now();
+    let rafId: number;
+    const tick = (now: number) => {
+      setAnimProgress(((now - startTime) % DURATION) / DURATION);
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [started]);
+
   const stops = [
     { x: 60,  y: 380, name: "Lima"     },
     { x: 180, y: 320, name: "Huacho"   },
@@ -376,6 +391,13 @@ function RouteMap({ reachedStops, started }: { reachedStops: number; started: bo
     { x: 700, y: 90,  name: "Trujillo" },
   ];
   const path = stops.map((s, i) => `${i === 0 ? "M" : "L"} ${s.x} ${s.y}`).join(" ");
+
+  // Interpolación lineal entre paradas
+  const n = stops.length - 1;
+  const seg = Math.min(Math.floor(animProgress * n), n - 1);
+  const t   = (animProgress * n) - seg;
+  const busX = stops[seg].x + (stops[Math.min(seg + 1, n)].x - stops[seg].x) * t;
+  const busY = stops[seg].y + (stops[Math.min(seg + 1, n)].y - stops[seg].y) * t;
 
   return (
     <div className="mt-6 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)]">
@@ -425,6 +447,27 @@ function RouteMap({ reachedStops, started }: { reachedStops: number; started: bo
               </g>
             );
           })}
+
+          {/* Bus animado — aparece al iniciar el viaje */}
+          {started && (
+            <g>
+              {/* Halo pulsante */}
+              <circle cx={busX} cy={busY} r="18" fill="oklch(0.62 0.18 28)" opacity="0.2">
+                <animate attributeName="r"       values="14;22;14" dur="1s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.3;0.08;0.3" dur="1s" repeatCount="indefinite" />
+              </circle>
+              {/* Punto del bus */}
+              <circle
+                cx={busX} cy={busY} r="11"
+                fill="oklch(0.62 0.18 28)"
+                stroke="white"
+                strokeWidth="3"
+                filter="drop-shadow(0 2px 8px oklch(0.62 0.18 28 / 0.6))"
+              />
+              {/* Icono "B" de bus */}
+              <text x={busX} y={busY + 4} textAnchor="middle" fill="white" style={{ fontSize: 10, fontWeight: 900 }}>B</text>
+            </g>
+          )}
         </svg>
         <div className="absolute bottom-2 right-3 flex items-center gap-1.5 rounded-full bg-card/90 px-2.5 py-1 text-[10px] font-semibold text-foreground shadow-sm backdrop-blur">
           <Navigation className="h-3 w-3 text-destructive" /> Algoritmo Dijkstra · ruta óptima
