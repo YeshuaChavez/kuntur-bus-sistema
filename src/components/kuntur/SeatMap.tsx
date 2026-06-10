@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 export type SeatStatus = "free" | "selected" | "occupied" | "sold" | "boarded";
@@ -6,6 +7,7 @@ export interface Seat {
   id: string;
   row: number;
   col: number;
+  floor: number;
   status: SeatStatus;
   passenger?: string;
 }
@@ -25,17 +27,51 @@ interface SeatMapProps {
 }
 
 export function SeatMap({ seats, onSelect, variant = "client" }: SeatMapProps) {
-  const rows = Math.max(...seats.map((s) => s.row));
+  const floors = [...new Set(seats.map((s) => s.floor))].sort();
+  const multiFloor = floors.length > 1;
+  const [activeFloor, setActiveFloor] = useState(floors[0] ?? 1);
+
+  const floorSeats = seats.filter((s) => s.floor === activeFloor);
+  const rows = Math.max(...floorSeats.map((s) => s.row));
+
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
-      {/* Bus front */}
+      {multiFloor && (
+        <div className="flex gap-2 mb-5 p-1 bg-secondary/40 rounded-2xl w-fit mx-auto">
+          {floors.map((f) => {
+            const count = seats.filter((s) => s.floor === f && s.status === "selected").length;
+            return (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setActiveFloor(f)}
+                className={cn(
+                  "relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200",
+                  activeFloor === f
+                    ? "bg-[image:var(--gradient-primary)] text-primary-foreground shadow-md"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <span>{f === 1 ? "🪑" : "🏔️"}</span>
+                <span>Piso {f}</span>
+                {count > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-black text-primary-foreground ring-2 ring-card">
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="mx-auto mb-4 flex w-full max-w-[260px] items-center justify-between rounded-t-3xl border border-border bg-secondary px-4 py-2 text-xs font-medium text-secondary-foreground">
-        <span>🧭 Conductor</span>
-        <span>Frente</span>
+        {activeFloor === 1 ? <><span>🧭 Conductor</span><span>Frente</span></> : <><span>🏔️ Piso Superior</span><span>Vista Panorámica</span></>}
       </div>
+
       <div className="flex flex-col items-center gap-2">
         {Array.from({ length: rows }).map((_, r) => {
-          const rowSeats = seats.filter((s) => s.row === r + 1).sort((a, b) => a.col - b.col);
+          const rowSeats = floorSeats.filter((s) => s.row === r + 1).sort((a, b) => a.col - b.col);
           return (
             <div key={r} className="flex items-center gap-2">
               {rowSeats.slice(0, 2).map((s) => (

@@ -140,12 +140,19 @@ export function getTripStyle(type: string) { return tripStyles[type] ?? tripStyl
 export const ALL_CATEGORIES = ["Todos", "Ejecutivo", "Premium", "Cama", "Cama nocturna"];
 
 export function makeSeats(): Seat[] {
-  const occupied = new Set(["1A", "2B", "3C", "4D", "6A", "7C", "9B", "5A"]);
+  const occupied1 = new Set(["1A", "2B", "3C", "4D", "6A", "7C", "9B", "5A"]);
+  const occupied2 = new Set(["P1B", "P2A", "P4C", "P5D", "P7B", "P8A", "P10C"]);
   const list: Seat[] = [];
   for (let r = 1; r <= 10; r++) {
     (["A", "B", "C", "D"] as const).forEach((c, i) => {
       const id = `${r}${c}`;
-      list.push({ id, row: r, col: i + 1, status: occupied.has(id) ? "occupied" : "free" });
+      list.push({ id, row: r, col: i + 1, floor: 1, status: occupied1.has(id) ? "occupied" : "free" });
+    });
+  }
+  for (let r = 1; r <= 10; r++) {
+    (["A", "B", "C", "D"] as const).forEach((c, i) => {
+      const id = `P${r}${c}`;
+      list.push({ id, row: r, col: i + 1, floor: 2, status: occupied2.has(id) ? "occupied" : "free" });
     });
   }
   return list;
