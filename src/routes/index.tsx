@@ -535,19 +535,19 @@ function Hero(props: {
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
             {/* Card Yape */}
-            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-[#742484]/10 border border-[#742484]/20 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-[#742484]/15 cursor-default">
-              <span className="text-[#742484] font-black text-xl tracking-tight">yape</span>
+            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-card border border-border/60 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-secondary/50 cursor-default">
+              <span className="text-foreground font-black text-xl tracking-tight">yape</span>
             </div>
             {/* Card Plin */}
-            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-[#00D1C4]/10 border border-[#00D1C4]/20 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-[#00D1C4]/15 cursor-default">
-              <span className="text-[#00B4A9] font-black text-xl tracking-tight">plin</span>
+            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-card border border-border/60 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-secondary/50 cursor-default">
+              <span className="text-foreground font-black text-xl tracking-tight">plin</span>
             </div>
             {/* Visa */}
-            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-[#1A1F71]/10 border border-[#1A1F71]/20 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-[#1A1F71]/15 cursor-default">
-              <span className="text-[#1A1F71] font-black text-xl italic tracking-tight">VISA</span>
+            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-card border border-border/60 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-secondary/50 cursor-default">
+              <span className="text-foreground font-black text-xl italic tracking-tight">VISA</span>
             </div>
             {/* Mastercard */}
-            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-card border border-border/60 transition-all hover:scale-105 shadow-sm hover:shadow-md p-2 cursor-default">
+            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-card border border-border/60 transition-all hover:scale-105 shadow-sm hover:shadow-md p-2 cursor-default hover:bg-secondary/50">
               <div className="flex items-center gap-1.5">
                 <div className="flex -space-x-2">
                   <div className="h-6 w-6 rounded-full bg-[#EB001B] opacity-90" />
@@ -557,12 +557,12 @@ function Hero(props: {
               </div>
             </div>
             {/* American Express */}
-            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-[#0070CD]/10 border border-[#0070CD]/20 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-[#0070CD]/15 cursor-default">
-              <span className="text-[#0070CD] font-bold text-sm tracking-tighter">AMEX</span>
+            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-card border border-border/60 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-secondary/50 cursor-default">
+              <span className="text-foreground font-bold text-sm tracking-tighter">AMEX</span>
             </div>
             {/* Diners Club */}
-            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-[#004B87]/10 border border-[#004B87]/20 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-[#004B87]/15 cursor-default">
-              <span className="text-[#004B87] font-bold text-xs tracking-wider">Diners Club</span>
+            <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-card border border-border/60 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-secondary/50 cursor-default">
+              <span className="text-foreground font-bold text-xs tracking-wider">Diners Club</span>
             </div>
           </div>
         </div>
