@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Compass, Eye, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -14,11 +13,11 @@ export interface Seat {
 }
 
 const statusStyles: Record<SeatStatus, string> = {
-  free: "border-2 border-primary/50 bg-background text-primary hover:bg-primary/10",
-  selected: "border-2 border-primary bg-primary text-primary-foreground shadow-[var(--shadow-soft)] scale-105",
-  occupied: "border border-border bg-muted text-muted-foreground cursor-not-allowed",
-  sold: "border-2 border-[var(--warning)] bg-[var(--warning)]/15 text-[var(--warning-foreground)]",
-  boarded: "border-2 border-primary bg-primary text-primary-foreground",
+  free:     "border-2 border-primary/50 bg-background text-primary hover:bg-primary/10 cursor-pointer",
+  selected: "border-2 border-primary bg-primary text-primary-foreground shadow-[var(--shadow-soft)] scale-105 cursor-pointer",
+  occupied: "border border-border bg-muted text-muted-foreground cursor-not-allowed opacity-60",
+  sold:     "border-2 border-[var(--warning)] bg-[var(--warning)]/15 text-[var(--warning-foreground)]",
+  boarded:  "border-2 border-primary bg-primary text-primary-foreground",
 };
 
 interface SeatMapProps {
@@ -30,60 +29,51 @@ interface SeatMapProps {
 export function SeatMap({ seats, onSelect, variant = "client" }: SeatMapProps) {
   const floors = [...new Set(seats.map((s) => s.floor))].sort();
   const multiFloor = floors.length > 1;
-  const [activeFloor, setActiveFloor] = useState(floors[0] ?? 1);
-
-  const floorSeats = seats.filter((s) => s.floor === activeFloor);
-  const rows = Math.max(...floorSeats.map((s) => s.row));
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
-      {multiFloor && (
-        <div className="flex gap-2 mb-5 p-1 bg-secondary/40 rounded-2xl w-fit mx-auto">
-          {floors.map((f) => {
-            const count = seats.filter((s) => s.floor === f && s.status === "selected").length;
-            return (
-              <button
-                key={f}
-                type="button"
-                onClick={() => setActiveFloor(f)}
-                className={cn(
-                  "relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200",
-                  activeFloor === f
-                    ? "bg-[image:var(--gradient-primary)] text-primary-foreground shadow-md"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {f === 1 ? <Layers className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                <span>Piso {f}</span>
-                {count > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-black text-primary-foreground ring-2 ring-card">
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      <div className="mx-auto mb-4 flex w-full max-w-[260px] items-center justify-between rounded-t-3xl border border-border bg-secondary px-4 py-2 text-xs font-medium text-secondary-foreground">
-        {activeFloor === 1
-          ? <><span className="flex items-center gap-1"><Compass className="h-3 w-3" /> Conductor</span><span>Frente</span></>
-          : <><span className="flex items-center gap-1"><Eye className="h-3 w-3" /> Piso Superior</span><span>Vista Panorámica</span></>}
-      </div>
-
-      <div className="flex flex-col items-center gap-2">
-        {Array.from({ length: rows }).map((_, r) => {
-          const rowSeats = floorSeats.filter((s) => s.row === r + 1).sort((a, b) => a.col - b.col);
+      <div className={cn(multiFloor && "grid grid-cols-1 gap-8 sm:grid-cols-2")}>
+        {floors.map((f) => {
+          const floorSeats = seats.filter((s) => s.floor === f);
+          const rows = Math.max(...floorSeats.map((s) => s.row));
           return (
-            <div key={r} className="flex items-center gap-2">
-              {rowSeats.slice(0, 2).map((s) => (
-                <SeatBtn key={s.id} seat={s} onSelect={onSelect} variant={variant} />
-              ))}
-              <div className="w-6 text-center text-[10px] text-muted-foreground">{r + 1}</div>
-              {rowSeats.slice(2).map((s) => (
-                <SeatBtn key={s.id} seat={s} onSelect={onSelect} variant={variant} />
-              ))}
+            <div key={f}>
+              {/* Floor badge */}
+              {multiFloor && (
+                <div className="mb-3 flex items-center justify-center gap-1.5">
+                  {f === 1
+                    ? <Layers className="h-3.5 w-3.5 text-primary" />
+                    : <Eye    className="h-3.5 w-3.5 text-primary" />}
+                  <span className="text-xs font-black uppercase tracking-wider text-primary">Piso {f}</span>
+                </div>
+              )}
+
+              {/* Bus front header */}
+              <div className="mx-auto mb-4 flex w-full max-w-[260px] items-center justify-between rounded-t-3xl border border-border bg-secondary px-4 py-2 text-xs font-medium text-secondary-foreground">
+                {f === 1
+                  ? <><span className="flex items-center gap-1"><Compass className="h-3 w-3" /> Conductor</span><span>Frente</span></>
+                  : <><span className="flex items-center gap-1"><Eye className="h-3 w-3" /> Piso Superior</span><span>Vista Panorámica</span></>}
+              </div>
+
+              {/* Seat grid */}
+              <div className="flex flex-col items-center gap-2">
+                {Array.from({ length: rows }).map((_, r) => {
+                  const rowSeats = floorSeats
+                    .filter((s) => s.row === r + 1)
+                    .sort((a, b) => a.col - b.col);
+                  return (
+                    <div key={r} className="flex items-center gap-2">
+                      {rowSeats.slice(0, 2).map((s) => (
+                        <SeatBtn key={s.id} seat={s} onSelect={onSelect} variant={variant} />
+                      ))}
+                      <div className="w-6 text-center text-[10px] text-muted-foreground">{r + 1}</div>
+                      {rowSeats.slice(2).map((s) => (
+                        <SeatBtn key={s.id} seat={s} onSelect={onSelect} variant={variant} />
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           );
         })}
@@ -125,7 +115,7 @@ function Legend({ variant }: { variant: "client" | "operator" }) {
       ? [
           { c: "border-2 border-primary/50 bg-background", l: "Libre" },
           { c: "bg-primary", l: "Seleccionado" },
-          { c: "bg-muted border border-border", l: "Ocupado" },
+          { c: "bg-muted border border-border opacity-60", l: "Ocupado" },
         ]
       : [
           { c: "bg-primary", l: "Abordado" },

@@ -154,4 +154,12 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+
+  button:not([disabled]),
+  a[href],
+  [role="button"],
+  select,
+  label[for] {
+    cursor: pointer;
+  }
 }
