@@ -133,7 +133,8 @@ function AdminView() {
       }
     >
       {/* Tab bar */}
-      <div className="mb-6 flex gap-1 rounded-2xl bg-secondary/40 p-1 w-fit">
+      <div className="mb-6 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-1 rounded-2xl bg-secondary/40 p-1 w-fit">
         {ADMIN_TABS.map(({ id, label, Icon }) => (
           <button
             key={id}
@@ -148,6 +149,7 @@ function AdminView() {
             <Icon className="h-4 w-4" /> {label}
           </button>
         ))}
+        </div>
       </div>
 
       {tab === "resumen"     && <ResumenTab adminName={adminName} />}

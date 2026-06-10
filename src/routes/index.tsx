@@ -7,7 +7,7 @@ import {
   LogIn, LogOut, ShieldCheck, AlertCircle, ArrowLeftRight, Sparkles, CreditCard, ChevronRight,
   IdCard, User as UserIcon, Lock, CheckCircle2, Crown, Moon, BedDouble, Star, SlidersHorizontal,
   Mail, ArrowUpDown, Headphones, Globe, Ticket as TicketIcon, Utensils, Sun, Compass,
-  Timer, Smartphone, XCircle, HelpCircle, SearchX, Luggage, RefreshCw,
+  Timer, Smartphone, XCircle, HelpCircle, SearchX, Luggage, RefreshCw, Menu,
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -161,11 +161,24 @@ export function makeSeats(): Seat[] {
   return list;
 }
 
+function useScrollReveal() {
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target); }
+      }),
+      { threshold: 0.07 }
+    );
+    document.querySelectorAll("[data-reveal]").forEach(el => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+}
+
 function HomeBooking() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   useEffect(() => { if (user && user.role !== "cliente") navigate({ to: roleHome(user.role) }); }, [user, navigate]);
-
+  useScrollReveal();
   const [activeSection, setActiveSection] = useState("inicio");
 
   useEffect(() => {
@@ -233,6 +246,7 @@ export function Header({ user, onLogout, activeSection, setActiveSection }: {
   activeSection: string;
   setActiveSection: (v: string) => void;
 }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-card/85 shadow-[0px_4px_20px_0px_rgba(84,95,115,0.05)] backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-16">
@@ -252,24 +266,66 @@ export function Header({ user, onLogout, activeSection, setActiveSection }: {
           <a href="/#destinos" onClick={() => setActiveSection("destinos")} className={cn("pb-1 font-semibold transition-colors hover:text-primary", activeSection === "destinos" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Destinos</a>
           <a href="/#beneficios" onClick={() => setActiveSection("beneficios")} className={cn("pb-1 font-semibold transition-colors hover:text-primary", activeSection === "beneficios" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Beneficios</a>
         </nav>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {user ? (
             <>
               <span className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground sm:inline-flex">
                 <ShieldCheck className="h-3.5 w-3.5 text-primary" /> {user.name} &middot; {user.role}
               </span>
-              {user.role !== "cliente" && <Link to={roleHome(user.role) as any} className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">Mi panel</Link>}
+              {user.role !== "cliente" && <Link to={roleHome(user.role) as any} className="hidden sm:inline-flex rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">Mi panel</Link>}
               <button onClick={onLogout} className="flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted">
                 <LogOut className="h-3.5 w-3.5" /> Salir
               </button>
             </>
           ) : (
-            <Link to="/login" search={{ redirect: "/" }} className="flex items-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted active:scale-95">
+            <Link to="/login" search={{ redirect: "/" }} className="hidden sm:flex items-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted active:scale-95">
               <UserIcon className="h-4 w-4 text-primary" /> Ingresar
             </Link>
           )}
+          <button
+            onClick={() => setMobileOpen(o => !o)}
+            aria-label="Abrir menú"
+            aria-expanded={mobileOpen}
+            className="md:hidden flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card transition-all hover:bg-muted active:scale-90"
+          >
+            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="border-t border-border/40 bg-card/95 backdrop-blur-md md:hidden">
+          <nav className="mx-auto max-w-7xl flex flex-col gap-1 px-5 py-3">
+            <button
+              onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setActiveSection("inicio"); setMobileOpen(false); }}
+              className={cn("flex w-full items-center rounded-xl px-4 py-3 text-sm font-semibold text-left transition-colors", activeSection === "inicio" ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary")}
+            >Inicio</button>
+            <a href="/#destinos" onClick={() => { setActiveSection("destinos"); setMobileOpen(false); }}
+              className={cn("flex items-center rounded-xl px-4 py-3 text-sm font-semibold transition-colors", activeSection === "destinos" ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary")}
+            >Destinos</a>
+            <a href="/#beneficios" onClick={() => { setActiveSection("beneficios"); setMobileOpen(false); }}
+              className={cn("flex items-center rounded-xl px-4 py-3 text-sm font-semibold transition-colors", activeSection === "beneficios" ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary")}
+            >Beneficios</a>
+          </nav>
+          <div className="mx-auto max-w-7xl flex flex-col gap-2 border-t border-border/40 px-5 pb-4 pt-3">
+            {!user && (
+              <Link to="/login" search={{ redirect: "/" }} onClick={() => setMobileOpen(false)}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-bold text-primary-foreground transition-all active:scale-95"
+              >
+                <UserIcon className="h-4 w-4" /> Ingresar a mi cuenta
+              </Link>
+            )}
+            {user && user.role !== "cliente" && (
+              <Link to={roleHome(user.role) as any} onClick={() => setMobileOpen(false)}
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition-all active:scale-95"
+              >
+                Mi panel
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
@@ -451,7 +507,7 @@ function Hero(props: {
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16">
           <Carousel opts={{ align: "start", loop: true }} setApi={setCarouselApi} className="w-full">
             <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <div>
+              <div data-reveal>
                 <span className="text-xs font-bold uppercase tracking-widest text-primary mb-1.5 block">Rutas destacadas</span>
                 <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">Explora destinos inolvidables</h2>
               </div>
@@ -497,11 +553,11 @@ function Hero(props: {
       {/* Beneficios */}
       <section id="beneficios" className="border-y border-border/30 bg-secondary py-24">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16">
-          <div className="text-center max-w-3xl mx-auto mb-16">
+          <div data-reveal className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">¿Por qué viajar con KUNTUR?</h2>
             <p className="mt-4 text-lg text-muted-foreground">Ofrecemos un servicio interprovincial premium de primer nivel, cuidando cada detalle de tu viaje.</p>
           </div>
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <div data-reveal className="grid grid-cols-1 gap-8 md:grid-cols-3">
             {([
               { icon: ShieldCheck, title: "Seguridad garantizada", desc: "Monitoreo GPS en tiempo real y conductores altamente capacitados para tu tranquilidad en ruta.", img: "/benefit_safety.png" },
               { icon: Bus, title: "Flota moderna", desc: "Buses de última generación equipados con asientos ergonómicos, climatización y pantallas de entretenimiento individual.", img: "/benefit_fleet.png" },
@@ -530,7 +586,7 @@ function Hero(props: {
       {/* Métodos de Pago */}
       <section className="border-t border-border/30 bg-background py-16">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16 text-center">
-          <div className="mb-10">
+          <div data-reveal className="mb-10">
             <span className="text-xs font-bold uppercase tracking-widest text-primary mb-1.5 block">Pago 100% Seguro</span>
             <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">Métodos de pago aceptados</h2>
             <p className="mt-2 text-sm text-muted-foreground">Elige el método que prefieras para comprar tu pasaje de forma segura y rápida.</p>
@@ -573,7 +629,7 @@ function Hero(props: {
       {/* FAQ */}
       <section className="border-t border-border/30 bg-secondary py-20">
         <div className="mx-auto max-w-3xl px-5 sm:px-8 lg:px-16">
-          <div className="mb-10 text-center">
+          <div data-reveal className="mb-10 text-center">
             <span className="text-xs font-bold uppercase tracking-widest text-primary mb-1.5 block">Resolvemos tus dudas</span>
             <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">Preguntas frecuentes</h2>
           </div>
