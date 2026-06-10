@@ -534,35 +534,35 @@ function Hero(props: {
             <p className="mt-2 text-sm text-muted-foreground">Elige el método que prefieras para comprar tu pasaje de forma segura y rápida.</p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
-            {/* Card Yape */}
+            {/* Yape */}
             <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-card border border-border/60 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-secondary/50 cursor-default">
-              <span className="text-foreground font-black text-xl tracking-tight">yape</span>
+              <span className="font-black text-xl tracking-tight" style={{ color: "#6D14CC" }}>yape</span>
             </div>
-            {/* Card Plin */}
+            {/* Plin */}
             <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-card border border-border/60 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-secondary/50 cursor-default">
-              <span className="text-foreground font-black text-xl tracking-tight">plin</span>
+              <span className="font-black text-xl tracking-tight" style={{ color: "#14B8C8" }}>plin</span>
             </div>
             {/* Visa */}
             <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-card border border-border/60 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-secondary/50 cursor-default">
-              <span className="text-foreground font-black text-xl italic tracking-tight">VISA</span>
+              <span className="font-black text-xl italic tracking-tight" style={{ color: "#1A1F71" }}>VISA</span>
             </div>
             {/* Mastercard */}
             <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-card border border-border/60 transition-all hover:scale-105 shadow-sm hover:shadow-md p-2 cursor-default hover:bg-secondary/50">
               <div className="flex items-center gap-1.5">
                 <div className="flex -space-x-2">
-                  <div className="h-6 w-6 rounded-full bg-[#EB001B] opacity-90" />
-                  <div className="h-6 w-6 rounded-full bg-[#F79E1B] opacity-90" />
+                  <div className="h-6 w-6 rounded-full bg-[#EB001B]" />
+                  <div className="h-6 w-6 rounded-full bg-[#F79E1B]" />
                 </div>
-                <span className="text-foreground font-bold text-xs tracking-tight">mastercard</span>
+                <span className="font-bold text-xs tracking-tight" style={{ color: "#231F20" }}>mastercard</span>
               </div>
             </div>
             {/* American Express */}
             <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-card border border-border/60 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-secondary/50 cursor-default">
-              <span className="text-foreground font-bold text-sm tracking-tighter">AMEX</span>
+              <span className="font-bold text-sm tracking-tighter" style={{ color: "#006FCF" }}>AMEX</span>
             </div>
             {/* Diners Club */}
             <div className="flex h-14 w-28 items-center justify-center rounded-xl bg-card border border-border/60 transition-all hover:scale-105 shadow-sm hover:shadow-md hover:bg-secondary/50 cursor-default">
-              <span className="text-foreground font-bold text-xs tracking-wider">Diners Club</span>
+              <span className="font-bold text-xs tracking-wider" style={{ color: "#004A97" }}>Diners Club</span>
             </div>
           </div>
         </div>
