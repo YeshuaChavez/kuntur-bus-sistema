@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
+import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import {
   Header,
@@ -53,7 +54,10 @@ function PaymentPage() {
   const total = (booking.selectedSeats?.length || 0) * trip.price;
 
   const handlePay = () => {
-    // Proceed to ticket page
+    toast.success("¡Pago confirmado!", {
+      description: `${booking.selectedSeats?.length ?? 1} boleto${(booking.selectedSeats?.length ?? 1) > 1 ? "s" : ""} reservado${(booking.selectedSeats?.length ?? 1) > 1 ? "s" : ""} · Revisa tu correo para el QR.`,
+      duration: 6000,
+    });
     navigate({ to: "/ticket" });
   };
 

@@ -7,8 +7,10 @@ import {
   LogIn, LogOut, ShieldCheck, AlertCircle, ArrowLeftRight, Sparkles, CreditCard, ChevronRight,
   IdCard, User as UserIcon, Lock, CheckCircle2, Crown, Moon, BedDouble, Star, SlidersHorizontal,
   Mail, ArrowUpDown, Headphones, Globe, Ticket as TicketIcon, Utensils, Sun, Compass,
-  Timer, Smartphone,
+  Timer, Smartphone, XCircle, HelpCircle, SearchX, Luggage, RefreshCw,
 } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -568,6 +570,68 @@ function Hero(props: {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section className="border-t border-border/30 bg-secondary py-20">
+        <div className="mx-auto max-w-3xl px-5 sm:px-8 lg:px-16">
+          <div className="mb-10 text-center">
+            <span className="text-xs font-bold uppercase tracking-widest text-primary mb-1.5 block">Resolvemos tus dudas</span>
+            <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">Preguntas frecuentes</h2>
+          </div>
+          <Accordion type="single" collapsible className="space-y-3">
+            {[
+              {
+                icon: Luggage,
+                q: "¿Cuánto equipaje puedo llevar?",
+                a: "Cada pasajero puede llevar hasta 20 kg en bodega y 5 kg de equipaje de mano en cabina. Si necesitas transportar equipaje adicional, contáctanos con anticipación para coordinarlo sin inconvenientes.",
+              },
+              {
+                icon: RefreshCw,
+                q: "¿Puedo cancelar o cambiar mi pasaje?",
+                a: "Sí. Los cambios de fecha o ruta se realizan hasta 24 horas antes de la salida sin costo adicional. Las cancelaciones tienen un descuento del 10% por gastos administrativos sobre el valor del pasaje.",
+              },
+              {
+                icon: Clock,
+                q: "¿Con cuánta anticipación debo llegar a la terminal?",
+                a: "Recomendamos llegar con al menos 30 minutos de anticipación para completar el proceso de embarque. Los buses parten puntualmente según el horario indicado en tu boleto.",
+              },
+              {
+                icon: TicketIcon,
+                q: "¿Cómo recibo mis pasajes después de comprar?",
+                a: "Una vez confirmado el pago, recibirás tus boletos digitales en PDF con código QR al correo que registraste. También puedes acceder a ellos en cualquier momento desde tu cuenta en la plataforma.",
+              },
+              {
+                icon: Star,
+                q: "¿Cuál es la diferencia entre Ejecutivo, Cama y Cama nocturna?",
+                a: "Ejecutivo: asientos reclinables con WiFi y toma USB. Cama: reclinable a 160° con TV individual, frazada y almohada. Cama Nocturna: reclinable a 180° casi completamente plano, cortinas de privacidad, ideal para viajes largos nocturnos.",
+              },
+              {
+                icon: Users,
+                q: "¿Tienen descuentos para estudiantes o adultos mayores?",
+                a: "Sí. Ofrecemos 20% de descuento para estudiantes universitarios con carnet vigente y adultos mayores de 65 años con DNI. El descuento se aplica automáticamente al seleccionar la categoría correspondiente durante la compra.",
+              },
+            ].map(({ icon: Icon, q, a }, i) => (
+              <AccordionItem
+                key={i}
+                value={`faq-${i}`}
+                className="rounded-2xl border border-border/50 bg-card px-5 shadow-[var(--shadow-card)] data-[state=open]:border-primary/30 data-[state=open]:shadow-[var(--shadow-soft)] transition-all"
+              >
+                <AccordionTrigger className="gap-4 py-5 text-left text-sm font-semibold text-foreground hover:no-underline hover:text-primary [&[data-state=open]]:text-primary">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    {q}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-5 pl-11 text-sm leading-relaxed text-muted-foreground">
+                  {a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
       {/* Dialog for details */}
       <Dialog open={!!selectedCityInfo} onOpenChange={(open) => !open && setSelectedCityInfo(null)}>
         <DialogContent className="max-w-2xl p-0 overflow-hidden rounded-[28px] border border-border/40 shadow-2xl bg-card [&>button]:bg-black/40 [&>button]:text-white [&>button]:hover:bg-black/60 [&>button]:rounded-full [&>button]:p-2 [&>button]:border [&>button]:border-white/20 [&>button]:transition-all">
@@ -747,21 +811,49 @@ export function TripsList({ origin, destination, date, onPick, onBack }: {
         <button onClick={onBack} className="w-full md:w-auto bg-primary text-primary-foreground px-8 py-4 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg active:scale-95">Modificar</button>
       </div>
       {/* Category filter */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-6">
-        <SlidersHorizontal className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
-        {ALL_CATEGORIES.map((cat) => {
-          const s = cat !== "Todos" ? tripStyles[cat] : null;
-          const Icon = s?.icon;
-          return (
-            <button key={cat} onClick={() => setActiveCategory(cat)} className={cn("inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all", activeCategory === cat ? s ? `${s.chip} shadow-sm` : "border-primary bg-primary text-primary-foreground shadow-sm" : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground")}>
-              {Icon && <Icon className="h-3 w-3" />}{cat}
-            </button>
-          );
-        })}
-      </div>
+      <TooltipProvider delayDuration={300}>
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-6">
+          <SlidersHorizontal className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
+          {ALL_CATEGORIES.map((cat) => {
+            const s = cat !== "Todos" ? tripStyles[cat] : null;
+            const Icon = s?.icon;
+            const chip = (
+              <button key={cat} onClick={() => setActiveCategory(cat)} className={cn("inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all", activeCategory === cat ? s ? `${s.chip} shadow-sm` : "border-primary bg-primary text-primary-foreground shadow-sm" : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground")}>
+                {Icon && <Icon className="h-3 w-3" />}{cat}
+              </button>
+            );
+            if (!s) return chip;
+            return (
+              <Tooltip key={cat}>
+                <TooltipTrigger asChild>{chip}</TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[220px] text-center text-xs leading-snug">
+                  <p className="font-semibold mb-0.5">{s.label} · {s.tagline}</p>
+                  <p className="text-muted-foreground">{s.description}</p>
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+      </TooltipProvider>
       <h2 className="text-2xl sm:text-3xl font-semibold text-foreground mb-6">Viajes Disponibles</h2>
       <div className="space-y-4">
-        {filtered.length === 0 && <div className="rounded-[24px] border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">No hay viajes de esta categor&iacute;a disponibles.</div>}
+        {filtered.length === 0 && (
+          <div className="rounded-[28px] border border-dashed border-border bg-card p-12 text-center shadow-[var(--shadow-card)]">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
+              <SearchX className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-base font-bold text-foreground">Sin viajes disponibles</h3>
+            <p className="mt-2 text-sm text-muted-foreground max-w-xs mx-auto">
+              No encontramos viajes de tipo <strong className="text-foreground">{activeCategory}</strong> para esta ruta. Prueba con otra categoría.
+            </p>
+            <button
+              onClick={() => setActiveCategory("Todos")}
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-secondary px-5 py-2.5 text-sm font-semibold text-foreground transition-all hover:bg-muted active:scale-95"
+            >
+              <X className="h-3.5 w-3.5" /> Ver todos los viajes
+            </button>
+          </div>
+        )}
         {filtered.map((t, idx) => {
           const s = getTripStyle(t.type);
           const Icon = s.icon;
@@ -993,16 +1085,46 @@ function MiniTicket({ k, v }: { k: string; v: string }) {
 }
 
 /* ====== PASSENGERS STEP ====== */
+function dniFieldStatus(v: string): FieldStatus {
+  if (!v) return "idle";
+  return /^\d{8}$/.test(v) ? "valid" : "invalid";
+}
+function dniFieldHint(v: string): string | undefined {
+  if (!v) return undefined;
+  if (/^\d{8}$/.test(v)) return "DNI v\u00e1lido";
+  const rem = 8 - v.length;
+  return rem > 0 ? `Faltan ${rem} d\u00edgito${rem === 1 ? "" : "s"}` : "Solo se permiten 8 d\u00edgitos";
+}
+function nameFieldStatus(v: string): FieldStatus {
+  if (!v) return "idle";
+  return v.trim().length >= 3 ? "valid" : "invalid";
+}
+function nameFieldHint(v: string): string | undefined {
+  if (!v || v.trim().length >= 3) return undefined;
+  return `M\u00ednimo 3 caracteres (${v.trim().length}/3)`;
+}
+function emailFieldStatus(v: string): FieldStatus {
+  if (!v) return "idle";
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? "valid" : "invalid";
+}
+function emailFieldHint(v: string): string | undefined {
+  if (!v) return undefined;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? "Correo v\u00e1lido" : "Introduce un correo v\u00e1lido";
+}
+
 export function PassengersStep({ selected, passengers, setPassengers, total, onBack, onNext, user, guestEmail, setGuestEmail }: {
   selected: Seat[]; passengers: { dni: string; name: string }[];
   setPassengers: (p: { dni: string; name: string }[]) => void;
   total: number; onBack: () => void; onNext: () => void;
   user: ReturnType<typeof useAuth>["user"]; guestEmail: string; setGuestEmail: (email: string) => void;
 }) {
-  const update = (i: number, patch: Partial<{ dni: string; name: string }>) => { setPassengers(passengers.map((p, idx) => (idx === i ? { ...p, ...patch } : p))); };
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const emailValid = user ? true : emailRegex.test(guestEmail);
+  const update = (i: number, patch: Partial<{ dni: string; name: string }>) => {
+    setPassengers(passengers.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
+  };
+  const emailValid = user ? true : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail);
   const valid = passengers.every((p) => /^\d{8}$/.test(p.dni) && p.name.trim().length >= 3) && emailValid;
+
+  const completedCount = passengers.filter((p) => /^\d{8}$/.test(p.dni) && p.name.trim().length >= 3).length;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
@@ -1017,31 +1139,91 @@ export function PassengersStep({ selected, passengers, setPassengers, total, onB
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><Mail className="h-4 w-4" /></div>
                 <span className="text-sm font-bold text-foreground">Contacto para env&iacute;o de pasajes</span>
               </div>
-              <FieldInput icon={Mail} label="Correo electr&oacute;nico" placeholder="ejemplo@correo.com" value={guestEmail} onChange={setGuestEmail} />
+              <FieldInput
+                icon={Mail}
+                label="Correo electr\u00f3nico"
+                placeholder="ejemplo@correo.com"
+                value={guestEmail}
+                onChange={setGuestEmail}
+                status={emailFieldStatus(guestEmail)}
+                hint={emailFieldHint(guestEmail)}
+              />
               <p className="mt-2 text-[11px] text-muted-foreground">Enviaremos tus boletos en PDF y tu c&oacute;digo QR a este correo.</p>
             </div>
           )}
-          {passengers.map((p, i) => (
-            <div key={i} className="rounded-[24px] border border-border/20 bg-card p-6 shadow-[var(--shadow-card)]">
-              <div className="mb-4 flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{i + 1}</span>
-                <span className="text-sm font-bold text-foreground">Pasajero &middot; Asiento {selected[i]?.id}</span>
+          {passengers.map((p, i) => {
+            const pDniStatus  = dniFieldStatus(p.dni);
+            const pNameStatus = nameFieldStatus(p.name);
+            const pComplete   = pDniStatus === "valid" && pNameStatus === "valid";
+            return (
+              <div
+                key={i}
+                className={`rounded-[24px] border bg-card p-6 shadow-[var(--shadow-card)] transition-all ${pComplete ? "border-[var(--success)]/40" : "border-border/20"}`}
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-primary-foreground transition-colors ${pComplete ? "bg-[var(--success)]" : "bg-primary"}`}>
+                      {pComplete ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+                    </span>
+                    <span className="text-sm font-bold text-foreground">Pasajero &middot; Asiento {selected[i]?.id}</span>
+                  </div>
+                  {pComplete && (
+                    <span className="rounded-full bg-[var(--success)]/10 px-2.5 py-1 text-[10px] font-black text-[var(--success)]">
+                      Completo
+                    </span>
+                  )}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <FieldInput
+                    icon={IdCard}
+                    label="DNI"
+                    placeholder="12345678"
+                    maxLength={8}
+                    value={p.dni}
+                    onChange={(v) => update(i, { dni: v.replace(/\D/g, "").slice(0, 8) })}
+                    status={pDniStatus}
+                    hint={dniFieldHint(p.dni)}
+                    showCounter
+                  />
+                  <FieldInput
+                    icon={UserIcon}
+                    label="Nombre completo"
+                    placeholder="Mar\u00eda L\u00f3pez"
+                    value={p.name}
+                    onChange={(v) => update(i, { name: v })}
+                    status={pNameStatus}
+                    hint={nameFieldHint(p.name)}
+                  />
+                </div>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <FieldInput icon={IdCard} label="DNI" placeholder="12345678" maxLength={8} value={p.dni} onChange={(v) => update(i, { dni: v.replace(/\D/g, "").slice(0, 8) })} />
-                <FieldInput icon={UserIcon} label="Nombre completo" placeholder="Mar&iacute;a L&oacute;pez" value={p.name} onChange={(v) => update(i, { name: v })} />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
       <aside className="rounded-[24px] border border-border/20 bg-card p-6 sm:p-8 shadow-[var(--shadow-card)] lg:sticky lg:top-28 lg:h-fit">
         <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Resumen</h3>
         <div className="mt-4 space-y-3 text-sm">
           <Row k="Asientos" v={selected.map((s) => s.id).join(", ")} />
-          <Row k="Pasajeros" v={passengers.length.toString()} />
+          <Row k="Pasajeros" v={`${completedCount} / ${passengers.length} completados`} />
         </div>
         <div className="my-5 h-px bg-border" />
+
+        {/* Progress bar */}
+        <div className="mb-5">
+          <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground mb-1.5">
+            <span>Progreso</span>
+            <span className={completedCount === passengers.length ? "text-[var(--success)]" : "text-primary"}>
+              {completedCount}/{passengers.length}
+            </span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${completedCount === passengers.length ? "bg-[var(--success)]" : "bg-primary"}`}
+              style={{ width: `${passengers.length > 0 ? (completedCount / passengers.length) * 100 : 0}%` }}
+            />
+          </div>
+        </div>
+
         <div className="flex items-baseline justify-between">
           <span className="text-sm text-muted-foreground">Total</span>
           <span className="text-3xl font-bold text-primary">S/ {total}</span>
@@ -1049,20 +1231,63 @@ export function PassengersStep({ selected, passengers, setPassengers, total, onB
         <button disabled={!valid} onClick={onNext} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95">
           Continuar al pago <ArrowRight className="h-4 w-4" />
         </button>
-        {!valid && <p className="mt-2 text-center text-[11px] text-muted-foreground">{!emailValid ? "Introduce un correo v\u00e1lido. " : ""}Completa DNI (8 d\u00edgitos) y nombre de cada pasajero.</p>}
+        {!valid && (
+          <p className="mt-2 text-center text-[11px] text-muted-foreground">
+            {!emailValid ? "Introduce un correo v\u00e1lido. " : ""}
+            {completedCount < passengers.length ? `Completa los datos de ${passengers.length - completedCount} pasajero${passengers.length - completedCount !== 1 ? "s" : ""}.` : ""}
+          </p>
+        )}
       </aside>
     </div>
   );
 }
 
-function FieldInput({ icon: Icon, label, value, onChange, placeholder, maxLength }: {
-  icon: any; label: string; value: string; onChange: (v: string) => void; placeholder?: string; maxLength?: number;
+type FieldStatus = "valid" | "invalid" | "idle";
+
+function FieldInput({ icon: Icon, label, value, onChange, placeholder, maxLength, status = "idle", hint, showCounter }: {
+  icon: any; label: string; value: string; onChange: (v: string) => void;
+  placeholder?: string; maxLength?: number;
+  status?: FieldStatus; hint?: string; showCounter?: boolean;
 }) {
+  const borderCls = status === "valid"
+    ? "border-[var(--success)]"
+    : status === "invalid" && value.length > 0
+    ? "border-destructive"
+    : "border-border";
+  const focusCls = status === "valid"
+    ? "focus-within:ring-[var(--success)]/20 focus-within:border-[var(--success)]"
+    : status === "invalid" && value.length > 0
+    ? "focus-within:ring-destructive/20 focus-within:border-destructive"
+    : "focus-within:border-primary focus-within:ring-primary/20";
   return (
-    <label className="flex flex-col gap-1 rounded-xl border border-border bg-background px-4 py-3 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
-      <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"><Icon className="h-3 w-3" /> {label}</span>
-      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} maxLength={maxLength} className="w-full bg-transparent text-base font-medium text-foreground outline-none placeholder:text-muted-foreground/50" />
-    </label>
+    <div className={`rounded-xl border ${borderCls} bg-background px-4 py-3 transition-all focus-within:ring-2 ${focusCls}`}>
+      <div className="flex items-center justify-between mb-1">
+        <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <Icon className="h-3 w-3" /> {label}
+        </span>
+        <div className="flex items-center gap-1.5">
+          {showCounter && maxLength && (
+            <span className={`text-[10px] font-bold tabular-nums ${value.length === maxLength ? "text-[var(--success)]" : value.length > 0 ? "text-muted-foreground" : "text-muted-foreground/40"}`}>
+              {value.length}/{maxLength}
+            </span>
+          )}
+          {status === "valid" && <CheckCircle2 className="h-3.5 w-3.5 text-[var(--success)] flex-shrink-0" />}
+          {status === "invalid" && value.length > 0 && <XCircle className="h-3.5 w-3.5 text-destructive flex-shrink-0" />}
+        </div>
+      </div>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        maxLength={maxLength}
+        className="w-full bg-transparent text-base font-medium text-foreground outline-none placeholder:text-muted-foreground/50"
+      />
+      {hint && value.length > 0 && (
+        <p className={`mt-1 text-[10px] font-medium ${status === "valid" ? "text-[var(--success)]" : "text-destructive"}`}>
+          {hint}
+        </p>
+      )}
+    </div>
   );
 }
 
