@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { SeatMap, type Seat } from "@/components/jaysi/SeatMap";
-import { Logo } from "@/components/jaysi/Logo";
 import { useAuth, roleHome, registerAccount, storeUser } from "@/lib/auth";
 import {
   ArrowRight, Calendar, MapPin, Search, Users, X, QrCode, Clock, Bus, Leaf,
@@ -30,6 +29,56 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 
+export interface BookingState {
+  origin: string;
+  destination: string;
+  date: string; // ISO String
+  pax: number;
+  tripId: string | null;
+  selectedSeats: string[];
+  passengers: { dni: string; name: string }[];
+  guestEmail: string;
+}
+
+export const initialBookingState: BookingState = {
+  origin: "Lima",
+  destination: "Trujillo",
+  date: "",
+  pax: 1,
+  tripId: null,
+  selectedSeats: [],
+  passengers: [],
+  guestEmail: "",
+};
+
+export function getBookingState(): BookingState {
+  if (typeof window === "undefined") return initialBookingState;
+  try {
+    const data = sessionStorage.getItem("kuntur_booking");
+    if (!data) return initialBookingState;
+    const parsed = JSON.parse(data);
+    return { ...initialBookingState, ...parsed };
+  } catch (e) {
+    return initialBookingState;
+  }
+}
+
+export function setBookingState(state: Partial<BookingState>) {
+  if (typeof window === "undefined") return;
+  try {
+    const current = getBookingState();
+    const updated = { ...current, ...state };
+    sessionStorage.setItem("kuntur_booking", JSON.stringify(updated));
+  } catch (e) {}
+}
+
+export function clearBookingState() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem("kuntur_booking");
+  } catch (e) {}
+}
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -40,9 +89,9 @@ export const Route = createFileRoute("/")({
   component: HomeBooking,
 });
 
-const cities = ["Lima", "Trujillo", "Arequipa", "Cusco", "Piura", "Ica", "Puno", "Chiclayo", "Tacna"];
+export const cities = ["Lima", "Trujillo", "Arequipa", "Cusco", "Piura", "Ica", "Puno", "Chiclayo", "Tacna"];
 
-const tripsBase = [
+export const tripsBase = [
   { id: "1", time: "06:30", arr: "11:45", price: 42, type: "Ejecutivo",     seats: 18, dur: "5h 15m" },
   { id: "2", time: "09:15", arr: "14:30", price: 38, type: "Cama",          seats: 6,  dur: "5h 15m" },
   { id: "3", time: "14:00", arr: "19:15", price: 45, type: "Premium",       seats: 22, dur: "5h 15m" },
@@ -81,16 +130,16 @@ export const tripStyles: Record<string, {
     icon: Moon, label: "Cama nocturna",
     gradient: "linear-gradient(135deg, oklch(0.42 0.12 280), oklch(0.32 0.1 270))",
     ring: "ring-1 ring-violet-400/50", chip: "bg-violet-100 text-violet-800 border border-violet-300",
-    accent: "text-violet-700", tagline: "Reclinable 180\u00b0", bgCard: "bg-gradient-to-br from-violet-50 to-purple-50",
+    accent: "text-violet-600", tagline: "Descanso total", bgCard: "bg-gradient-to-br from-violet-50 to-purple-50",
     borderCard: "border-violet-200 hover:border-violet-400",
-    description: "Cama full 180\u00b0 \u00b7 kit de viaje \u00b7 luz nocturna \u00b7 snack",
-  },
+    description: "Cama 180\u00b0 \u00b7 Fraza t\u00e9rmica \u00b7 Cortinas privacidad",
+  }
 };
 
-function getTripStyle(type: string) { return tripStyles[type] ?? tripStyles.Ejecutivo; }
-const ALL_CATEGORIES = ["Todos", "Ejecutivo", "Premium", "Cama", "Cama nocturna"];
+export function getTripStyle(type: string) { return tripStyles[type] ?? tripStyles.Ejecutivo; }
+export const ALL_CATEGORIES = ["Todos", "Ejecutivo", "Premium", "Cama", "Cama nocturna"];
 
-function makeSeats(): Seat[] {
+export function makeSeats(): Seat[] {
   const occupied = new Set(["1A", "2B", "3C", "4D", "6A", "7C", "9B", "5A"]);
   const list: Seat[] = [];
   for (let r = 1; r <= 10; r++) {
@@ -102,7 +151,6 @@ function makeSeats(): Seat[] {
   return list;
 }
 
-/* ====== MAIN ====== */
 function HomeBooking() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -133,65 +181,43 @@ function HomeBooking() {
   const [destination, setDestination] = useState("Trujillo");
   const [date, setDate] = useState<Date>(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d; });
   const [pax, setPax] = useState(1);
-  const [step, setStep] = useState<"search" | "trips" | "seats" | "passengers" | "payment" | "ticket">("search");
-  const [tripId, setTripId] = useState<string | null>(null);
-  const [seats, setSeats] = useState<Seat[]>(makeSeats);
-  const [authBlock, setAuthBlock] = useState(false);
-  const [passengers, setPassengers] = useState<{ dni: string; name: string }[]>([]);
-  const [guestEmail, setGuestEmail] = useState("");
-  const [payment, setPayment] = useState<{ method: "card" | "yape" | "plin"; card: string; exp: string; cvv: string }>({ method: "card", card: "", exp: "", cvv: "" });
-
-  const trip = useMemo(() => tripsBase.find((t) => t.id === tripId) ?? tripsBase[0], [tripId]);
-  const selected = seats.filter((s) => s.status === "selected");
-  const total = selected.length * trip.price;
-
-  useEffect(() => { setSeats((prev) => { let kept = 0; return prev.map((seat) => { if (seat.status !== "selected") return seat; kept += 1; return kept <= pax ? seat : { ...seat, status: "free" }; }); }); }, [pax]);
-
-  const toggleSeat = (id: string) => {
-    setSeats((prev) => {
-      const target = prev.find((seat) => seat.id === id);
-      if (!target || target.status === "occupied") return prev;
-      if (target.status === "free" && prev.filter((seat) => seat.status === "selected").length >= pax) return prev;
-      return prev.map((seat) => seat.id === id ? { ...seat, status: seat.status === "selected" ? "free" : "selected" } : seat);
-    });
-  };
 
   const swap = () => { setOrigin(destination); setDestination(origin); };
-  const goPay = () => {
-    if (!selected.length) return;
-    if (user && user.role !== "cliente") { setAuthBlock(true); return; }
-    setPassengers(selected.map(() => ({ dni: "", name: "" })));
-    setStep("passengers");
+
+  const handleSearch = () => {
+    clearBookingState();
+    setBookingState({
+      origin,
+      destination,
+      date: date.toISOString(),
+      pax,
+    });
+    navigate({
+      to: "/trips",
+      search: {
+        origin,
+        destination,
+        date: date.toISOString(),
+        pax,
+      },
+    });
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Header user={user} onLogout={logout} activeSection={activeSection} setActiveSection={setActiveSection} />
       <main>
-        {step === "search" && (
-          <Hero origin={origin} destination={destination} date={date} pax={pax}
-            setOrigin={setOrigin} setDestination={setDestination} setDate={setDate} setPax={setPax}
-            swap={swap} onSearch={() => setStep("trips")} />
-        )}
-        {step !== "search" && (
-          <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16 pb-16 pt-6">
-            <Stepper step={step} />
-            {step === "trips" && <TripsList origin={origin} destination={destination} date={date} onPick={(id) => { setTripId(id); setStep("seats"); }} onBack={() => setStep("search")} />}
-            {step === "seats" && <SeatStep trip={trip} seats={seats} selected={selected} total={total} toggleSeat={toggleSeat} onBack={() => setStep("trips")} onPay={goPay} user={user} pax={pax} />}
-            {step === "passengers" && <PassengersStep selected={selected} passengers={passengers} setPassengers={setPassengers} total={total} onBack={() => setStep("seats")} onNext={() => setStep("payment")} user={user} guestEmail={guestEmail} setGuestEmail={setGuestEmail} />}
-            {step === "payment" && <PaymentStep total={total} payment={payment} setPayment={setPayment} onBack={() => setStep("passengers")} onPay={() => setStep("ticket")} />}
-            {step === "ticket" && <TicketResult selected={selected} trip={trip} origin={origin} destination={destination} date={date} passengers={passengers} onNew={() => { setStep("search"); setSeats(makeSeats()); setGuestEmail(""); }} user={user} guestEmail={guestEmail} />}
-          </div>
-        )}
+        <Hero origin={origin} destination={destination} date={date} pax={pax}
+          setOrigin={setOrigin} setDestination={setDestination} setDate={setDate} setPax={setPax}
+          swap={swap} onSearch={handleSearch} />
       </main>
-      {authBlock && <AuthBlockModal onClose={() => setAuthBlock(false)} onLogin={() => navigate({ to: "/login", search: { redirect: "/" } })} user={user} />}
       <Footer />
     </div>
   );
 }
 
 /* ====== HEADER ====== */
-function Header({ user, onLogout, activeSection, setActiveSection }: {
+export function Header({ user, onLogout, activeSection, setActiveSection }: {
   user: ReturnType<typeof useAuth>["user"];
   onLogout: () => void;
   activeSection: string;
@@ -200,7 +226,17 @@ function Header({ user, onLogout, activeSection, setActiveSection }: {
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-card/85 shadow-[0px_4px_20px_0px_rgba(84,95,115,0.05)] backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-16">
-        <Link to="/" onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setActiveSection("inicio"); }} className="text-2xl font-extrabold tracking-tight text-primary">KUNTUR</Link>
+        <Link
+          to="/"
+          onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setActiveSection("inicio"); }}
+          className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-primary"
+        >
+          <span
+            aria-hidden="true"
+            className="h-8 w-8 bg-primary [mask:url('/condor.svg')_center/contain_no-repeat] [-webkit-mask:url('/condor.svg')_center/contain_no-repeat]"
+          />
+          <span>KUNTUR</span>
+        </Link>
         <nav className="hidden items-center gap-10 text-base md:flex">
           <button onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setActiveSection("inicio"); }} className={cn("pb-1 font-semibold transition-colors hover:text-primary bg-transparent border-0 cursor-pointer", activeSection === "inicio" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Inicio</button>
           <a href="#destinos" onClick={() => setActiveSection("destinos")} className={cn("pb-1 font-semibold transition-colors hover:text-primary", activeSection === "destinos" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Destinos</a>
@@ -596,7 +632,7 @@ function Hero(props: {
 }
 
 /* ====== DATE PICKER ====== */
-function DatePickerField({ value, onChange, borderless }: { value: Date; onChange: (v: Date) => void; borderless?: boolean }) {
+export function DatePickerField({ value, onChange, borderless }: { value: Date; onChange: (v: Date) => void; borderless?: boolean }) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   return (
     <Popover>
@@ -622,7 +658,7 @@ function DatePickerField({ value, onChange, borderless }: { value: Date; onChang
 }
 
 /* ====== STEPPER ====== */
-function Stepper({ step }: { step: string }) {
+export function Stepper({ step }: { step: string }) {
   const steps = ["search", "trips", "seats", "passengers", "payment", "ticket"];
   const labels = ["Buscar", "Viajes", "Asientos", "Datos", "Pago", "Boleto"];
   const idx = steps.indexOf(step);
@@ -640,7 +676,7 @@ function Stepper({ step }: { step: string }) {
 }
 
 /* ====== TRIPS LIST ====== */
-function TripsList({ origin, destination, date, onPick, onBack }: {
+export function TripsList({ origin, destination, date, onPick, onBack }: {
   origin: string; destination: string; date: Date; onPick: (id: string) => void; onBack: () => void;
 }) {
   const dateLabel = format(date, "EEEE d 'de' MMMM, yyyy", { locale: es });
@@ -728,7 +764,7 @@ function TripsList({ origin, destination, date, onPick, onBack }: {
 }
 
 /* ====== SEAT STEP ====== */
-function SeatStep({ trip, seats, selected, total, toggleSeat, onBack, onPay, user, pax }: {
+export function SeatStep({ trip, seats, selected, total, toggleSeat, onBack, onPay, user, pax }: {
   trip: typeof tripsBase[number]; seats: Seat[]; selected: Seat[]; total: number;
   toggleSeat: (id: string) => void; onBack: () => void; onPay: () => void;
   user: ReturnType<typeof useAuth>["user"]; pax: number;
@@ -780,7 +816,7 @@ function Row({ k, v }: { k: string; v: string }) {
 }
 
 /* ====== AUTH BLOCK MODAL ====== */
-function AuthBlockModal({ onClose, onLogin, user }: { onClose: () => void; onLogin: () => void; user: ReturnType<typeof useAuth>["user"]; }) {
+export function AuthBlockModal({ onClose, onLogin, user }: { onClose: () => void; onLogin: () => void; user: ReturnType<typeof useAuth>["user"]; }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-4 backdrop-blur-sm sm:items-center">
       <div className="w-full max-w-md rounded-[24px] border border-border bg-card p-6 shadow-[var(--shadow-elegant)]">
@@ -804,7 +840,7 @@ function AuthBlockModal({ onClose, onLogin, user }: { onClose: () => void; onLog
 }
 
 /* ====== TICKET RESULT ====== */
-function TicketResult({ selected, trip, origin, destination, date, passengers, onNew, user, guestEmail }: {
+export function TicketResult({ selected, trip, origin, destination, date, passengers, onNew, user, guestEmail }: {
   selected: Seat[]; trip: typeof tripsBase[number]; origin: string; destination: string; date: Date;
   passengers?: { dni: string; name: string }[]; onNew: () => void;
   user: ReturnType<typeof useAuth>["user"]; guestEmail: string;
@@ -900,7 +936,7 @@ function MiniTicket({ k, v }: { k: string; v: string }) {
 }
 
 /* ====== PASSENGERS STEP ====== */
-function PassengersStep({ selected, passengers, setPassengers, total, onBack, onNext, user, guestEmail, setGuestEmail }: {
+export function PassengersStep({ selected, passengers, setPassengers, total, onBack, onNext, user, guestEmail, setGuestEmail }: {
   selected: Seat[]; passengers: { dni: string; name: string }[];
   setPassengers: (p: { dni: string; name: string }[]) => void;
   total: number; onBack: () => void; onNext: () => void;
@@ -974,7 +1010,7 @@ function FieldInput({ icon: Icon, label, value, onChange, placeholder, maxLength
 }
 
 /* ====== PAYMENT STEP ====== */
-function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
+export function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
   total: number; payment: { method: "card" | "yape" | "plin"; card: string; exp: string; cvv: string };
   setPayment: (p: typeof payment) => void; onBack: () => void; onPay: () => void;
 }) {
@@ -1034,7 +1070,7 @@ function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
 }
 
 /* ====== FOOTER ====== */
-function Footer() {
+export function Footer() {
   return (
     <footer className="bg-muted border-t border-border">
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16 py-10 flex flex-col md:flex-row justify-between items-center gap-8">
