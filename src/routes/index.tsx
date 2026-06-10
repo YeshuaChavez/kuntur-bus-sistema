@@ -246,8 +246,8 @@ export function Header({ user, onLogout, activeSection, setActiveSection }: {
         </Link>
         <nav className="hidden items-center gap-10 text-base md:flex">
           <button onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setActiveSection("inicio"); }} className={cn("pb-1 font-semibold transition-colors hover:text-primary bg-transparent border-0 cursor-pointer", activeSection === "inicio" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Inicio</button>
-          <a href="#destinos" onClick={() => setActiveSection("destinos")} className={cn("pb-1 font-semibold transition-colors hover:text-primary", activeSection === "destinos" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Destinos</a>
-          <a href="#beneficios" onClick={() => setActiveSection("beneficios")} className={cn("pb-1 font-semibold transition-colors hover:text-primary", activeSection === "beneficios" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Beneficios</a>
+          <a href="/#destinos" onClick={() => setActiveSection("destinos")} className={cn("pb-1 font-semibold transition-colors hover:text-primary", activeSection === "destinos" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Destinos</a>
+          <a href="/#beneficios" onClick={() => setActiveSection("beneficios")} className={cn("pb-1 font-semibold transition-colors hover:text-primary", activeSection === "beneficios" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Beneficios</a>
         </nav>
         <div className="flex items-center gap-3">
           {user ? (
