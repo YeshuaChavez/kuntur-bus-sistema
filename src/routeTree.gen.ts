@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TripsRouteImport } from './routes/trips'
 import { Route as TicketRouteImport } from './routes/ticket'
 import { Route as SeatsRouteImport } from './routes/seats'
+import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as PaymentRouteImport } from './routes/payment'
 import { Route as PassengersRouteImport } from './routes/passengers'
 import { Route as MisViajesRouteImport } from './routes/mis-viajes'
@@ -35,6 +36,11 @@ const TicketRoute = TicketRouteImport.update({
 const SeatsRoute = SeatsRouteImport.update({
   id: '/seats',
   path: '/seats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerfilRoute = PerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaymentRoute = PaymentRouteImport.update({
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/mis-viajes': typeof MisViajesRoute
   '/passengers': typeof PassengersRoute
   '/payment': typeof PaymentRoute
+  '/perfil': typeof PerfilRoute
   '/seats': typeof SeatsRoute
   '/ticket': typeof TicketRoute
   '/trips': typeof TripsRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/mis-viajes': typeof MisViajesRoute
   '/passengers': typeof PassengersRoute
   '/payment': typeof PaymentRoute
+  '/perfil': typeof PerfilRoute
   '/seats': typeof SeatsRoute
   '/ticket': typeof TicketRoute
   '/trips': typeof TripsRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/mis-viajes': typeof MisViajesRoute
   '/passengers': typeof PassengersRoute
   '/payment': typeof PaymentRoute
+  '/perfil': typeof PerfilRoute
   '/seats': typeof SeatsRoute
   '/ticket': typeof TicketRoute
   '/trips': typeof TripsRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/mis-viajes'
     | '/passengers'
     | '/payment'
+    | '/perfil'
     | '/seats'
     | '/ticket'
     | '/trips'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/mis-viajes'
     | '/passengers'
     | '/payment'
+    | '/perfil'
     | '/seats'
     | '/ticket'
     | '/trips'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/mis-viajes'
     | '/passengers'
     | '/payment'
+    | '/perfil'
     | '/seats'
     | '/ticket'
     | '/trips'
@@ -181,6 +193,7 @@ export interface RootRouteChildren {
   MisViajesRoute: typeof MisViajesRoute
   PassengersRoute: typeof PassengersRoute
   PaymentRoute: typeof PaymentRoute
+  PerfilRoute: typeof PerfilRoute
   SeatsRoute: typeof SeatsRoute
   TicketRoute: typeof TicketRoute
   TripsRoute: typeof TripsRoute
@@ -207,6 +220,13 @@ declare module '@tanstack/react-router' {
       path: '/seats'
       fullPath: '/seats'
       preLoaderRoute: typeof SeatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perfil': {
+      id: '/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof PerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/payment': {
@@ -285,6 +305,7 @@ const rootRouteChildren: RootRouteChildren = {
   MisViajesRoute: MisViajesRoute,
   PassengersRoute: PassengersRoute,
   PaymentRoute: PaymentRoute,
+  PerfilRoute: PerfilRoute,
   SeatsRoute: SeatsRoute,
   TicketRoute: TicketRoute,
   TripsRoute: TripsRoute,

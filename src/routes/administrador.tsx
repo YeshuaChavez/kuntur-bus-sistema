@@ -366,8 +366,9 @@ function OperacionesTab() {
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><span className="h-2.5 w-2.5 rounded-full bg-primary/50" /> Cusco - Arequipa</div>
             </div>
           </div>
-          <div className="relative h-full min-h-[420px] bg-[radial-gradient(ellipse_at_center,_var(--secondary)_0%,_var(--background)_75%)]">
-            <svg className="absolute inset-0 h-full w-full opacity-30" viewBox="0 0 800 420" fill="none">
+          <div className="relative h-full min-h-[420px] bg-[#0f172a]">
+            <img src="/map_peru_routes.png" alt="Mapa de Rutas Perú" className="absolute inset-0 h-full w-full object-cover opacity-75" />
+            <svg className="absolute inset-0 h-full w-full opacity-40" viewBox="0 0 800 420" fill="none">
               <path d="M0 210 Q200 100 400 210 T800 210" stroke="oklch(0.55 0.13 150)" strokeWidth="1.5" strokeDasharray="6 6" />
               <path d="M120 0 Q200 210 320 420" stroke="oklch(0.55 0.13 150)" strokeWidth="1.5" strokeDasharray="6 6" />
               <path d="M580 0 Q500 210 680 420" stroke="oklch(0.55 0.13 150)" strokeWidth="1.5" strokeDasharray="6 6" />
