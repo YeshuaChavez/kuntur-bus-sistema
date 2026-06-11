@@ -1,4 +1,5 @@
 import { Link, useRouter } from "@tanstack/react-router";
+import { useState } from "react";
 import { ArrowLeft, LogOut } from "lucide-react";
 import { Logo } from "./Logo";
 import { useAuth } from "@/lib/auth";
@@ -14,6 +15,15 @@ export function RoleShell({
 }) {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const [dark, setDark] = useState(
+    () => typeof window !== "undefined" && document.documentElement.classList.contains("dark")
+  );
+  const toggleTheme = () => {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    try { localStorage.setItem("kuntur_theme", next ? "dark" : "light"); } catch {}
+  };
   const goBack = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.history.back();
@@ -58,6 +68,21 @@ export function RoleShell({
           </div>
           <div className="flex items-center gap-2">
             {rightSlot}
+            <button
+              onClick={toggleTheme}
+              aria-label={dark ? "Activar modo claro" : "Activar modo oscuro"}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-foreground transition-colors hover:bg-muted"
+            >
+              {dark ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+                </svg>
+              )}
+            </button>
             {user && (
               <button
                 onClick={handleLogout}
