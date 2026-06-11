@@ -109,9 +109,9 @@ function PaymentPage() {
 
       {/* Email confirmation modal */}
       <Dialog open={showEmail} onOpenChange={(open) => { if (!open) navigate({ to: "/ticket" }); }}>
-        <DialogContent className="max-w-md gap-0 overflow-hidden rounded-2xl p-0">
-          {/* Email header */}
-          <div className="bg-[image:var(--gradient-primary)] px-6 py-5 text-primary-foreground">
+        <DialogContent className="max-w-md gap-0 overflow-hidden rounded-2xl p-0 flex flex-col max-h-[90dvh]">
+          {/* Email header — fijo */}
+          <div className="flex-shrink-0 bg-[image:var(--gradient-primary)] px-6 py-5 text-primary-foreground">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
                 <Mail className="h-5 w-5" />
@@ -126,8 +126,8 @@ function PaymentPage() {
             <p className="mt-0.5 text-[11px] opacity-75">#{purchaseId} · Pago procesado exitosamente</p>
           </div>
 
-          {/* Email body */}
-          <div className="space-y-4 px-6 py-5">
+          {/* Email body — scrollable */}
+          <div className="flex-1 overflow-y-auto space-y-4 px-6 py-5">
             <p className="text-sm text-foreground">
               Hola <strong>{booking.passengers?.[0]?.name ?? "Viajero"}</strong>, tu reserva fue confirmada. Aquí están los detalles de tu viaje.
             </p>
@@ -167,7 +167,8 @@ function PaymentPage() {
             </p>
           </div>
 
-          <div className="border-t border-border px-6 pb-5 pt-4">
+          {/* Footer — fijo */}
+          <div className="flex-shrink-0 border-t border-border px-6 pb-5 pt-4">
             <button
               onClick={() => { setShowEmail(false); navigate({ to: "/ticket" }); }}
               className="w-full rounded-full bg-primary py-3 text-sm font-bold text-primary-foreground transition-all hover:brightness-110 active:scale-95"
