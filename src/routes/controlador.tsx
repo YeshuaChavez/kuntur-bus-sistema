@@ -215,7 +215,7 @@ function MonitoreoTab() {
           <div className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-base font-bold text-foreground">Próximas Salidas</h2>
-              <button className="text-xs font-semibold text-primary hover:underline">Ver todas</button>
+              <button onClick={() => toast.info("Mostrando todas las salidas del día")} className="text-xs font-semibold text-primary hover:underline">Ver todas</button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -261,7 +261,7 @@ function MonitoreoTab() {
             {fleet.map((b) => <UnitCard key={b.id} unit={b} />)}
           </div>
           <div className="rounded-b-3xl bg-secondary/30 p-4">
-            <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-lg transition-all hover:brightness-110 active:scale-[0.98]">
+            <button onClick={() => toast.success("Ruta asignada correctamente · Conductor notificado")} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-lg transition-all hover:brightness-110 active:scale-[0.98]">
               <PlusCircle className="h-4 w-4" /> Asignar Nueva Ruta
             </button>
           </div>
@@ -420,7 +420,7 @@ function RutasTab() {
             <h1 className="text-2xl font-bold text-foreground">Rutas Activas</h1>
             <p className="text-sm text-muted-foreground">Flujos de transporte en tiempo real</p>
           </div>
-          <button className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg transition-all hover:brightness-110 active:scale-95">
+          <button onClick={() => toast.success("Formulario de nueva ruta abierto")} className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg transition-all hover:brightness-110 active:scale-95">
             <PlusCircle className="h-4 w-4" /> Nueva Ruta
           </button>
         </div>
@@ -501,8 +501,8 @@ function RutasTab() {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <button className="rounded-xl border border-border bg-background px-4 py-2 text-xs font-semibold text-muted-foreground transition-all hover:bg-secondary active:scale-95">Modificar</button>
-                  <button className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:brightness-110 active:scale-95">Ver Detalles</button>
+                  <button onClick={() => toast.info("Editor de ruta abierto")} className="rounded-xl border border-border bg-background px-4 py-2 text-xs font-semibold text-muted-foreground transition-all hover:bg-secondary active:scale-95">Modificar</button>
+                  <button onClick={() => toast.info(`Detalle de ruta ${r.id} · ${r.from} → ${r.to}`)} className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:brightness-110 active:scale-95">Ver Detalles</button>
                 </div>
               </div>
             </div>

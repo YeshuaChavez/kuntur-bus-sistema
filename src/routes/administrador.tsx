@@ -124,10 +124,10 @@ function AdminView() {
           <span className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-bold text-secondary-foreground sm:inline-flex">
             <BadgeCheck className="h-3.5 w-3.5 text-primary" /> {adminName}
           </span>
-          <button className="hidden items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground transition-all hover:bg-secondary sm:flex">
+          <button onClick={() => toast.info("Seleccionar período de reporte")} className="hidden items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground transition-all hover:bg-secondary sm:flex">
             <Calendar className="h-3.5 w-3.5" /> Oct 2026
           </button>
-          <button className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-lg transition-all hover:brightness-110 active:scale-95">
+          <button onClick={() => toast.success("Exportando dashboard · PDF generado", { description: "El archivo llegará a tu carpeta de descargas en segundos." })} className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-lg transition-all hover:brightness-110 active:scale-95">
             <Download className="h-3.5 w-3.5" /> Exportar
           </button>
         </div>
@@ -473,7 +473,7 @@ function OperacionesTab() {
                     </div>
                   </td>
                   <td className="px-5 py-4">
-                    <button className="text-muted-foreground hover:text-primary"><MoreVertical className="h-4 w-4" /></button>
+                    <button onClick={() => toast.info(`Opciones para ${r.id}`)} className="text-muted-foreground hover:text-primary"><MoreVertical className="h-4 w-4" /></button>
                   </td>
                 </tr>
               ))}
@@ -481,7 +481,7 @@ function OperacionesTab() {
           </table>
         </div>
         <div className="border-t border-border p-4 text-center">
-          <button className="text-sm font-bold text-primary hover:underline">Cargar más registros</button>
+          <button onClick={() => toast.info("Cargando registros adicionales…")} className="text-sm font-bold text-primary hover:underline">Cargar más registros</button>
         </div>
       </div>
     </div>
@@ -560,7 +560,7 @@ function FlotaTab() {
             </table>
           </div>
           <div className="border-t border-border p-4 text-center">
-            <button className="text-sm font-bold text-primary hover:underline">Ver todas las 125 unidades</button>
+            <button onClick={() => toast.info("Cargando inventario completo de flota…")} className="text-sm font-bold text-primary hover:underline">Ver todas las 125 unidades</button>
           </div>
         </div>
 
@@ -598,7 +598,7 @@ function FlotaTab() {
             <div className="relative z-10">
               <h4 className="mb-2 text-lg font-bold">Optimización IA</h4>
               <p className="mb-4 text-sm opacity-90">Sistema sugiere rotar 5 unidades para equilibrar el desgaste de flota.</p>
-              <button className="rounded-xl bg-card px-4 py-2 text-xs font-bold text-primary transition-all hover:brightness-105 active:scale-95">
+              <button onClick={() => toast.success("IA analizando flota · 5 rotaciones sugeridas generadas")} className="rounded-xl bg-card px-4 py-2 text-xs font-bold text-primary transition-all hover:brightness-105 active:scale-95">
                 Ver Recomendaciones
               </button>
             </div>
@@ -706,8 +706,8 @@ function PersonalTab() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                          <button className="rounded-lg p-2 text-muted-foreground hover:bg-secondary"><Pencil className="h-4 w-4" /></button>
-                          <button className="rounded-lg p-2 text-muted-foreground hover:bg-secondary"><MoreVertical className="h-4 w-4" /></button>
+                          <button onClick={() => toast.info(`Editando perfil de ${p.name}`)} className="rounded-lg p-2 text-muted-foreground hover:bg-secondary"><Pencil className="h-4 w-4" /></button>
+                          <button onClick={() => toast.info(`Más opciones para ${p.name}`)} className="rounded-lg p-2 text-muted-foreground hover:bg-secondary"><MoreVertical className="h-4 w-4" /></button>
                         </div>
                       </td>
                     </tr>
@@ -721,9 +721,9 @@ function PersonalTab() {
             <div className="flex items-center gap-1">
               <button className="rounded-lg p-1.5 bg-secondary hover:bg-secondary/70 disabled:opacity-40" disabled><ChevronLeft className="h-4 w-4" /></button>
               <button className="h-8 w-8 rounded-lg bg-primary text-xs font-bold text-primary-foreground">1</button>
-              <button className="h-8 w-8 rounded-lg text-xs font-bold text-foreground hover:bg-secondary">2</button>
-              <button className="h-8 w-8 rounded-lg text-xs font-bold text-foreground hover:bg-secondary">3</button>
-              <button className="rounded-lg p-1.5 bg-secondary hover:bg-secondary/70"><ChevronRight className="h-4 w-4" /></button>
+              <button onClick={() => toast.info("Página 2 · Cargando colaboradores…")} className="h-8 w-8 rounded-lg text-xs font-bold text-foreground hover:bg-secondary">2</button>
+              <button onClick={() => toast.info("Página 3 · Cargando colaboradores…")} className="h-8 w-8 rounded-lg text-xs font-bold text-foreground hover:bg-secondary">3</button>
+              <button onClick={() => toast.info("Página 2 · Cargando colaboradores…")} className="rounded-lg p-1.5 bg-secondary hover:bg-secondary/70"><ChevronRight className="h-4 w-4" /></button>
             </div>
           </div>
         </div>
@@ -911,7 +911,7 @@ function FinanzasTab() {
                 <div>
                   <p className="text-sm font-bold text-destructive">Facturas Pendientes de Pago (4)</p>
                   <p className="mt-1 text-xs text-muted-foreground">Vencimiento detectado para proveedores de mantenimiento.</p>
-                  <button className="mt-2 text-xs font-semibold text-destructive underline">Revisar facturas</button>
+                  <button onClick={() => toast.error("4 facturas vencidas · Contacta a los proveedores", { duration: 5000 })} className="mt-2 text-xs font-semibold text-destructive underline">Revisar facturas</button>
                 </div>
               </div>
             </div>
@@ -933,7 +933,7 @@ function FinanzasTab() {
         <div className="flex items-center justify-between border-b border-border p-5">
           <h3 className="text-lg font-bold text-foreground">Reporte de Liquidación de Conductores</h3>
           <div className="flex gap-1">
-            <button className="rounded-lg p-2 text-muted-foreground hover:bg-secondary"><Search className="h-4 w-4" /></button>
+            <button onClick={() => toast.info("Buscar liquidación por conductor o unidad")} className="rounded-lg p-2 text-muted-foreground hover:bg-secondary"><Search className="h-4 w-4" /></button>
           </div>
         </div>
         <div className="overflow-x-auto">

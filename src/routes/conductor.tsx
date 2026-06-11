@@ -636,7 +636,7 @@ function SensoresView({ unit, started }: { unit: string; started: boolean }) {
           <p className="text-sm text-muted-foreground">
             Unidad <strong className="text-foreground">{unit}</strong>
             {" · "}
-            <span className={overallBad ? "font-bold text-destructive" : overallWarn ? "font-bold text-yellow-600" : "font-bold text-primary"}>
+            <span className={overallBad ? "font-bold text-destructive" : overallWarn ? "font-bold text-yellow-600 dark:text-yellow-400" : "font-bold text-primary"}>
               {overallBad ? "Atención Requerida" : overallWarn ? "Revisión Preventiva" : "Estado General: Óptimo"}
             </span>
           </p>
