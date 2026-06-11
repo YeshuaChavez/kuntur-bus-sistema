@@ -105,7 +105,7 @@ export const tripsBase = [
 
 export const tripStyles: Record<string, {
   icon: any; label: string; gradient: string; ring: string; chip: string; accent: string;
-  tagline: string; bgCard: string; borderCard: string; description: string;
+  tagline: string; bgCard: string; borderCard: string; description: string; image: string;
 }> = {
   Premium: {
     icon: Crown, label: "Premium",
@@ -114,6 +114,7 @@ export const tripStyles: Record<string, {
     accent: "text-amber-600", tagline: "VIP", bgCard: "bg-gradient-to-br from-amber-50 to-orange-50",
     borderCard: "border-amber-200 hover:border-amber-400",
     description: "Asiento VIP reclinable \u00b7 snack \u00b7 almohada \u00b7 cargador USB",
+    image: "/bus_premium.png",
   },
   Ejecutivo: {
     icon: Star, label: "Ejecutivo",
@@ -122,6 +123,7 @@ export const tripStyles: Record<string, {
     accent: "text-blue-600", tagline: "Asiento amplio", bgCard: "bg-gradient-to-br from-blue-50 to-indigo-50",
     borderCard: "border-blue-200 hover:border-blue-400",
     description: "Asiento ejecutivo reclinable \u00b7 WiFi a bordo \u00b7 toma USB",
+    image: "/bus_ejecutivo.png",
   },
   Cama: {
     icon: BedDouble, label: "Cama",
@@ -130,6 +132,7 @@ export const tripStyles: Record<string, {
     accent: "text-emerald-600", tagline: "Reclinable 160\u00b0", bgCard: "bg-gradient-to-br from-emerald-50 to-teal-50",
     borderCard: "border-emerald-200 hover:border-emerald-400",
     description: "Semi-cama 160\u00b0 \u00b7 TV individual \u00b7 frazada \u00b7 almohada",
+    image: "/bus_cama.png",
   },
   "Cama nocturna": {
     icon: Moon, label: "Cama nocturna",
@@ -138,6 +141,7 @@ export const tripStyles: Record<string, {
     accent: "text-violet-600", tagline: "Descanso total", bgCard: "bg-gradient-to-br from-violet-50 to-purple-50",
     borderCard: "border-violet-200 hover:border-violet-400",
     description: "Cama 180\u00b0 \u00b7 Fraza t\u00e9rmica \u00b7 Cortinas privacidad",
+    image: "/bus_cama_nocturna.png",
   }
 };
 
@@ -1104,7 +1108,9 @@ export function TripsList({ origin, destination, date, onPick, onBack }: {
             <button key={t.id} onClick={() => onPick(t.id)} className={cn("group relative flex w-full flex-col md:flex-row items-start md:items-center justify-between overflow-hidden rounded-[24px] border p-6 text-left shadow-[var(--shadow-card)] transition-all hover:shadow-[var(--shadow-elegant)] hover:-translate-y-0.5 bg-card", isFirst ? "border-2 border-primary ring-4 ring-primary/5" : "border-border/30 hover:border-primary/50")}>
               {isFirst && <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-4 py-1 rounded-bl-xl text-[11px] font-bold uppercase tracking-wider">Recomendado</div>}
               <div className="flex items-start gap-4 flex-1">
-                <div className="hidden sm:flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-[var(--shadow-soft)]" style={{ background: s.gradient }}><Icon className="h-6 w-6" /></div>
+                <div className="hidden sm:flex h-20 w-32 flex-shrink-0 items-center justify-center rounded-xl overflow-hidden bg-secondary border border-border/50 relative shadow-[var(--shadow-soft)] group-hover:scale-[1.03] transition-transform duration-300">
+                  <img src={s.image} alt={s.label} className="h-full w-full object-cover" />
+                </div>
                 <div>
                   <div className="flex items-center gap-3 mb-3">
                     <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider", s.chip)}><Icon className="h-3 w-3" /> {s.label}</span>
