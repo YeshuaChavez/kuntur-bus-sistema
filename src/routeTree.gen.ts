@@ -14,6 +14,7 @@ import { Route as TicketRouteImport } from './routes/ticket'
 import { Route as SeatsRouteImport } from './routes/seats'
 import { Route as PaymentRouteImport } from './routes/payment'
 import { Route as PassengersRouteImport } from './routes/passengers'
+import { Route as MisViajesRouteImport } from './routes/mis-viajes'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ControladorRouteImport } from './routes/controlador'
 import { Route as ConductorRouteImport } from './routes/conductor'
@@ -44,6 +45,11 @@ const PaymentRoute = PaymentRouteImport.update({
 const PassengersRoute = PassengersRouteImport.update({
   id: '/passengers',
   path: '/passengers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MisViajesRoute = MisViajesRouteImport.update({
+  id: '/mis-viajes',
+  path: '/mis-viajes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/conductor': typeof ConductorRoute
   '/controlador': typeof ControladorRoute
   '/login': typeof LoginRoute
+  '/mis-viajes': typeof MisViajesRoute
   '/passengers': typeof PassengersRoute
   '/payment': typeof PaymentRoute
   '/seats': typeof SeatsRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/conductor': typeof ConductorRoute
   '/controlador': typeof ControladorRoute
   '/login': typeof LoginRoute
+  '/mis-viajes': typeof MisViajesRoute
   '/passengers': typeof PassengersRoute
   '/payment': typeof PaymentRoute
   '/seats': typeof SeatsRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/conductor': typeof ConductorRoute
   '/controlador': typeof ControladorRoute
   '/login': typeof LoginRoute
+  '/mis-viajes': typeof MisViajesRoute
   '/passengers': typeof PassengersRoute
   '/payment': typeof PaymentRoute
   '/seats': typeof SeatsRoute
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/conductor'
     | '/controlador'
     | '/login'
+    | '/mis-viajes'
     | '/passengers'
     | '/payment'
     | '/seats'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/conductor'
     | '/controlador'
     | '/login'
+    | '/mis-viajes'
     | '/passengers'
     | '/payment'
     | '/seats'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/conductor'
     | '/controlador'
     | '/login'
+    | '/mis-viajes'
     | '/passengers'
     | '/payment'
     | '/seats'
@@ -166,6 +178,7 @@ export interface RootRouteChildren {
   ConductorRoute: typeof ConductorRoute
   ControladorRoute: typeof ControladorRoute
   LoginRoute: typeof LoginRoute
+  MisViajesRoute: typeof MisViajesRoute
   PassengersRoute: typeof PassengersRoute
   PaymentRoute: typeof PaymentRoute
   SeatsRoute: typeof SeatsRoute
@@ -208,6 +221,13 @@ declare module '@tanstack/react-router' {
       path: '/passengers'
       fullPath: '/passengers'
       preLoaderRoute: typeof PassengersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mis-viajes': {
+      id: '/mis-viajes'
+      path: '/mis-viajes'
+      fullPath: '/mis-viajes'
+      preLoaderRoute: typeof MisViajesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -262,6 +282,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConductorRoute: ConductorRoute,
   ControladorRoute: ControladorRoute,
   LoginRoute: LoginRoute,
+  MisViajesRoute: MisViajesRoute,
   PassengersRoute: PassengersRoute,
   PaymentRoute: PaymentRoute,
   SeatsRoute: SeatsRoute,

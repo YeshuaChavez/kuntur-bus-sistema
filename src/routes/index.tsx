@@ -247,6 +247,29 @@ export function Header({ user, onLogout, activeSection, setActiveSection }: {
   setActiveSection: (v: string) => void;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
+
+  function goHome() {
+    setActiveSection("inicio");
+    setMobileOpen(false);
+    if (window.location.pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      navigate({ to: "/" });
+    }
+  }
+
+  function goSection(id: string, section: string) {
+    setActiveSection(section);
+    setMobileOpen(false);
+    if (window.location.pathname === "/") {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      navigate({ to: "/" });
+      setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }), 400);
+    }
+  }
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-card/85 shadow-[0px_4px_20px_0px_rgba(84,95,115,0.05)] backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-16">
@@ -262,9 +285,9 @@ export function Header({ user, onLogout, activeSection, setActiveSection }: {
           <span>KUNTUR</span>
         </Link>
         <nav className="hidden items-center gap-10 text-base md:flex">
-          <button onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setActiveSection("inicio"); }} className={cn("pb-1 font-semibold transition-colors hover:text-primary bg-transparent border-0 cursor-pointer", activeSection === "inicio" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Inicio</button>
-          <a href="/#destinos" onClick={() => setActiveSection("destinos")} className={cn("pb-1 font-semibold transition-colors hover:text-primary", activeSection === "destinos" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Destinos</a>
-          <a href="/#beneficios" onClick={() => setActiveSection("beneficios")} className={cn("pb-1 font-semibold transition-colors hover:text-primary", activeSection === "beneficios" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Beneficios</a>
+          <button onClick={goHome} className={cn("pb-1 font-semibold transition-colors hover:text-primary bg-transparent border-0 cursor-pointer", activeSection === "inicio" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Inicio</button>
+          <button onClick={() => goSection("destinos", "destinos")} className={cn("pb-1 font-semibold transition-colors hover:text-primary bg-transparent border-0 cursor-pointer", activeSection === "destinos" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Destinos</button>
+          <button onClick={() => goSection("beneficios", "beneficios")} className={cn("pb-1 font-semibold transition-colors hover:text-primary bg-transparent border-0 cursor-pointer", activeSection === "beneficios" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Beneficios</button>
           {user?.role === "cliente" && (
             <Link to={"/mis-viajes" as any} className="pb-1 font-semibold text-muted-foreground transition-colors hover:text-primary">
               Mis viajes
@@ -303,15 +326,17 @@ export function Header({ user, onLogout, activeSection, setActiveSection }: {
         <div className="border-t border-border/40 bg-card/95 backdrop-blur-md md:hidden">
           <nav className="mx-auto max-w-7xl flex flex-col gap-1 px-5 py-3">
             <button
-              onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setActiveSection("inicio"); setMobileOpen(false); }}
+              onClick={goHome}
               className={cn("flex w-full items-center rounded-xl px-4 py-3 text-sm font-semibold text-left transition-colors", activeSection === "inicio" ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary")}
             >Inicio</button>
-            <a href="/#destinos" onClick={() => { setActiveSection("destinos"); setMobileOpen(false); }}
-              className={cn("flex items-center rounded-xl px-4 py-3 text-sm font-semibold transition-colors", activeSection === "destinos" ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary")}
-            >Destinos</a>
-            <a href="/#beneficios" onClick={() => { setActiveSection("beneficios"); setMobileOpen(false); }}
-              className={cn("flex items-center rounded-xl px-4 py-3 text-sm font-semibold transition-colors", activeSection === "beneficios" ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary")}
-            >Beneficios</a>
+            <button
+              onClick={() => goSection("destinos", "destinos")}
+              className={cn("flex w-full items-center rounded-xl px-4 py-3 text-sm font-semibold text-left transition-colors", activeSection === "destinos" ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary")}
+            >Destinos</button>
+            <button
+              onClick={() => goSection("beneficios", "beneficios")}
+              className={cn("flex w-full items-center rounded-xl px-4 py-3 text-sm font-semibold text-left transition-colors", activeSection === "beneficios" ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary")}
+            >Beneficios</button>
             {user?.role === "cliente" && (
               <Link to={"/mis-viajes" as any} onClick={() => setMobileOpen(false)}
                 className="flex items-center rounded-xl px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
