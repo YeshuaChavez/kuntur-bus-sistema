@@ -513,33 +513,84 @@ function BigBtn({ icon: Icon, label, onClick, active, disabled }: {
 
 /* ─── SOS Modal ─────────────────────────────────────────────────────── */
 function SosModal({ onClose }: { onClose: () => void }) {
-  const reasons = ["Avería mecánica", "Accidente", "Asalto / Seguridad", "Salud pasajero", "Otro"];
+  const [phase, setPhase] = useState<"select" | "sending" | "done">("select");
+  const [reason, setReason] = useState("");
+  const reasons = ["Avería mecánica", "Accidente de tránsito", "Asalto / Seguridad", "Emergencia médica", "Otro"];
+
+  const handleReason = (r: string) => {
+    setReason(r);
+    setPhase("sending");
+    setTimeout(() => setPhase("done"), 2600);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/50 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-t-3xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)]">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/15">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-foreground">Reportar emergencia</h3>
-            <p className="text-xs text-muted-foreground">Selecciona el motivo. La oficina será notificada.</p>
-          </div>
-        </div>
-        <div className="mt-4 space-y-2">
-          {reasons.map((r) => (
-            <button
-              key={r}
-              onClick={onClose}
-              className="w-full rounded-xl border border-border bg-background p-3.5 text-left font-medium text-foreground transition-colors hover:border-destructive hover:bg-destructive/5"
-            >
-              {r}
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/60 backdrop-blur-sm">
+      <div className="w-full max-w-md animate-in slide-in-from-bottom rounded-t-3xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] duration-300">
+
+        {phase === "select" && (
+          <>
+            <div className="mb-5 flex items-center gap-3">
+              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-destructive">
+                <AlertTriangle className="h-6 w-6 text-white" />
+                <span className="absolute inset-0 animate-ping rounded-full bg-destructive opacity-40" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-foreground">Emergencia SOS</h3>
+                <p className="text-xs text-muted-foreground">Central y PNP serán notificados de inmediato.</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {reasons.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => handleReason(r)}
+                  className="w-full rounded-xl border border-border bg-background p-3.5 text-left font-medium text-foreground transition-all hover:border-destructive hover:bg-destructive/5 active:scale-[0.98]"
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+            <button onClick={onClose} className="mt-4 w-full rounded-xl py-3 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground">
+              Cancelar
             </button>
-          ))}
-        </div>
-        <button onClick={onClose} className="mt-4 w-full rounded-xl py-3 text-sm font-semibold text-muted-foreground">
-          Cancelar
-        </button>
+          </>
+        )}
+
+        {phase === "sending" && (
+          <div className="flex flex-col items-center gap-5 py-8">
+            <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10">
+              <div className="absolute inset-0 animate-spin rounded-full border-4 border-destructive/20 border-t-destructive" />
+              <AlertTriangle className="h-8 w-8 text-destructive" />
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-foreground">Enviando alerta…</p>
+              <p className="mt-1 text-sm text-muted-foreground">Motivo: <strong className="text-foreground">{reason}</strong></p>
+              <p className="mt-2 text-xs text-muted-foreground">Conectando con Central KUNTUR · PNP Lima</p>
+            </div>
+          </div>
+        )}
+
+        {phase === "done" && (
+          <div className="flex flex-col items-center gap-5 py-6">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+              <CheckCircle2 className="h-10 w-10 text-primary" />
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-foreground">Alerta enviada</p>
+              <div className="mt-2 flex flex-wrap justify-center gap-2">
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">Central notificada</span>
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">PNP en camino</span>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">Motivo registrado: <strong className="text-foreground">{reason}</strong></p>
+            </div>
+            <div className="w-full rounded-xl border border-primary/20 bg-primary/5 p-3 text-center text-xs font-medium text-primary">
+              Permanece en el bus. No abandones el vehículo hasta recibir instrucciones de la central.
+            </div>
+            <button onClick={onClose} className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.98]">
+              Entendido
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
