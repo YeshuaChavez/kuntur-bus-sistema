@@ -106,10 +106,14 @@ function ControladorView() {
     >
       {/* Tab bar */}
       <div className="mb-6 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        <div className="flex gap-1 rounded-2xl bg-secondary/40 p-1 w-fit">
+        <div role="tablist" aria-label="Secciones del panel de controlador" className="flex gap-1 rounded-2xl bg-secondary/40 p-1 w-fit">
         {TABS.map(({ id, label, Icon }) => (
           <button
             key={id}
+            role="tab"
+            aria-selected={tab === id}
+            aria-controls={`ctrl-panel-${id}`}
+            id={`ctrl-tab-${id}`}
             onClick={() => setTab(id)}
             className={cn(
               "relative flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200",
@@ -121,7 +125,7 @@ function ControladorView() {
             <Icon className="h-4 w-4" />
             {label}
             {id === "alertas" && criticalCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-black text-white ring-2 ring-card">
+              <span aria-label={`${criticalCount} alertas críticas`} className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-black text-white ring-2 ring-card">
                 {criticalCount}
               </span>
             )}
@@ -130,10 +134,12 @@ function ControladorView() {
         </div>
       </div>
 
-      {tab === "monitoreo" && <MonitoreoTab />}
-      {tab === "rutas"     && <RutasTab />}
-      {tab === "alertas"   && <AlertasTab />}
-      {tab === "taller"    && <TallerTab />}
+      <div id={`ctrl-panel-${tab}`} role="tabpanel" aria-labelledby={`ctrl-tab-${tab}`}>
+        {tab === "monitoreo" && <MonitoreoTab />}
+        {tab === "rutas"     && <RutasTab />}
+        {tab === "alertas"   && <AlertasTab />}
+        {tab === "taller"    && <TallerTab />}
+      </div>
     </RoleShell>
   );
 }
@@ -144,6 +150,8 @@ function ControladorView() {
 function MonitoreoTab() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
+  const tileRef = useRef<any>(null);
+  const observerRef = useRef<MutationObserver | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || !mapRef.current) return;
@@ -163,10 +171,20 @@ function MonitoreoTab() {
 
       mapInstance.current = map;
 
-      // Dark theme CartoDB layer
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-        maxZoom: 20
-      }).addTo(map);
+      // Theme-adaptive tile layer
+      const isDark = () => document.documentElement.classList.contains("dark");
+      const tileUrl = (dark: boolean) => dark
+        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+
+      tileRef.current = L.tileLayer(tileUrl(isDark()), { maxZoom: 20 }).addTo(map);
+
+      observerRef.current = new MutationObserver(() => {
+        if (!mapInstance.current || !tileRef.current) return;
+        tileRef.current.remove();
+        tileRef.current = L.tileLayer(tileUrl(isDark()), { maxZoom: 20 }).addTo(mapInstance.current);
+      });
+      observerRef.current.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
       // Custom DivIcons
       const cityIcon = (name: string) => L.divIcon({
@@ -281,6 +299,7 @@ function MonitoreoTab() {
     });
 
     return () => {
+      observerRef.current?.disconnect();
       if (mapInstance.current) {
         mapInstance.current.remove();
         mapInstance.current = null;
@@ -292,7 +311,7 @@ function MonitoreoTab() {
     <div className="flex flex-col gap-4">
       <style>{`
         .leaflet-container {
-          background: #0f172a !important;
+          background: var(--card) !important;
           border-radius: 24px;
         }
         .custom-city-icon {
@@ -300,62 +319,50 @@ function MonitoreoTab() {
           border: none !important;
           user-select: none !important;
           -webkit-user-select: none !important;
-          -moz-user-select: none !important;
-          -ms-user-select: none !important;
         }
         .custom-city-icon span {
-          color: #ffffff !important;
-          background-color: rgba(15, 23, 42, 0.85) !important;
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          color: var(--foreground) !important;
+          background-color: var(--card) !important;
+          border: 1px solid var(--border) !important;
         }
-        .custom-city-icon *:focus,
-        .custom-city-icon *:active,
-        .custom-city-icon:focus,
-        .custom-city-icon:active {
-          outline: none !important;
-          background: transparent !important;
-          box-shadow: none !important;
+        .custom-city-icon *:focus, .custom-city-icon:focus,
+        .custom-city-icon *:active, .custom-city-icon:active {
+          outline: none !important; background: transparent !important; box-shadow: none !important;
         }
         .custom-bus-icon {
           background: transparent !important;
           border: none !important;
           user-select: none !important;
           -webkit-user-select: none !important;
-          -moz-user-select: none !important;
-          -ms-user-select: none !important;
         }
-        .custom-bus-icon *:focus,
-        .custom-bus-icon *:active,
-        .custom-bus-icon:focus,
-        .custom-bus-icon:active {
-          outline: none !important;
-          background: transparent !important;
-          box-shadow: none !important;
+        .custom-bus-icon *:focus, .custom-bus-icon:focus,
+        .custom-bus-icon *:active, .custom-bus-icon:active {
+          outline: none !important; background: transparent !important; box-shadow: none !important;
         }
         .custom-leaflet-popup .leaflet-popup-content-wrapper {
-          background: #1e293b !important;
-          color: #f8fafc !important;
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          background: var(--card) !important;
+          color: var(--foreground) !important;
+          border: 1px solid var(--border) !important;
           border-radius: 12px !important;
-          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+          box-shadow: var(--shadow-elegant) !important;
         }
         .custom-leaflet-popup .leaflet-popup-tip {
-          background: #1e293b !important;
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          background: var(--card) !important;
+          border: 1px solid var(--border) !important;
         }
         .leaflet-bar {
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+          border: 1px solid var(--border) !important;
+          box-shadow: var(--shadow-card) !important;
           border-radius: 8px !important;
           overflow: hidden;
         }
         .leaflet-bar a {
-          background-color: #1e293b !important;
-          color: #f8fafc !important;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+          background-color: var(--card) !important;
+          color: var(--foreground) !important;
+          border-bottom: 1px solid var(--border) !important;
         }
         .leaflet-bar a:hover {
-          background-color: #334155 !important;
+          background-color: var(--muted) !important;
         }
       `}</style>
       {/* KPIs */}
@@ -391,7 +398,7 @@ function MonitoreoTab() {
               <span className="text-muted-foreground">· Costa Norte</span>
             </div>
 
-            <div ref={mapRef} className="relative h-[420px] w-full" style={{ zIndex: 1 }} />
+            <div ref={mapRef} className="relative h-[420px] w-full" style={{ zIndex: 1 }} role="img" aria-label="Mapa geográfico del Perú con posición de buses en tiempo real" />
           </div>
 
           {/* Departures table */}

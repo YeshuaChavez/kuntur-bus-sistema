@@ -140,10 +140,14 @@ function AdminView() {
     >
       {/* Tab bar */}
       <div className="mb-6 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        <div className="flex gap-1 rounded-2xl bg-secondary/40 p-1 w-fit">
+        <div role="tablist" aria-label="Secciones del panel de administrador" className="flex gap-1 rounded-2xl bg-secondary/40 p-1 w-fit">
         {ADMIN_TABS.map(({ id, label, Icon }) => (
           <button
             key={id}
+            role="tab"
+            aria-selected={tab === id}
+            aria-controls={`admin-panel-${id}`}
+            id={`admin-tab-${id}`}
             onClick={() => setTab(id)}
             className={cn(
               "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200",
@@ -158,11 +162,13 @@ function AdminView() {
         </div>
       </div>
 
-      {tab === "resumen"     && <ResumenTab adminName={adminName} />}
-      {tab === "operaciones" && <OperacionesTab />}
-      {tab === "flota"       && <FlotaTab />}
-      {tab === "personal"    && <PersonalTab />}
-      {tab === "finanzas"    && <FinanzasTab />}
+      <div id={`admin-panel-${tab}`} role="tabpanel" aria-labelledby={`admin-tab-${tab}`}>
+        {tab === "resumen"     && <ResumenTab adminName={adminName} />}
+        {tab === "operaciones" && <OperacionesTab />}
+        {tab === "flota"       && <FlotaTab />}
+        {tab === "personal"    && <PersonalTab />}
+        {tab === "finanzas"    && <FinanzasTab />}
+      </div>
     </RoleShell>
   );
 }
@@ -525,65 +531,54 @@ function OperacionesTab() {
     <div className="flex flex-col gap-5">
       <style>{`
         .leaflet-container {
-          background: #0b0f19 !important;
-          background-image: 
-            radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0),
-            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 0),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 0) !important;
-          background-size: 20px 20px, 100px 100px, 100px 100px !important;
+          background: var(--card) !important;
+          background-image: radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0) !important;
+          background-size: 24px 24px !important;
           border-radius: 24px;
-          border: 1px solid rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border);
         }
         .custom-hub-icon {
           background: transparent !important;
           border: none !important;
           user-select: none !important;
         }
-        .custom-hub-icon *:focus,
-        .custom-hub-icon *:active,
-        .custom-hub-icon:focus,
-        .custom-hub-icon:active {
-          outline: none !important;
-          background: transparent !important;
-          box-shadow: none !important;
+        .custom-hub-icon *:focus, .custom-hub-icon:focus,
+        .custom-hub-icon *:active, .custom-hub-icon:active {
+          outline: none !important; background: transparent !important; box-shadow: none !important;
         }
         .custom-bus-icon {
           background: transparent !important;
           border: none !important;
           user-select: none !important;
         }
-        .custom-bus-icon *:focus,
-        .custom-bus-icon *:active,
-        .custom-bus-icon:focus,
-        .custom-bus-icon:active {
-          outline: none !important;
-          background: transparent !important;
-          box-shadow: none !important;
+        .custom-bus-icon *:focus, .custom-bus-icon:focus,
+        .custom-bus-icon *:active, .custom-bus-icon:active {
+          outline: none !important; background: transparent !important; box-shadow: none !important;
         }
         .custom-leaflet-popup .leaflet-popup-content-wrapper {
-          background: #1e293b !important;
-          color: #f8fafc !important;
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          background: var(--card) !important;
+          color: var(--foreground) !important;
+          border: 1px solid var(--border) !important;
           border-radius: 12px !important;
-          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+          box-shadow: var(--shadow-elegant) !important;
         }
         .custom-leaflet-popup .leaflet-popup-tip {
-          background: #1e293b !important;
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          background: var(--card) !important;
+          border: 1px solid var(--border) !important;
         }
         .leaflet-bar {
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+          border: 1px solid var(--border) !important;
+          box-shadow: var(--shadow-card) !important;
           border-radius: 8px !important;
           overflow: hidden;
         }
         .leaflet-bar a {
-          background-color: #1e293b !important;
-          color: #f8fafc !important;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+          background-color: var(--card) !important;
+          color: var(--foreground) !important;
+          border-bottom: 1px solid var(--border) !important;
         }
         .leaflet-bar a:hover {
-          background-color: #334155 !important;
+          background-color: var(--muted) !important;
         }
       `}</style>
       <div>
@@ -610,7 +605,7 @@ function OperacionesTab() {
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><span className="h-2.5 w-2.5 rounded-full bg-primary/50" /> Cusco - Arequipa</div>
             </div>
           </div>
-          <div ref={mapRef} className="relative h-full min-h-[420px] w-full" style={{ zIndex: 1 }} />
+          <div ref={mapRef} role="img" aria-label="Diagrama topológico de terminales y corredores KUNTUR" className="relative h-full min-h-[420px] w-full" style={{ zIndex: 1 }} />
         </div>
 
         {/* Alerts */}
