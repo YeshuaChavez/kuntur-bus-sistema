@@ -296,12 +296,41 @@ function MonitoreoTab() {
           border-radius: 24px;
         }
         .custom-city-icon {
-          background: transparent;
-          border: none;
+          background: transparent !important;
+          border: none !important;
+          user-select: none !important;
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+        }
+        .custom-city-icon span {
+          color: #ffffff !important;
+          background-color: rgba(15, 23, 42, 0.85) !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        .custom-city-icon *:focus,
+        .custom-city-icon *:active,
+        .custom-city-icon:focus,
+        .custom-city-icon:active {
+          outline: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
         }
         .custom-bus-icon {
-          background: transparent;
-          border: none;
+          background: transparent !important;
+          border: none !important;
+          user-select: none !important;
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+        }
+        .custom-bus-icon *:focus,
+        .custom-bus-icon *:active,
+        .custom-bus-icon:focus,
+        .custom-bus-icon:active {
+          outline: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
         }
         .custom-leaflet-popup .leaflet-popup-content-wrapper {
           background: #1e293b !important;
