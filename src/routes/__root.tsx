@@ -3,35 +3,99 @@ import { useState, useRef, useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 
-const QUICK_REPLIES = [
-  { q: "¿Cómo compro un pasaje?", a: "Usa el buscador en la página principal: elige origen, destino y fecha, selecciona tu asiento y paga en línea. ¡Listo en minutos!" },
-  { q: "¿Dónde veo mi boleto?", a: "Tu boleto digital aparece tras el pago y llega a tu correo. Si tienes cuenta, también está en 'Mis viajes'." },
-  { q: "¿Cuánto dura Lima → Cusco?", a: "Aproximadamente 21–24 horas. Te recomendamos el servicio Cama nocturna para mayor comodidad en ruta." },
-  { q: "¿Puedo cancelar mi pasaje?", a: "Sí, hasta 24 horas antes de la salida. Escríbenos por correo o llama a nuestro centro de atención KUNTUR." },
+type KW = { keys: string[]; answer: string };
+
+const KB: KW[] = [
+  { keys: ["hola","buenas","saludos","hey","buenos días","buenas tardes","buenas noches"],
+    answer: "¡Hola! 👋 Soy el asistente KUNTUR. Puedo ayudarte con pasajes, horarios, precios, destinos, equipaje y más. ¿Qué necesitas?" },
+  { keys: ["gracias","ok","listo","perfecto","excelente","genial"],
+    answer: "¡Con gusto! Si tienes otra pregunta aquí estaré. ¡Buen viaje! 🦅" },
+  { keys: ["pasaje","comprar","compra","adquirir","reservar","reserva","compro"],
+    answer: "Para comprar un pasaje: ingresa origen, destino y fecha en el buscador de la página principal → elige tu asiento en el mapa interactivo → paga en línea. Tu boleto digital llega al instante." },
+  { keys: ["boleto","ticket","ver boleto","mis viajes","donde esta"],
+    answer: "Tu boleto aparece en pantalla al terminar la compra y se envía a tu correo. Con cuenta KUNTUR también lo encuentras en 'Mis viajes' cuando quieras." },
+  { keys: ["horario","hora","salida","llegada","cuando sale","a que hora"],
+    answer: "Los horarios varían por ruta. Búscalos en el buscador con tu origen, destino y fecha: verás todos los viajes disponibles con hora exacta de salida y llegada estimada." },
+  { keys: ["precio","costo","cuanto","cuánto","vale","soles","tarifa","barato"],
+    answer: "Precios referenciales: Lima–Ica desde S/ 35 · Lima–Trujillo desde S/ 45 · Lima–Arequipa desde S/ 65 · Lima–Piura desde S/ 70 · Lima–Cusco desde S/ 80. Varían según categoría y disponibilidad." },
+  { keys: ["lima"],
+    answer: "Lima es nuestro hub principal. Conectamos a Ica (4-5 h), Trujillo (9 h), Arequipa (14 h), Piura (15 h) y Cusco (21-24 h). Consulta el buscador para horarios exactos." },
+  { keys: ["arequipa"],
+    answer: "Lima → Arequipa: aproximadamente 14 horas. Servicios disponibles: Ejecutivo, Cama y Cama nocturna. Desde S/ 65." },
+  { keys: ["cusco","cuzco"],
+    answer: "Lima → Cusco: aproximadamente 21-24 horas. Recomendamos el servicio Cama nocturna para mayor comodidad. Desde S/ 80." },
+  { keys: ["trujillo"],
+    answer: "Lima → Trujillo: aproximadamente 9 horas. Servicios: Ejecutivo y Premium. Desde S/ 45." },
+  { keys: ["piura"],
+    answer: "Lima → Piura: aproximadamente 14-16 horas. Servicios: Ejecutivo y Cama. Desde S/ 70." },
+  { keys: ["ica"],
+    answer: "Lima → Ica: aproximadamente 4-5 horas. Es la ruta más corta que operamos. Servicios: Ejecutivo y Premium. Desde S/ 35." },
+  { keys: ["cancelar","cancelación","devolucion","devolución","reembolso","anular"],
+    answer: "Puedes cancelar hasta 24 horas antes de la salida. El reembolso se aplica según la tarifa. Escríbenos a atencion@kuntur.pe o llama a nuestro centro de atención." },
+  { keys: ["asiento","cama","ejecutivo","premium","nocturna","clase","servicio","categoria"],
+    answer: "Tenemos 4 categorías: Ejecutivo (asiento reclinable) · Premium (asiento extra ancho) · Cama (reclinación 180°) · Cama nocturna (ideal para viajes de madrugada, totalmente reclinable)." },
+  { keys: ["equipaje","maleta","bulto","peso","llevar","bodega"],
+    answer: "Cada pasajero: 1 maleta de hasta 25 kg en bodega + 1 bolso de mano de hasta 8 kg. Equipaje adicional tiene costo extra según peso." },
+  { keys: ["pago","tarjeta","yape","plin","efectivo","transferencia","visa","mastercard","pagar"],
+    answer: "Aceptamos Visa, Mastercard, Yape, Plin y transferencias bancarias. El pago es 100% seguro con cifrado SSL." },
+  { keys: ["cuenta","registro","registrar","crear cuenta","usuario","contraseña"],
+    answer: "Crear tu cuenta KUNTUR es gratis: solo necesitas tu correo. Con cuenta guardas tu historial de viajes, tus datos de pasajero y accedes a ofertas exclusivas." },
+  { keys: ["qr","código qr","codigo qr","escanear","validar","subir","abordar"],
+    answer: "Tu boleto incluye un QR único. Al subir al bus, el auxiliar lo escaneará desde su tablet. Puedes mostrarlo en pantalla o imprimirlo." },
+  { keys: ["descuento","oferta","promoción","promocion","estudiante","adulto mayor","65"],
+    answer: "20% de descuento para estudiantes con carnet universitario vigente y adultos mayores de 65 años con DNI. El descuento se aplica automáticamente al seleccionar la categoría." },
+  { keys: ["wifi","enchufe","usb","servicio a bordo","pelicula","comida","snack"],
+    answer: "Los buses Premium y Cama incluyen WiFi a bordo, toma de corriente USB por asiento y snack de bienvenida en rutas largas." },
+  { keys: ["mascota","perro","gato","animal"],
+    answer: "Por el momento KUNTUR no permite el transporte de mascotas en la cabina. Contacta a atención al cliente para consultar opciones en bodega para tu viaje." },
+  { keys: ["niño","menor","bebe","bebé","infantil"],
+    answer: "Niños menores de 3 años viajan gratis en el regazo del adulto. De 3 a 11 años pagan tarifa reducida del 50%. Mayores de 12 pagan tarifa completa." },
 ];
+
+function matchAnswer(input: string): string {
+  const norm = input.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  for (const { keys, answer } of KB) {
+    if (keys.some((k) => norm.includes(k.normalize("NFD").replace(/[̀-ͯ]/g, "")))) {
+      return answer;
+    }
+  }
+  return "No tengo información exacta sobre eso. Puedes escribirnos a atencion@kuntur.pe o llamar a nuestra línea de atención. ¿Hay algo más en lo que pueda ayudarte?";
+}
+
+const BOT_ICON = (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/>
+    <path d="M2 14h2M20 14h2M15 13v2M9 13v2"/>
+  </svg>
+);
 
 function AssistenteIA() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<{ from: "bot" | "user"; text: string }[]>([
-    { from: "bot", text: "¡Hola! Soy el asistente KUNTUR 🦅 ¿En qué puedo ayudarte hoy?" },
+    { from: "bot", text: "¡Hola! Soy el asistente KUNTUR. Puedes preguntarme sobre pasajes, horarios, precios, destinos, equipaje y más." },
   ]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, open]);
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, typing]);
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 100);
+  }, [open]);
 
   const reply = (text: string) => {
-    const found = QUICK_REPLIES.find((r) => r.q === text);
-    const answer = found?.a ?? "Gracias por tu consulta. En breve un agente te atenderá. También puedes llamar al número de atención KUNTUR.";
-    setMessages((m) => [...m, { from: "user", text }]);
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setMessages((m) => [...m, { from: "user", text: trimmed }]);
     setTyping(true);
     setTimeout(() => {
       setTyping(false);
-      setMessages((m) => [...m, { from: "bot", text: answer }]);
-    }, 900);
+      setMessages((m) => [...m, { from: "bot", text: matchAnswer(trimmed) }]);
+    }, 800);
   };
 
   const send = () => {
@@ -44,33 +108,33 @@ function AssistenteIA() {
   return (
     <>
       {open && (
-        <div className="fixed bottom-24 left-4 sm:left-6 z-50 w-[calc(100vw-2rem)] max-w-[340px] overflow-hidden rounded-2xl border border-border bg-card shadow-[0_8px_40px_-8px_rgba(0,0,0,0.25)]">
+        <div className="fixed bottom-[4.5rem] right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] max-w-[340px] overflow-hidden rounded-2xl border border-border bg-card shadow-[0_8px_40px_-8px_rgba(0,0,0,0.28)]">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-border bg-primary/8 px-4 py-3">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[image:var(--gradient-primary)]">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2z"/>
-                  <path d="M7 14h.01M12 14h.01M17 14h.01"/>
-                </svg>
+          <div className="flex items-center justify-between border-b border-border/60 bg-primary/5 px-4 py-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground">
+                {BOT_ICON}
               </div>
               <div>
                 <p className="text-sm font-bold text-foreground leading-none">Asistente KUNTUR</p>
-                <p className="text-[10px] text-primary mt-0.5">● En línea</p>
+                <p className="mt-0.5 text-[10px] font-semibold text-primary">● En línea</p>
               </div>
             </div>
-            <button onClick={() => setOpen(false)} className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <button
+              onClick={() => setOpen(false)}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 6 6 18M6 6l12 12"/>
               </svg>
             </button>
           </div>
 
           {/* Messages */}
-          <div className="flex h-56 flex-col gap-2 overflow-y-auto p-3">
+          <div className="flex h-60 flex-col gap-2 overflow-y-auto p-3">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-xs leading-relaxed ${
+                <div className={`max-w-[88%] rounded-2xl px-3 py-2 text-xs leading-relaxed ${
                   m.from === "bot"
                     ? "bg-secondary text-foreground rounded-tl-sm"
                     : "bg-primary text-primary-foreground rounded-tr-sm"
@@ -81,7 +145,7 @@ function AssistenteIA() {
             ))}
             {typing && (
               <div className="flex justify-start">
-                <div className="flex items-center gap-1 rounded-2xl rounded-tl-sm bg-secondary px-3 py-2">
+                <div className="flex items-center gap-1 rounded-2xl rounded-tl-sm bg-secondary px-3 py-2.5">
                   <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:0ms]" />
                   <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:150ms]" />
                   <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:300ms]" />
@@ -91,36 +155,22 @@ function AssistenteIA() {
             <div ref={bottomRef} />
           </div>
 
-          {/* Quick replies */}
-          {messages.length <= 2 && !typing && (
-            <div className="flex flex-wrap gap-1.5 border-t border-border px-3 py-2">
-              {QUICK_REPLIES.map((r) => (
-                <button
-                  key={r.q}
-                  onClick={() => reply(r.q)}
-                  className="rounded-full border border-border bg-background px-2.5 py-1 text-[10px] font-semibold text-foreground transition-colors hover:bg-primary hover:text-primary-foreground hover:border-primary"
-                >
-                  {r.q}
-                </button>
-              ))}
-            </div>
-          )}
-
           {/* Input */}
-          <div className="flex items-center gap-2 border-t border-border p-3">
+          <div className="flex items-center gap-2 border-t border-border/60 p-3">
             <input
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder="Escribe tu consulta…"
-              className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              placeholder="Escribe tu pregunta…"
+              className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             <button
               onClick={send}
-              disabled={!input.trim()}
+              disabled={!input.trim() || typing}
               className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow transition-all hover:brightness-110 active:scale-90 disabled:opacity-40"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
               </svg>
             </button>
@@ -128,20 +178,22 @@ function AssistenteIA() {
         </div>
       )}
 
-      {/* FAB */}
+      {/* FAB — solo círculo con icono */}
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label="Abrir asistente inteligente"
-        className="fixed bottom-6 left-4 sm:left-6 z-50 flex items-center gap-2.5 rounded-full border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-[0_4px_20px_-4px_rgba(0,0,0,0.18)] transition-all hover:scale-105 hover:shadow-[0_8px_28px_-4px_rgba(0,0,0,0.22)] active:scale-95"
+        aria-label="Asistente inteligente KUNTUR"
+        className="fixed bottom-6 right-4 sm:right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[image:var(--gradient-primary)] text-primary-foreground shadow-[0_4px_24px_-4px_oklch(0.5_0.07_160_/_0.55)] transition-all hover:scale-110 hover:shadow-[0_6px_28px_-4px_oklch(0.5_0.07_160_/_0.65)] active:scale-95"
       >
-        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[image:var(--gradient-primary)]">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2z"/>
-            <path d="M7 14h.01M12 14h.01M17 14h.01"/>
+        {open ? (
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 6 6 18M6 6l12 12"/>
           </svg>
-        </div>
-        <span className="hidden sm:inline">Asistente inteligente</span>
-        <span className="sm:hidden">Asistente</span>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/>
+            <path d="M2 14h2M20 14h2M15 13v2M9 13v2"/>
+          </svg>
+        )}
       </button>
     </>
   );
