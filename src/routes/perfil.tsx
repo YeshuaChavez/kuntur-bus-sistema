@@ -9,7 +9,7 @@ import { User, Mail, ShieldCheck, Edit2, Check, X, Bus, Lock, ArrowRight, Eye, E
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/perfil" as any)({
+export const Route = createFileRoute("/perfil")({
   head: () => ({
     meta: [
       { title: "Mi perfil — KUNTUR" },
