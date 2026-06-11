@@ -248,6 +248,15 @@ function LoginPage() {
                 </div>
               </div>
             )}
+
+            <div className="mt-8 border-t border-border pt-6 text-center">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Continuar como invitado <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
         </section>
       </main>
