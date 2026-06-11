@@ -52,7 +52,7 @@ const tripStyles: Record<string, {
   Premium: {
     icon: Crown,
     gradient: "linear-gradient(135deg, oklch(0.78 0.14 85), oklch(0.68 0.16 50))",
-    chip: "bg-amber-100 text-amber-700 border border-amber-300",
+    chip: "bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700/50",
     accent: "text-amber-600",
     tagline: "VIP · snack incluido",
     bg: "bg-amber-50 border-amber-200",
@@ -60,7 +60,7 @@ const tripStyles: Record<string, {
   Ejecutivo: {
     icon: Star,
     gradient: "linear-gradient(135deg, oklch(0.62 0.13 230), oklch(0.55 0.14 250))",
-    chip: "bg-blue-100 text-blue-700 border border-blue-300",
+    chip: "bg-blue-100 text-blue-700 border border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50",
     accent: "text-blue-600",
     tagline: "Asiento amplio · WiFi",
     bg: "bg-blue-50 border-blue-200",
@@ -68,7 +68,7 @@ const tripStyles: Record<string, {
   Cama: {
     icon: BedDouble,
     gradient: "linear-gradient(135deg, oklch(0.62 0.13 150), oklch(0.5 0.14 160))",
-    chip: "bg-emerald-100 text-emerald-700 border border-emerald-300",
+    chip: "bg-emerald-100 text-emerald-700 border border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700/50",
     accent: "text-emerald-600",
     tagline: "Reclinable 160°",
     bg: "bg-emerald-50 border-emerald-200",
@@ -76,7 +76,7 @@ const tripStyles: Record<string, {
   "Cama nocturna": {
     icon: Moon,
     gradient: "linear-gradient(135deg, oklch(0.4 0.1 280), oklch(0.3 0.09 270))",
-    chip: "bg-violet-100 text-violet-700 border border-violet-300",
+    chip: "bg-violet-100 text-violet-700 border border-violet-300 dark:bg-violet-900/30 dark:text-violet-300 dark:border-violet-700/50",
     accent: "text-violet-600",
     tagline: "Reclinable 180° · manta",
     bg: "bg-violet-50 border-violet-200",
@@ -259,9 +259,9 @@ function CountdownBadge({ dateStr, hhmm }: { dateStr: string; hhmm: string }) {
   return (
     <div className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 font-mono text-sm font-bold tabular-nums ${
       ready
-        ? "animate-pulse bg-emerald-100 text-emerald-700"
+        ? "animate-pulse bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
         : secs < 600
-        ? "bg-amber-100 text-amber-700"
+        ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
         : "bg-secondary text-primary"
     }`}>
       <Timer className="h-3.5 w-3.5 flex-shrink-0" />
@@ -706,11 +706,11 @@ function Scanner() {
       {/* Result card */}
       {(phase === "valid" || phase === "invalid") && passenger && (
         <div className={`mt-3 rounded-xl border p-3 ${
-          phase === "valid" ? "border-emerald-300/50 bg-emerald-500/10" : "border-destructive/30 bg-destructive/10"
+          phase === "valid" ? "border-emerald-300/50 bg-emerald-500/10 dark:border-emerald-700/50 dark:bg-emerald-500/15" : "border-destructive/30 bg-destructive/10"
         }`}>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className={`text-sm font-bold ${phase === "valid" ? "text-emerald-700" : "text-destructive"}`}>
+              <p className={`text-sm font-bold ${phase === "valid" ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}`}>
                 {phase === "valid" ? "Acceso permitido" : "Acceso denegado"}
               </p>
               {phase === "valid" ? (

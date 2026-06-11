@@ -110,7 +110,7 @@ export const tripStyles: Record<string, {
   Premium: {
     icon: Crown, label: "Premium",
     gradient: "linear-gradient(135deg, oklch(0.78 0.14 85), oklch(0.65 0.18 45))",
-    ring: "ring-2 ring-amber-300/50", chip: "bg-amber-100 text-amber-800 border border-amber-300",
+    ring: "ring-2 ring-amber-300/50", chip: "bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700/50",
     accent: "text-amber-600", tagline: "VIP", bgCard: "bg-gradient-to-br from-amber-50 to-orange-50",
     borderCard: "border-amber-200 hover:border-amber-400",
     description: "Asiento VIP reclinable \u00b7 snack \u00b7 almohada \u00b7 cargador USB",
@@ -118,7 +118,7 @@ export const tripStyles: Record<string, {
   Ejecutivo: {
     icon: Star, label: "Ejecutivo",
     gradient: "linear-gradient(135deg, oklch(0.55 0.14 230), oklch(0.45 0.16 255))",
-    ring: "ring-1 ring-blue-300/50", chip: "bg-blue-100 text-blue-800 border border-blue-300",
+    ring: "ring-1 ring-blue-300/50", chip: "bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50",
     accent: "text-blue-600", tagline: "Asiento amplio", bgCard: "bg-gradient-to-br from-blue-50 to-indigo-50",
     borderCard: "border-blue-200 hover:border-blue-400",
     description: "Asiento ejecutivo reclinable \u00b7 WiFi a bordo \u00b7 toma USB",
@@ -126,7 +126,7 @@ export const tripStyles: Record<string, {
   Cama: {
     icon: BedDouble, label: "Cama",
     gradient: "linear-gradient(135deg, oklch(0.58 0.13 155), oklch(0.46 0.14 165))",
-    ring: "ring-1 ring-emerald-300/50", chip: "bg-emerald-100 text-emerald-800 border border-emerald-300",
+    ring: "ring-1 ring-emerald-300/50", chip: "bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700/50",
     accent: "text-emerald-600", tagline: "Reclinable 160\u00b0", bgCard: "bg-gradient-to-br from-emerald-50 to-teal-50",
     borderCard: "border-emerald-200 hover:border-emerald-400",
     description: "Semi-cama 160\u00b0 \u00b7 TV individual \u00b7 frazada \u00b7 almohada",
@@ -134,7 +134,7 @@ export const tripStyles: Record<string, {
   "Cama nocturna": {
     icon: Moon, label: "Cama nocturna",
     gradient: "linear-gradient(135deg, oklch(0.42 0.12 280), oklch(0.32 0.1 270))",
-    ring: "ring-1 ring-violet-400/50", chip: "bg-violet-100 text-violet-800 border border-violet-300",
+    ring: "ring-1 ring-violet-400/50", chip: "bg-violet-100 text-violet-800 border border-violet-300 dark:bg-violet-900/30 dark:text-violet-300 dark:border-violet-700/50",
     accent: "text-violet-600", tagline: "Descanso total", bgCard: "bg-gradient-to-br from-violet-50 to-purple-50",
     borderCard: "border-violet-200 hover:border-violet-400",
     description: "Cama 180\u00b0 \u00b7 Fraza t\u00e9rmica \u00b7 Cortinas privacidad",
@@ -580,7 +580,8 @@ function Hero(props: {
         <div className="absolute inset-0 -z-20">
           <img alt="Flota de buses KUNTUR" className="h-full w-full object-cover" src="/fleet-hero.png" />
         </div>
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0.5)_0%,rgba(0,0,0,0.15)_60%,rgba(247,250,248,0.4)_85%,rgba(247,250,248,1)_100%)]" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/50 via-black/15 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 -z-10 h-2/5 bg-gradient-to-t from-background to-transparent" />
         <div className="relative z-10 mx-auto max-w-7xl px-5 text-center sm:px-8 lg:px-16">
           <h1 className="mx-auto max-w-4xl text-4xl font-extrabold leading-tight tracking-tight text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.6)] sm:text-5xl lg:text-[54px] lg:leading-[1.15]">
             Viaja con el confort y la seguridad de <span className="text-[oklch(0.78_0.13_160)] font-black">KUNTUR</span>
@@ -847,25 +848,27 @@ function Hero(props: {
 
       {/* Dialog for details */}
       <Dialog open={!!selectedCityInfo} onOpenChange={(open) => !open && setSelectedCityInfo(null)}>
-        <DialogContent className="max-w-2xl p-0 overflow-hidden rounded-[28px] border border-border/40 shadow-2xl bg-card [&>button]:bg-black/40 [&>button]:text-white [&>button]:hover:bg-black/60 [&>button]:rounded-full [&>button]:p-2 [&>button]:border [&>button]:border-white/20 [&>button]:transition-all">
+        <DialogContent className="max-w-2xl p-0 overflow-hidden rounded-[28px] border border-border/40 shadow-2xl bg-card flex flex-col max-h-[90dvh] [&>button]:bg-black/40 [&>button]:text-white [&>button]:hover:bg-black/60 [&>button]:rounded-full [&>button]:p-2 [&>button]:border [&>button]:border-white/20 [&>button]:transition-all">
           {selectedCityInfo && (() => {
             const details = destinationDetails[selectedCityInfo.city];
             return (
               <>
-                <div className="relative h-[240px] w-full">
+                {/* Image — fija, no hace scroll */}
+                <div className="relative h-[180px] sm:h-[220px] w-full flex-shrink-0">
                   <img alt={selectedCityInfo.city} className="h-full w-full object-cover" src={selectedCityInfo.img} />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
-                  <div className="absolute bottom-6 left-6 text-white">
+                  <div className="absolute bottom-4 left-5 sm:bottom-6 sm:left-6 text-white">
                     <p className="text-xs font-semibold uppercase tracking-wider text-[oklch(0.78_0.13_160)]">{selectedCityInfo.region}</p>
                     <DialogTitle asChild>
-                      <h2 className="text-3xl font-extrabold mt-1 text-white">{selectedCityInfo.city}</h2>
+                      <h2 className="text-2xl sm:text-3xl font-extrabold mt-1 text-white">{selectedCityInfo.city}</h2>
                     </DialogTitle>
                   </div>
                 </div>
-                <div className="p-8 space-y-6">
+                {/* Contenido scrollable */}
+                <div className="overflow-y-auto flex-1 p-5 sm:p-8 space-y-5">
                   <div>
-                    <h3 className="text-base font-bold text-foreground flex items-center gap-2 mb-2">
-                      <Compass className="h-5 w-5 text-primary" /> Historia y Cultura
+                    <h3 className="text-sm font-bold text-foreground flex items-center gap-2 mb-2">
+                      <Compass className="h-4 w-4 text-primary flex-shrink-0" /> Historia y Cultura
                     </h3>
                     <DialogDescription asChild>
                       <p className="text-muted-foreground text-sm leading-relaxed">
@@ -873,28 +876,29 @@ function Hero(props: {
                       </p>
                     </DialogDescription>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 rounded-2xl bg-secondary/50 border border-border/20 flex flex-col items-center text-center">
-                      <Sun className="h-6 w-6 text-orange-500 mb-2" />
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="p-3 rounded-2xl bg-secondary/50 border border-border/20 flex flex-col items-center text-center">
+                      <Sun className="h-5 w-5 text-orange-500 mb-1.5" />
                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Clima</span>
-                      <span className="text-xs font-semibold text-foreground">{details?.weather}</span>
+                      <span className="text-[11px] font-semibold text-foreground leading-snug">{details?.weather}</span>
                     </div>
-                    <div className="p-4 rounded-2xl bg-secondary/50 border border-border/20 flex flex-col items-center text-center">
-                      <Utensils className="h-6 w-6 text-green-600 mb-2" />
+                    <div className="p-3 rounded-2xl bg-secondary/50 border border-border/20 flex flex-col items-center text-center">
+                      <Utensils className="h-5 w-5 text-green-600 mb-1.5" />
                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Plato Bandera</span>
-                      <span className="text-xs font-semibold text-foreground">{details?.food}</span>
+                      <span className="text-[11px] font-semibold text-foreground leading-snug">{details?.food}</span>
                     </div>
-                    <div className="p-4 rounded-2xl bg-secondary/50 border border-border/20 flex flex-col items-center text-center">
-                      <Sparkles className="h-6 w-6 text-amber-500 mb-2" />
+                    <div className="p-3 rounded-2xl bg-secondary/50 border border-border/20 flex flex-col items-center text-center">
+                      <Sparkles className="h-5 w-5 text-amber-500 mb-1.5" />
                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">¿Sabías que...?</span>
-                      <span className="text-xs font-semibold text-foreground leading-snug">{details?.fact}</span>
+                      <span className="text-[11px] font-semibold text-foreground leading-snug">{details?.fact}</span>
                     </div>
                   </div>
                 </div>
-                <div className="p-6 border-t border-border/40 bg-secondary/30 flex items-center justify-between gap-4 flex-col sm:flex-row">
+                {/* Footer fijo */}
+                <div className="p-4 sm:p-5 border-t border-border/40 bg-secondary/30 flex items-center justify-between gap-3 flex-col sm:flex-row flex-shrink-0">
                   <div className="flex flex-col text-center sm:text-left">
                     <span className="text-xs text-muted-foreground">Pasajes de ida desde</span>
-                    <span className="text-2xl font-extrabold text-foreground">S/ {selectedCityInfo.price}.00</span>
+                    <span className="text-xl font-extrabold text-foreground">S/ {selectedCityInfo.price}.00</span>
                   </div>
                   <button
                     onClick={() => {
@@ -902,7 +906,7 @@ function Hero(props: {
                       props.onSearch();
                       setSelectedCityInfo(null);
                     }}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-full bg-primary hover:bg-primary/90 active:scale-95 px-8 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-full bg-primary hover:bg-primary/90 active:scale-95 px-6 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30"
                   >
                     Buscar Pasajes <ArrowRight className="h-4 w-4" />
                   </button>
