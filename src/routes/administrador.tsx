@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import { RoleShell } from "@/components/kuntur/RoleShell";
 import {
   TrendingUp, TrendingDown, DollarSign, Users, Bus, Percent, ArrowUpRight,
@@ -410,7 +411,7 @@ function OperacionesTab() {
                 </div>
                 <p className="text-xs text-muted-foreground">Unidad <strong className="text-foreground">{a.unit}</strong>: {a.detail}</p>
                 {a.type === "speed" && (
-                  <button className="mt-2 text-xs font-semibold text-primary hover:underline">Contactar Conductor</button>
+                  <button onClick={() => toast.info("Llamando al conductor…", { duration: 3000 })} className="mt-2 text-xs font-semibold text-primary hover:underline">Contactar Conductor</button>
                 )}
               </div>
             ))}
@@ -498,7 +499,7 @@ function FlotaTab() {
           <h1 className="text-2xl font-bold text-foreground">Gestión de Flota</h1>
           <p className="text-sm text-muted-foreground">Monitoreo operativo y mantenimiento preventivo</p>
         </div>
-        <button className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg transition-all hover:brightness-110 active:scale-95">
+        <button onClick={() => toast.success("Mantenimiento programado · Unidad reservada en taller")} className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg transition-all hover:brightness-110 active:scale-95">
           <PlusCircle className="h-4 w-4" /> Programar Mantenimiento
         </button>
       </div>
@@ -761,7 +762,7 @@ function PersonalTab() {
                         </span>
                       </div>
                       {!s.ok && (
-                        <button className="mt-1 flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                        <button onClick={() => toast.success("Conductor asignado al turno correctamente")} className="mt-1 flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
                           <PlusCircle className="h-3 w-3" /> Asignar ahora
                         </button>
                       )}
@@ -770,7 +771,7 @@ function PersonalTab() {
                 );
               })}
             </div>
-            <button className="w-full border-t border-border p-4 text-sm font-bold text-primary transition-colors hover:bg-primary/5">
+            <button onClick={() => toast.info("Calendario completo · Función disponible próximamente")} className="w-full border-t border-border p-4 text-sm font-bold text-primary transition-colors hover:bg-primary/5">
               Ver Calendario Completo
             </button>
           </div>
@@ -781,7 +782,7 @@ function PersonalTab() {
               <h4 className="text-sm font-bold uppercase tracking-wide">Recordatorio de Nómina</h4>
             </div>
             <p className="mb-4 text-sm opacity-90">El cierre de mes es en 4 días. Valide las horas extra del personal administrativo.</p>
-            <button className="w-full rounded-xl bg-card py-2 text-sm font-bold text-primary transition-all hover:brightness-105 active:scale-95">
+            <button onClick={() => toast.success("Redirigiendo a módulo de finanzas…")} className="w-full rounded-xl bg-card py-2 text-sm font-bold text-primary transition-all hover:brightness-105 active:scale-95">
               Ir a Finanzas
             </button>
           </div>
@@ -802,7 +803,7 @@ function FinanzasTab() {
           <h1 className="text-2xl font-bold text-foreground">Gestión Financiera</h1>
           <p className="text-sm text-muted-foreground">Panel de control y auditoría de flujo de caja KUNTUR</p>
         </div>
-        <button className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg transition-all hover:brightness-110 active:scale-95">
+        <button onClick={() => toast.success("Reporte generado · Descarga iniciada", { description: "El PDF llegará a tu carpeta de descargas en segundos." })} className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg transition-all hover:brightness-110 active:scale-95">
           <Download className="h-4 w-4" /> Generar Reporte Mensual
         </button>
       </div>

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import { RoleShell } from "@/components/kuntur/RoleShell";
 import {
   Bus, MapPin, Search, AlertCircle, Phone, BadgeCheck, Headset,
@@ -614,25 +615,25 @@ function AlertasTab() {
 
                   <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
                     {isSos && (
-                      <button className="flex items-center gap-1.5 rounded-xl bg-destructive px-4 py-2 text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95">
+                      <button onClick={() => toast.error("Llamada de emergencia iniciada · PNP en camino", { duration: 5000 })} className="flex items-center gap-1.5 rounded-xl bg-destructive px-4 py-2 text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95">
                         <Phone className="h-3.5 w-3.5" /> Contactar Policía
                       </button>
                     )}
                     {isMech && (
-                      <button className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground transition-all hover:brightness-110 active:scale-95">
+                      <button onClick={() => toast.success("Mecánico asignado · ETA estimado 20 min")} className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground transition-all hover:brightness-110 active:scale-95">
                         <ClipboardList className="h-3.5 w-3.5" /> Asignar Mecánico
                       </button>
                     )}
                     {!isSos && !isMech && (
-                      <button className="flex items-center gap-1.5 rounded-xl bg-primary/10 px-4 py-2 text-xs font-bold text-primary transition-all hover:bg-primary/20 active:scale-95">
+                      <button onClick={() => toast.success("ETA actualizado · Pasajeros informados automáticamente")} className="flex items-center gap-1.5 rounded-xl bg-primary/10 px-4 py-2 text-xs font-bold text-primary transition-all hover:bg-primary/20 active:scale-95">
                         <RefreshCw className="h-3.5 w-3.5" /> Ajustar ETA
                       </button>
                     )}
-                    <button className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground transition-all hover:bg-secondary active:scale-95">
+                    <button onClick={() => toast.info(`Llamando al conductor de ${a.id}…`, { duration: 3000 })} className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground transition-all hover:bg-secondary active:scale-95">
                       <Phone className="h-3.5 w-3.5" /> Llamar Conductor
                     </button>
                     {!isSos && !isMech && (
-                      <button className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground transition-all hover:bg-secondary active:scale-95">
+                      <button onClick={() => toast.success("Pasajeros notificados · Mensaje enviado por app")} className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground transition-all hover:bg-secondary active:scale-95">
                         <MessageSquare className="h-3.5 w-3.5" /> Notificar Pasajeros
                       </button>
                     )}
@@ -661,7 +662,7 @@ function TallerTab() {
           <h1 className="text-2xl font-bold text-foreground">Taller de Mantenimiento</h1>
           <p className="text-sm text-muted-foreground">Control operativo de flota y gestión de reparaciones</p>
         </div>
-        <button className="flex items-center gap-2 rounded-xl bg-primary/10 px-5 py-2.5 text-sm font-bold text-primary transition-all hover:bg-primary/20 active:scale-95">
+        <button onClick={() => toast.success("Ingreso registrado en taller · Mecánico asignado automáticamente")} className="flex items-center gap-2 rounded-xl bg-primary/10 px-5 py-2.5 text-sm font-bold text-primary transition-all hover:bg-primary/20 active:scale-95">
           <PlusCircle className="h-4 w-4" /> Registrar Ingreso
         </button>
       </div>

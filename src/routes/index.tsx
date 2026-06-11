@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate, useLocation } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { SeatMap, type Seat } from "@/components/kuntur/SeatMap";
 import { useAuth, roleHome, registerAccount, storeUser } from "@/lib/auth";
 import {
@@ -8,6 +8,7 @@ import {
   IdCard, User as UserIcon, Lock, CheckCircle2, Crown, Moon, BedDouble, Star, SlidersHorizontal,
   Mail, ArrowUpDown, Headphones, Globe, Ticket as TicketIcon, Utensils, Sun, Compass,
   Timer, Smartphone, XCircle, HelpCircle, SearchX, Luggage, RefreshCw, Menu,
+  Bell, Download, Share2, AlertTriangle, Wrench, BarChart3, BadgeCheck,
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -31,6 +32,7 @@ import {
   CarouselNext,
   type CarouselApi,
 } from "@/components/ui/carousel";
+import { toast } from "sonner";
 
 export interface BookingState {
   origin: string;
@@ -239,6 +241,113 @@ function HomeBooking() {
   );
 }
 
+/* ====== NOTIFICATIONS ====== */
+type Notif = { id: string; title: string; desc: string; time: string; read: boolean; icon: any };
+
+function getRoleNotifications(role: string | undefined): Notif[] {
+  if (role === "cliente") return [
+    { id: "1", title: "Viaje confirmado", desc: "Tu boleto ha sido procesado exitosamente.", time: "Hace 5 min", read: false, icon: CheckCircle2 },
+    { id: "2", title: "Recuerda tu viaje", desc: "Tu salida de mañana es a las 22:30. ¡Llega 30 min antes!", time: "Hace 2 h", read: false, icon: Calendar },
+    { id: "3", title: "Oferta especial", desc: "20% de descuento en rutas hacia Arequipa este fin de semana.", time: "Ayer", read: true, icon: Sparkles },
+  ];
+  if (role === "conductor") return [
+    { id: "1", title: "Viaje asignado", desc: "Nueva ruta: Lima → Trujillo · Salida 06:30 · Bus JY-104.", time: "Hace 10 min", read: false, icon: Bus },
+    { id: "2", title: "Revisión pendiente", desc: "Bus JY-104 requiere inspección de frenos antes de salir.", time: "Hace 1 h", read: false, icon: AlertTriangle },
+  ];
+  if (role === "auxiliar") return [
+    { id: "1", title: "Viaje próximo", desc: "JY-104 Lima → Trujillo inicia abordaje en 30 min. Gate A2.", time: "Hace 5 min", read: false, icon: Clock },
+    { id: "2", title: "Atención especial", desc: "Asiento 1A: pasajero con necesidades especiales. Atención prioritaria.", time: "Hace 20 min", read: false, icon: Users },
+  ];
+  if (role === "controlador") return [
+    { id: "1", title: "Alerta SOS activa", desc: "JY-104 activó botón de pánico · Av. Central 450, Lima.", time: "Hace 2 min", read: false, icon: AlertCircle },
+    { id: "2", title: "Retraso detectado", desc: "JY-211 Lima → Arequipa · 20 min de retraso por tráfico.", time: "Hace 15 min", read: false, icon: Clock },
+    { id: "3", title: "Mantenimiento urgente", desc: "KTR-202 requiere cambio de frenos antes de próxima salida.", time: "Hace 1 h", read: true, icon: Wrench },
+  ];
+  if (role === "administrador") return [
+    { id: "1", title: "Reporte disponible", desc: "El resumen de ingresos de esta semana está listo.", time: "Hace 30 min", read: false, icon: BarChart3 },
+    { id: "2", title: "Gastos pendientes", desc: "3 solicitudes de gasto esperan tu aprobación.", time: "Hace 2 h", read: false, icon: BadgeCheck },
+    { id: "3", title: "Logro del equipo", desc: "Carlos Mendoza completó 200 viajes este mes.", time: "Ayer", read: true, icon: Sparkles },
+  ];
+  return [];
+}
+
+function NotifBell({ role }: { role: string | undefined }) {
+  const [open, setOpen] = useState(false);
+  const [notifs, setNotifs] = useState<Notif[]>(() => getRoleNotifications(role));
+  const unread = notifs.filter((n) => !n.read).length;
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const markAll = () => setNotifs((ns) => ns.map((n) => ({ ...n, read: true })));
+  const markOne = (id: string) => setNotifs((ns) => ns.map((n) => n.id === id ? { ...n, read: true } : n));
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Notificaciones"
+        className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card transition-all hover:bg-muted active:scale-90"
+      >
+        <Bell className="h-4 w-4 text-foreground" />
+        {unread > 0 && (
+          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white">
+            {unread}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-11 z-50 w-80 overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-elegant)]">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+            <span className="text-sm font-bold text-foreground">Notificaciones</span>
+            {unread > 0 && (
+              <button onClick={markAll} className="text-xs font-semibold text-primary hover:underline">
+                Marcar todas como leídas
+              </button>
+            )}
+          </div>
+          <div className="max-h-80 divide-y divide-border overflow-y-auto">
+            {notifs.length === 0 ? (
+              <p className="p-6 text-center text-sm text-muted-foreground">Sin notificaciones</p>
+            ) : (
+              notifs.map((n) => {
+                const Icon = n.icon;
+                return (
+                  <button
+                    key={n.id}
+                    onClick={() => markOne(n.id)}
+                    className={cn("flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-secondary/50", !n.read && "bg-primary/5")}
+                  >
+                    <div className={cn("mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full", !n.read ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground")}>
+                      <Icon className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-1">
+                        <p className={cn("truncate text-sm font-semibold", n.read ? "text-muted-foreground" : "text-foreground")}>{n.title}</p>
+                        {!n.read && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
+                      </div>
+                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{n.desc}</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground/60">{n.time}</p>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ====== HEADER ====== */
 export function Header({ user, onLogout, activeSection, setActiveSection }: {
   user: ReturnType<typeof useAuth>["user"];
@@ -298,10 +407,17 @@ export function Header({ user, onLogout, activeSection, setActiveSection }: {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <span className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground sm:inline-flex">
-                <ShieldCheck className="h-3.5 w-3.5 text-primary" /> {user.name} &middot; {user.role}
-              </span>
+              {user.role === "cliente" ? (
+                <Link to={"/perfil" as any} className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-muted sm:inline-flex">
+                  <ShieldCheck className="h-3.5 w-3.5 text-primary" /> {user.name} &middot; {user.role}
+                </Link>
+              ) : (
+                <span className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground sm:inline-flex">
+                  <ShieldCheck className="h-3.5 w-3.5 text-primary" /> {user.name} &middot; {user.role}
+                </span>
+              )}
               {user.role !== "cliente" && <Link to={roleHome(user.role) as any} className="hidden sm:inline-flex rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">Mi panel</Link>}
+              <NotifBell role={user.role} />
               <button onClick={onLogout} className="flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted">
                 <LogOut className="h-3.5 w-3.5" /> Salir
               </button>
@@ -342,6 +458,11 @@ export function Header({ user, onLogout, activeSection, setActiveSection }: {
               <Link to={"/mis-viajes" as any} onClick={() => setMobileOpen(false)}
                 className={cn("flex items-center rounded-xl px-4 py-3 text-sm font-semibold transition-colors", pathname === "/mis-viajes" ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary")}
               >Mis viajes</Link>
+            )}
+            {user && (
+              <Link to={"/perfil" as any} onClick={() => setMobileOpen(false)}
+                className={cn("flex items-center rounded-xl px-4 py-3 text-sm font-semibold transition-colors", pathname === "/perfil" ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary")}
+              >Mi perfil</Link>
             )}
           </nav>
           <div className="mx-auto max-w-7xl flex flex-col gap-2 border-t border-border/40 px-5 pb-4 pt-3">
@@ -1167,7 +1288,24 @@ export function TicketResult({ selected, trip, origin, destination, date, passen
           )}
         </div>
       )}
-      <button onClick={onNew} className="mt-6 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted">Comprar otro pasaje</button>
+      <div className="mt-5 flex flex-wrap justify-center gap-3">
+        <button
+          onClick={() => toast.success("PDF generado", { description: "Revisa tu carpeta de descargas." })}
+          className="flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+        >
+          <Download className="h-4 w-4 text-primary" /> Descargar PDF
+        </button>
+        <button
+          onClick={() => {
+            navigator.clipboard?.writeText(`Boleto KUNTUR · ${origin} → ${destination} · ${trip.time}`).catch(() => {});
+            toast.success("¡Enlace copiado!", { description: "Comparte tu reserva fácilmente." });
+          }}
+          className="flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+        >
+          <Share2 className="h-4 w-4 text-primary" /> Compartir
+        </button>
+      </div>
+      <button onClick={onNew} className="mt-3 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted">Comprar otro pasaje</button>
     </div>
   );
 }
