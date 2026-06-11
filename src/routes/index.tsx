@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { SeatMap, type Seat } from "@/components/kuntur/SeatMap";
 import { useAuth, roleHome, registerAccount, storeUser } from "@/lib/auth";
@@ -248,6 +248,7 @@ export function Header({ user, onLogout, activeSection, setActiveSection }: {
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   function goHome() {
     setActiveSection("inicio");
@@ -289,7 +290,7 @@ export function Header({ user, onLogout, activeSection, setActiveSection }: {
           <button onClick={() => goSection("destinos", "destinos")} className={cn("pb-1 font-semibold transition-colors hover:text-primary bg-transparent border-0 cursor-pointer", activeSection === "destinos" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Destinos</button>
           <button onClick={() => goSection("beneficios", "beneficios")} className={cn("pb-1 font-semibold transition-colors hover:text-primary bg-transparent border-0 cursor-pointer", activeSection === "beneficios" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>Beneficios</button>
           {user?.role === "cliente" && (
-            <Link to={"/mis-viajes" as any} className="pb-1 font-semibold text-muted-foreground transition-colors hover:text-primary">
+            <Link to={"/mis-viajes" as any} className={cn("pb-1 font-semibold transition-colors hover:text-primary", pathname === "/mis-viajes" ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>
               Mis viajes
             </Link>
           )}
@@ -339,7 +340,7 @@ export function Header({ user, onLogout, activeSection, setActiveSection }: {
             >Beneficios</button>
             {user?.role === "cliente" && (
               <Link to={"/mis-viajes" as any} onClick={() => setMobileOpen(false)}
-                className="flex items-center rounded-xl px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+                className={cn("flex items-center rounded-xl px-4 py-3 text-sm font-semibold transition-colors", pathname === "/mis-viajes" ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary")}
               >Mis viajes</Link>
             )}
           </nav>
