@@ -74,9 +74,8 @@ export function roleHome(role: Role): string {
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser());
   useEffect(() => {
-    setUser(getStoredUser());
     const onChange = () => setUser(getStoredUser());
     window.addEventListener("kuntur-auth", onChange);
     window.addEventListener("storage", onChange);
