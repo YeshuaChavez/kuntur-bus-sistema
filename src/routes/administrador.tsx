@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import "leaflet/dist/leaflet.css";
 import { toast } from "sonner";
 import { RoleShell } from "@/components/kuntur/RoleShell";
 import {
@@ -340,8 +341,189 @@ function ResumenTab({ adminName }: { adminName: string }) {
 //  TAB 2 — OPERACIONES
 // ══════════════════════════════════════════════════════════════════════════
 function OperacionesTab() {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<any>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !mapRef.current) return;
+
+    // Dynamically import Leaflet to prevent SSR errors
+    import("leaflet").then((L) => {
+      if (mapInstance.current) return;
+
+      const map = L.map(mapRef.current!, {
+        center: [-11.0, -75.0],
+        zoom: 6,
+        minZoom: 4,
+        maxZoom: 12,
+        zoomControl: false,
+        attributionControl: false
+      });
+
+      mapInstance.current = map;
+
+      // Dark theme CartoDB layer
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        maxZoom: 20
+      }).addTo(map);
+
+      // Custom DivIcons
+      const cityIcon = (name: string) => L.divIcon({
+        className: "custom-city-icon",
+        html: `
+          <div class="flex items-center gap-1.5 whitespace-nowrap">
+            <div class="w-2.5 h-2.5 rounded-full bg-white border-2 border-[oklch(0.55_0.13_150)] shadow-[0_0_8px_rgba(255,255,255,0.8)]"></div>
+            <span class="text-[10px] font-bold text-white uppercase tracking-wider bg-slate-900/80 px-1.5 py-0.5 rounded backdrop-blur-sm border border-white/10 select-none">${name}</span>
+          </div>
+        `,
+        iconSize: [120, 20],
+        iconAnchor: [5, 10]
+      });
+
+      const busIcon = (id: string, status: "onroute" | "delayed") => {
+        const colorClass = status === "onroute" 
+          ? "bg-primary text-primary-foreground border-primary shadow-primary/40" 
+          : "bg-[var(--warning)] text-white border-[var(--warning)] shadow-[var(--warning)]/40";
+        return L.divIcon({
+          className: "custom-bus-icon",
+          html: `
+            <div class="flex flex-col items-center">
+              <div class="flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-black tracking-wider shadow-lg ${colorClass} transition-all duration-300 transform hover:scale-110">
+                <svg class="h-2.5 w-2.5 animate-pulse" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="6" y1="21" x2="6" y2="17"></line>
+                  <line x1="18" y1="21" x2="18" y2="17"></line>
+                  <path d="M4 17h16"></path>
+                </svg>
+                <span>${id}</span>
+              </div>
+              <div class="w-1.5 h-1.5 rounded-full bg-white border border-black/40 mt-0.5"></div>
+            </div>
+          `,
+          iconSize: [60, 30],
+          iconAnchor: [30, 25]
+        });
+      };
+
+      // Coordinates
+      const citiesCoords: Record<string, [number, number]> = {
+        Lima: [-12.046374, -77.042793],
+        Trujillo: [-8.11599, -79.02998],
+        Ica: [-14.06777, -75.72858],
+        Arequipa: [-16.409047, -71.537451],
+        Cusco: [-13.53195, -71.96746],
+        Puno: [-15.84, -70.02],
+        Piura: [-5.19449, -80.63282]
+      };
+
+      // Add city markers
+      Object.entries(citiesCoords).forEach(([name, coords]) => {
+        L.marker(coords, { icon: cityIcon(name) }).addTo(map);
+      });
+
+      // Draw routes
+      const routes = [
+        [citiesCoords.Piura, citiesCoords.Trujillo],
+        [citiesCoords.Trujillo, citiesCoords.Lima],
+        [citiesCoords.Lima, citiesCoords.Ica, citiesCoords.Arequipa],
+        [citiesCoords.Arequipa, citiesCoords.Cusco, citiesCoords.Puno]
+      ];
+
+      routes.forEach((route) => {
+        L.polyline(route, {
+          color: "oklch(0.78 0.13 160)",
+          weight: 5,
+          opacity: 0.12
+        }).addTo(map);
+
+        L.polyline(route, {
+          color: "oklch(0.55 0.13 150)",
+          weight: 1.5,
+          opacity: 0.6,
+          dashArray: "3 6"
+        }).addTo(map);
+      });
+
+      // Active buses
+      const buses = [
+        { id: "BUS-402", coords: [-10.08, -78.03] as [number, number], status: "onroute" as const, route: "Lima → Trujillo" },
+        { id: "BUS-105", coords: [-14.22, -74.28] as [number, number], status: "delayed" as const, route: "Lima → Arequipa" },
+        { id: "BUS-088", coords: [-14.68, -70.99] as [number, number], status: "onroute" as const, route: "Cusco → Puno" },
+        { id: "BUS-331", coords: [-9.5, -78.5] as [number, number], status: "onroute" as const, route: "Trujillo → Lima" }
+      ];
+
+      buses.forEach((b) => {
+        const marker = L.marker(b.coords, { icon: busIcon(b.id, b.status) }).addTo(map);
+        marker.bindPopup(`
+          <div class="p-1 text-[11px] leading-relaxed">
+            <h4 class="font-bold text-foreground mb-1 flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full ${b.status === "onroute" ? "bg-primary" : "bg-orange-500"}"></span>
+              Bus ${b.id}
+            </h4>
+            <p class="text-muted-foreground m-0"><strong>Ruta:</strong> ${b.route}</p>
+            <p class="text-muted-foreground m-0"><strong>Estado:</strong> ${b.status === "onroute" ? "En Ruta" : "Retrasado"}</p>
+          </div>
+        `, {
+          closeButton: false,
+          className: "custom-leaflet-popup"
+        });
+      });
+
+      // Zoom controller manually positioned
+      L.control.zoom({
+        position: "bottomright"
+      }).addTo(map);
+    });
+
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
+  }, []);
+
   return (
     <div className="flex flex-col gap-5">
+      <style>{`
+        .leaflet-container {
+          background: #0f172a !important;
+          border-radius: 24px;
+        }
+        .custom-city-icon {
+          background: transparent;
+          border: none;
+        }
+        .custom-bus-icon {
+          background: transparent;
+          border: none;
+        }
+        .custom-leaflet-popup .leaflet-popup-content-wrapper {
+          background: #1e293b !important;
+          color: #f8fafc !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          border-radius: 12px !important;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+        }
+        .custom-leaflet-popup .leaflet-popup-tip {
+          background: #1e293b !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        .leaflet-bar {
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+          border-radius: 8px !important;
+          overflow: hidden;
+        }
+        .leaflet-bar a {
+          background-color: #1e293b !important;
+          color: #f8fafc !important;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        .leaflet-bar a:hover {
+          background-color: #334155 !important;
+        }
+      `}</style>
       <div>
         <h1 className="text-2xl font-bold text-foreground">Consola de Operaciones</h1>
         <p className="text-sm text-muted-foreground">Monitoreo de flota y cumplimiento de itinerarios en tiempo real</p>
@@ -357,37 +539,16 @@ function OperacionesTab() {
 
       {/* Map + Alerts grid */}
       <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
-        {/* SVG Map */}
+        {/* Leaflet Map Wrapper */}
         <div className="relative overflow-hidden rounded-[24px] border border-border bg-card shadow-[var(--shadow-card)]" style={{ minHeight: "420px" }}>
-          <div className="absolute left-4 top-4 z-10 rounded-2xl border border-border/50 bg-card/80 p-4 backdrop-blur-md">
+          <div className="absolute left-4 top-4 z-10 rounded-2xl border border-border/50 bg-card/80 p-4 backdrop-blur-md" style={{ zIndex: 10 }}>
             <h3 className="mb-2 text-sm font-bold text-foreground">Zonas de Operación</h3>
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><span className="h-2.5 w-2.5 rounded-full bg-primary" /> Lima - Cusco (Alta densidad)</div>
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><span className="h-2.5 w-2.5 rounded-full bg-primary/50" /> Cusco - Arequipa</div>
             </div>
           </div>
-          <div className="relative h-full min-h-[420px] bg-[#0f172a]">
-            <img src="/map_peru_routes.png" alt="Mapa de Rutas Perú" className="absolute inset-0 h-full w-full object-cover opacity-75" />
-            <svg className="absolute inset-0 h-full w-full opacity-40" viewBox="0 0 800 420" fill="none">
-              <path d="M0 210 Q200 100 400 210 T800 210" stroke="oklch(0.55 0.13 150)" strokeWidth="1.5" strokeDasharray="6 6" />
-              <path d="M120 0 Q200 210 320 420" stroke="oklch(0.55 0.13 150)" strokeWidth="1.5" strokeDasharray="6 6" />
-              <path d="M580 0 Q500 210 680 420" stroke="oklch(0.55 0.13 150)" strokeWidth="1.5" strokeDasharray="6 6" />
-            </svg>
-            <OpsCity x="12%" y="22%" name="Lima" />
-            <OpsCity x="68%" y="18%" name="Trujillo" />
-            <OpsCity x="32%" y="78%" name="Ica" />
-            <OpsCity x="78%" y="68%" name="Arequipa" />
-            <OpsCity x="52%" y="48%" name="Cusco" />
-            <OpsPin x="22%" y="32%" id="BUS-402" status="onroute" />
-            <OpsPin x="58%" y="40%" id="BUS-105" status="delayed" />
-            <OpsPin x="40%" y="60%" id="BUS-088" status="onroute" />
-            <OpsPin x="65%" y="55%" id="BUS-331" status="onroute" />
-          </div>
-          <div className="absolute bottom-4 right-4 flex flex-col gap-1.5">
-            <button className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground shadow-sm hover:bg-secondary"><Plus className="h-4 w-4" /></button>
-            <button className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground shadow-sm hover:bg-secondary"><Minus className="h-4 w-4" /></button>
-            <button className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm hover:brightness-110 mt-1"><Crosshair className="h-4 w-4" /></button>
-          </div>
+          <div ref={mapRef} className="relative h-full min-h-[420px] w-full" style={{ zIndex: 1 }} />
         </div>
 
         {/* Alerts */}
