@@ -16,6 +16,7 @@ import { es } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { getPurchases, type PurchaseRecord } from "@/lib/purchases";
 import {
   Dialog,
   DialogContent,
@@ -232,7 +233,7 @@ function HomeBooking() {
       <main>
         <Hero origin={origin} destination={destination} date={date} pax={pax}
           setOrigin={setOrigin} setDestination={setDestination} setDate={setDate} setPax={setPax}
-          swap={swap} onSearch={handleSearch} />
+          swap={swap} onSearch={handleSearch} user={user} />
       </main>
       <Footer />
     </div>
@@ -375,11 +376,63 @@ const destinationDetails: Record<string, {
 };
 
 /* ====== HERO ====== */
+function MisViajes({ email }: { email: string }) {
+  const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
+  useEffect(() => { setPurchases(getPurchases(email)); }, [email]);
+  if (purchases.length === 0) return null;
+  return (
+    <section className="border-b border-border/30 bg-card py-12">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-16">
+        <div className="mb-6">
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-primary">Tu historial</span>
+          <h2 className="text-2xl font-extrabold tracking-tight text-foreground">Mis viajes</h2>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {purchases.map(p => (
+            <div key={p.id} className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-elegant)]">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    {format(new Date(p.purchaseDate), "d MMM yyyy · HH:mm", { locale: es })}
+                  </p>
+                  <p className="mt-0.5 truncate text-lg font-bold text-foreground">{p.origin} → {p.destination}</p>
+                </div>
+                <span className="whitespace-nowrap rounded-xl bg-primary/10 px-3 py-1 text-sm font-bold text-primary">S/ {p.total}</span>
+              </div>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-3.5 w-3.5 shrink-0 text-primary" />
+                  <span className="capitalize">{format(new Date(p.departureDate), "EEEE d MMM", { locale: es })} · {p.departureTime}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-3.5 w-3.5 shrink-0 text-primary" />
+                  <span className="truncate">{p.passengers.map(pass => pass.name).join(", ")}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <TicketIcon className="h-3.5 w-3.5 shrink-0 text-primary" />
+                  <span>Asientos: {p.seats.join(", ")}</span>
+                </div>
+              </div>
+              <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3">
+                <span className="font-mono text-[10px] font-bold text-muted-foreground">#KNT-{p.id}</span>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-muted/50">
+                  <QrCode className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Hero(props: {
   origin: string; destination: string; date: Date; pax: number;
   setOrigin: (v: string) => void; setDestination: (v: string) => void;
   setDate: (v: Date) => void; setPax: (v: number) => void;
   swap: () => void; onSearch: () => void;
+  user?: ReturnType<typeof useAuth>["user"];
 }) {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [selectedCityInfo, setSelectedCityInfo] = useState<{ city: string; region: string; price: number; img: string } | null>(null);
@@ -501,6 +554,10 @@ function Hero(props: {
           </div>
         </div>
       </section>
+
+      {props.user?.role === "cliente" && props.user.email && (
+        <MisViajes email={props.user.email} />
+      )}
 
       {/* Destinos */}
       <section id="destinos" className="bg-background pb-16 pt-36">
