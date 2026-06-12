@@ -575,22 +575,19 @@ function Hero(props: {
     let intervalId: any;
 
     const startAutoplay = () => {
+      clearInterval(intervalId);
       intervalId = setInterval(() => {
         carouselApi.scrollNext();
       }, 4000);
     };
 
-    const stopAutoplay = () => {
-      if (intervalId) clearInterval(intervalId);
-    };
+    const stopAutoplay = () => clearInterval(intervalId);
 
     startAutoplay();
 
-    carouselApi.on("select", () => {
-      stopAutoplay();
-      startAutoplay();
-    });
+    carouselApi.on("select", startAutoplay);
     carouselApi.on("pointerDown", stopAutoplay);
+    carouselApi.on("pointerUp", startAutoplay);
 
     return () => stopAutoplay();
   }, [carouselApi]);
