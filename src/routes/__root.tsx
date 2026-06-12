@@ -69,13 +69,20 @@ const BOT_ICON = (
   </svg>
 );
 
+const CHIP_GROUPS: { label: string; chips: string[] }[] = [
+  { label: "Compras", chips: ["¿Cómo compro un pasaje?", "¿Qué métodos de pago aceptan?", "¿Puedo cancelar mi reserva?"] },
+  { label: "Viaje",   chips: ["¿Qué incluye el equipaje?", "¿Qué servicios hay a bordo?", "¿Descuentos disponibles?"] },
+  { label: "Rutas",   chips: ["Lima → Cusco", "Lima → Arequipa", "Lima → Trujillo", "Lima → Ica"] },
+];
+
 function AssistenteIA() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<{ from: "bot" | "user"; text: string }[]>([
-    { from: "bot", text: "¡Hola! Soy el asistente KUNTUR. Puedes preguntarme sobre pasajes, horarios, precios, destinos, equipaje y más." },
+    { from: "bot", text: "¡Hola! Soy el asistente KUNTUR. ¿En qué puedo ayudarte hoy? Puedes escribir o elegir un tema:" },
   ]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
+  const [activeGroup, setActiveGroup] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -122,6 +129,7 @@ function AssistenteIA() {
             </div>
             <button
               onClick={() => setOpen(false)}
+              aria-label="Cerrar asistente"
               className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -131,7 +139,7 @@ function AssistenteIA() {
           </div>
 
           {/* Messages */}
-          <div className="flex h-60 flex-col gap-2 overflow-y-auto p-3">
+          <div className="flex h-52 flex-col gap-2 overflow-y-auto p-3">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[88%] rounded-2xl px-3 py-2 text-xs leading-relaxed ${
@@ -155,6 +163,37 @@ function AssistenteIA() {
             <div ref={bottomRef} />
           </div>
 
+          {/* Suggestion chips */}
+          <div className="border-t border-border/60 px-3 pt-2 pb-1">
+            <div className="mb-1.5 flex gap-1">
+              {CHIP_GROUPS.map((g, i) => (
+                <button
+                  key={g.label}
+                  onClick={() => setActiveGroup(i)}
+                  className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold transition-colors ${
+                    activeGroup === i
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-1.5 pb-2">
+              {CHIP_GROUPS[activeGroup].chips.map((chip) => (
+                <button
+                  key={chip}
+                  onClick={() => { reply(chip); }}
+                  disabled={typing}
+                  className="rounded-full border border-border bg-background px-2.5 py-1 text-[10px] font-medium text-foreground transition-all hover:border-primary hover:bg-primary/5 hover:text-primary active:scale-95 disabled:opacity-50"
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Input */}
           <div className="flex items-center gap-2 border-t border-border/60 p-3">
             <input
@@ -168,6 +207,7 @@ function AssistenteIA() {
             <button
               onClick={send}
               disabled={!input.trim() || typing}
+              aria-label="Enviar mensaje"
               className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow transition-all hover:brightness-110 active:scale-90 disabled:opacity-40"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

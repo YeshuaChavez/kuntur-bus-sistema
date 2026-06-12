@@ -353,173 +353,142 @@ function ResumenTab({ adminName }: { adminName: string }) {
 function OperacionesTab() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
+  const tileRef = useRef<any>(null);
+  const observerRef = useRef<MutationObserver | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || !mapRef.current) return;
 
-    // Dynamically import Leaflet to prevent SSR errors
     import("leaflet").then((L) => {
       if (mapInstance.current) return;
 
-      // Initialize Leaflet with simple CRS for topology diagram
+      const isDark = () => document.documentElement.classList.contains("dark");
+      const tileUrl = (dark: boolean) =>
+        dark
+          ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+
       const map = L.map(mapRef.current!, {
-        crs: L.CRS.Simple,
-        center: [420, 500],
-        zoom: 0,
-        minZoom: -1,
-        maxZoom: 2,
+        center: [-10.5, -75.5],
+        zoom: 5,
+        minZoom: 4,
+        maxZoom: 10,
         zoomControl: false,
-        attributionControl: false
+        attributionControl: false,
       });
 
       mapInstance.current = map;
+      tileRef.current = L.tileLayer(tileUrl(isDark()), { maxZoom: 20 }).addTo(map);
 
-      // Define Hubs with custom capacity conic gradients
+      observerRef.current = new MutationObserver(() => {
+        if (!mapInstance.current || !tileRef.current) return;
+        tileRef.current.remove();
+        tileRef.current = L.tileLayer(tileUrl(isDark()), { maxZoom: 20 }).addTo(mapInstance.current);
+      });
+      observerRef.current.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
       const hubs = [
-        { id: "LIMA", name: "Lima (Centro)", coords: [400, 500] as [number, number], capacity: 85, activeBuses: 14, platforms: "12/14", info: "Hub principal del país. Conexiones fluidas, alta demanda de noche." },
-        { id: "TRUJILLO", name: "Trujillo (Norte)", coords: [580, 320] as [number, number], capacity: 62, activeBuses: 8, platforms: "6/8", info: "Hub norteño. Conexiones hacia Piura y Chiclayo. Operación normal." },
-        { id: "PIURA", name: "Piura (Norte Extremo)", coords: [720, 150] as [number, number], capacity: 45, activeBuses: 5, platforms: "4/8", info: "Terminal extremo norte. Tránsito rápido." },
-        { id: "ICA", name: "Ica (Costa Sur)", coords: [280, 420] as [number, number], capacity: 70, activeBuses: 6, platforms: "5/6", info: "Punto de paso a Arequipa. Tránsito moderado." },
-        { id: "AREQUIPA", name: "Arequipa (Sur)", coords: [160, 600] as [number, number], capacity: 78, activeBuses: 10, platforms: "8/10", info: "Segunda terminal de mayor flujo. Clima estable." },
-        { id: "CUSCO", name: "Cusco (Andes)", coords: [280, 780] as [number, number], capacity: 91, activeBuses: 12, platforms: "9/10", info: "Alta demanda turística. Andenes al límite de capacidad." },
-        { id: "PUNO", name: "Puno (Altiplano)", coords: [120, 880] as [number, number], capacity: 35, activeBuses: 4, platforms: "3/6", info: "Frontera y altiplano. Operación fluida sin novedades." }
+        { id: "LIMA",     name: "Lima",     coords: [-12.046, -77.043] as [number, number], capacity: 85, activeBuses: 14, platforms: "12/14", info: "Hub principal del país. Alta demanda nocturna." },
+        { id: "TRUJILLO", name: "Trujillo", coords: [-8.109,  -79.022] as [number, number], capacity: 62, activeBuses: 8,  platforms: "6/8",   info: "Hub norteño. Conexiones hacia Piura y Chiclayo." },
+        { id: "PIURA",    name: "Piura",    coords: [-5.194,  -80.633] as [number, number], capacity: 45, activeBuses: 5,  platforms: "4/8",   info: "Terminal extremo norte. Tránsito rápido." },
+        { id: "ICA",      name: "Ica",      coords: [-14.067, -75.729] as [number, number], capacity: 70, activeBuses: 6,  platforms: "5/6",   info: "Punto de paso a Arequipa. Tránsito moderado." },
+        { id: "AREQUIPA", name: "Arequipa", coords: [-16.409, -71.537] as [number, number], capacity: 78, activeBuses: 10, platforms: "8/10",  info: "Segunda terminal de mayor flujo. Clima estable." },
+        { id: "CUSCO",    name: "Cusco",    coords: [-13.532, -71.967] as [number, number], capacity: 91, activeBuses: 12, platforms: "9/10",  info: "Alta demanda turística. Andenes al límite." },
+        { id: "PUNO",     name: "Puno",     coords: [-15.840, -70.022] as [number, number], capacity: 35, activeBuses: 4,  platforms: "3/6",   info: "Frontera y altiplano. Operación fluida." },
       ];
 
       const hubIcon = (name: string, capacity: number, activeBuses: number) => {
-        // color based on capacity level
         const color = capacity > 85 ? "#ef4444" : capacity > 70 ? "#f59e0b" : "#10b981";
-        const progressGradient = `conic-gradient(${color} ${capacity * 3.6}deg, rgba(255,255,255,0.06) 0deg)`;
-
+        const grad = `conic-gradient(${color} ${capacity * 3.6}deg, rgba(255,255,255,0.08) 0deg)`;
         return L.divIcon({
           className: "custom-hub-icon",
           html: `
-            <div class="flex flex-col items-center group cursor-pointer">
-              <!-- Node Wheel -->
-              <div class="relative flex items-center justify-center w-12 h-12 rounded-full bg-slate-900 border border-slate-700/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-300 group-hover:scale-110 group-hover:border-white/20">
-                <!-- Outer glow ring for status -->
-                <div class="absolute inset-0 rounded-full border border-[${color}]/20 ${capacity > 85 ? 'animate-pulse' : ''}"></div>
-                <!-- Inner progress circle -->
-                <div class="absolute inset-[1px] rounded-full" style="background: ${progressGradient}"></div>
-                <!-- Mask circle -->
-                <div class="absolute inset-[3px] rounded-full bg-slate-950 flex items-center justify-center">
-                  <span class="text-[10px] font-black text-white select-none">${capacity}%</span>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+              <div style="position:relative;display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:rgba(10,15,30,0.90);border:1px solid rgba(255,255,255,0.14);box-shadow:0 0 18px rgba(0,0,0,0.5)">
+                <div style="position:absolute;inset:0;border-radius:50%;background:${grad}"></div>
+                <div style="position:absolute;inset:3px;border-radius:50%;background:rgba(10,15,30,0.95);display:flex;align-items:center;justify-content:center">
+                  <span style="font-size:10px;font-weight:900;color:white;user-select:none">${capacity}%</span>
                 </div>
-                <!-- Active pulse for warning -->
-                ${capacity > 85 ? `<div class="absolute inset-0 rounded-full border-2 border-red-500/60 animate-ping opacity-60"></div>` : ""}
+                ${capacity > 85 ? `<div style="position:absolute;inset:0;border-radius:50%;border:2px solid rgba(239,68,68,0.6);animation:ping 1s infinite"></div>` : ""}
               </div>
-              <!-- Label -->
-              <div class="mt-1.5 flex flex-col items-center">
-                <span class="text-[10px] font-bold text-white uppercase tracking-wider bg-slate-900/90 px-2 py-0.5 rounded border border-white/10 select-none shadow-sm">${name}</span>
-                <span class="text-[8px] font-bold text-teal-400 mt-0.5 bg-teal-500/10 px-1.5 py-0.2 rounded border border-teal-500/20 select-none">${activeBuses} buses</span>
-              </div>
-            </div>
-          `,
-          iconSize: [100, 70],
-          iconAnchor: [50, 25]
+              <span style="font-size:10px;font-weight:700;color:white;background:rgba(10,15,30,0.88);padding:2px 8px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);white-space:nowrap;user-select:none">${name}</span>
+              <span style="font-size:9px;font-weight:700;color:#2dd4bf;background:rgba(20,184,166,0.15);padding:1px 6px;border-radius:10px;border:1px solid rgba(20,184,166,0.25);user-select:none">${activeBuses} buses</span>
+            </div>`,
+          iconSize: [110, 82],
+          iconAnchor: [55, 32],
         });
       };
 
-      // Add Hub Markers
       hubs.forEach((h) => {
         const marker = L.marker(h.coords, { icon: hubIcon(h.name, h.capacity, h.activeBuses) }).addTo(map);
         marker.bindPopup(`
-          <div class="p-2.5 text-[11px] leading-relaxed max-w-[200px]">
-            <h4 class="font-bold text-foreground mb-1 text-sm border-b border-border pb-1.5 flex items-center justify-between">
-              <span>Terminal ${h.name.split(" ")[0]}</span>
-              <span class="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded font-mono">${h.id}</span>
+          <div style="padding:10px;font-size:11px;line-height:1.6;max-width:200px">
+            <h4 style="font-weight:700;font-size:13px;margin:0 0 6px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+              Terminal ${h.name}
+              <span style="font-size:9px;font-family:monospace;opacity:0.6;padding:2px 6px;background:rgba(0,0,0,0.08);border-radius:4px">${h.id}</span>
             </h4>
-            <p class="text-muted-foreground m-0.5"><strong>Capacidad Andenes:</strong> ${h.platforms} (${h.capacity}%)</p>
-            <p class="text-muted-foreground m-0.5"><strong>Buses Operando:</strong> ${h.activeBuses} unidades</p>
-            <p class="text-slate-400 mt-1.5 italic font-medium leading-snug">${h.info}</p>
-          </div>
-        `, {
-          closeButton: false,
-          className: "custom-leaflet-popup"
-        });
+            <p style="margin:2px 0"><strong>Andenes:</strong> ${h.platforms} (${h.capacity}%)</p>
+            <p style="margin:2px 0"><strong>Buses activos:</strong> ${h.activeBuses} unidades</p>
+            <p style="margin:6px 0 0;font-style:italic;font-size:10px;opacity:0.7">${h.info}</p>
+          </div>`, { closeButton: false, className: "custom-leaflet-popup" });
       });
 
-      // Flow Corridors between Hubs
       const corridors = [
-        { from: [720, 150], to: [580, 320], status: "Fluido", time: "6h", color: "#10b981", active: true },
-        { from: [580, 320], to: [400, 500], status: "Fluido", time: "8h", color: "#10b981", active: true },
-        { from: [400, 500], to: [280, 420], status: "Tránsito Moderado", time: "4h", color: "#f59e0b", active: true },
-        { from: [280, 420], to: [160, 600], status: "Fluido", time: "10h", color: "#10b981", active: true },
-        { from: [160, 600], to: [280, 780], status: "Mantenimiento Vial (Retraso)", time: "11h", color: "#ef4444", active: true },
-        { from: [160, 600], to: [120, 880], status: "Fluido", time: "5h", color: "#10b981", active: false },
-        { from: [280, 780], to: [120, 880], status: "Fluido", time: "6h", color: "#10b981", active: true }
+        { from: [-5.194, -80.633],  to: [-8.109,  -79.022], color: "#10b981", active: true },
+        { from: [-8.109, -79.022],  to: [-12.046, -77.043], color: "#10b981", active: true },
+        { from: [-12.046, -77.043], to: [-14.067, -75.729], color: "#f59e0b", active: true },
+        { from: [-14.067, -75.729], to: [-16.409, -71.537], color: "#10b981", active: true },
+        { from: [-16.409, -71.537], to: [-13.532, -71.967], color: "#ef4444", active: true },
+        { from: [-16.409, -71.537], to: [-15.840, -70.022], color: "#10b981", active: false },
+        { from: [-13.532, -71.967], to: [-15.840, -70.022], color: "#10b981", active: true },
       ];
 
       corridors.forEach((c) => {
         const path = [c.from, c.to] as [number, number][];
-        // Faint thick glow line
-        L.polyline(path, {
-          color: c.color,
-          weight: 6,
-          opacity: 0.15
-        }).addTo(map);
-
-        // Thin central flow line
-        L.polyline(path, {
-          color: c.color,
-          weight: 2,
-          opacity: 0.7,
-          dashArray: c.active ? "4 8" : "none"
-        }).addTo(map);
+        L.polyline(path, { color: c.color, weight: 7, opacity: 0.15 }).addTo(map);
+        L.polyline(path, { color: c.color, weight: 2.5, opacity: 0.8, dashArray: c.active ? "5 9" : undefined }).addTo(map);
       });
 
-      // Custom Bus Icon
+      const activeBusesList = [
+        { id: "BUS-402", coords: [-10.1, -78.1] as [number, number], status: "onroute" as const, route: "Lima → Trujillo",  speed: "78 km/h" },
+        { id: "BUS-105", coords: [-15.1, -73.2] as [number, number], status: "delayed" as const, route: "Ica → Arequipa",   speed: "0 km/h (Parado)" },
+        { id: "BUS-088", coords: [-14.5, -71.2] as [number, number], status: "onroute" as const, route: "Cusco → Puno",     speed: "65 km/h" },
+        { id: "BUS-331", coords: [-9.3,  -78.5] as [number, number], status: "onroute" as const, route: "Trujillo → Lima",  speed: "82 km/h" },
+      ];
+
       const busIcon = (id: string, status: "onroute" | "delayed") => {
-        const colorClass = status === "onroute" 
-          ? "bg-primary text-primary-foreground border-primary/50 shadow-primary/30" 
-          : "bg-orange-500 text-white border-orange-500/50 shadow-orange-500/30";
+        const bg = status === "onroute" ? "rgba(99,102,241,0.92)" : "rgba(249,115,22,0.92)";
         return L.divIcon({
           className: "custom-bus-icon",
           html: `
-            <div class="flex flex-col items-center">
-              <div class="flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-black tracking-wider shadow-lg ${colorClass} transition-all duration-300 transform hover:scale-110">
-                <span class="w-1 h-1 rounded-full bg-white animate-pulse"></span>
-                <span>${id}</span>
-              </div>
-            </div>
-          `,
-          iconSize: [50, 20],
-          iconAnchor: [25, 10]
+            <div style="display:flex;align-items:center;gap:4px;background:${bg};border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:3px 8px;box-shadow:0 4px 12px rgba(0,0,0,0.4)">
+              <span style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.9);display:inline-block"></span>
+              <span style="font-size:9px;font-weight:800;color:white;white-space:nowrap">${id}</span>
+            </div>`,
+          iconSize: [72, 22],
+          iconAnchor: [36, 11],
         });
       };
-
-      // Active buses on topological paths
-      const activeBusesList = [
-        { id: "BUS-402", coords: [490, 410] as [number, number], status: "onroute" as const, route: "Lima → Trujillo", speed: "78 km/h" },
-        { id: "BUS-105", coords: [220, 510] as [number, number], status: "delayed" as const, route: "Ica → Arequipa", speed: "0 km/h (Parado)" },
-        { id: "BUS-088", coords: [200, 830] as [number, number], status: "onroute" as const, route: "Cusco → Puno", speed: "65 km/h" },
-        { id: "BUS-331", coords: [445, 455] as [number, number], status: "onroute" as const, route: "Trujillo → Lima", speed: "82 km/h" }
-      ];
 
       activeBusesList.forEach((b) => {
         const marker = L.marker(b.coords, { icon: busIcon(b.id, b.status) }).addTo(map);
         marker.bindPopup(`
-          <div class="p-1.5 text-[11px] leading-relaxed">
-            <h4 class="font-bold text-foreground mb-1 flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full ${b.status === "onroute" ? "bg-primary" : "bg-orange-500"}"></span>
-              Bus ${b.id}
+          <div style="padding:8px;font-size:11px;line-height:1.5">
+            <h4 style="font-weight:700;margin:0 0 4px;display:flex;align-items:center;gap:6px">
+              <span style="width:8px;height:8px;border-radius:50%;background:${b.status === "onroute" ? "#818cf8" : "#f97316"};display:inline-block"></span>
+              ${b.id}
             </h4>
-            <p class="text-muted-foreground m-0"><strong>Itinerario:</strong> ${b.route}</p>
-            <p class="text-muted-foreground m-0"><strong>Velocidad:</strong> ${b.speed}</p>
-            <p class="text-muted-foreground m-0"><strong>Estado:</strong> ${b.status === "onroute" ? "En Ruta (A tiempo)" : "Retrasado"}</p>
-          </div>
-        `, {
-          closeButton: false,
-          className: "custom-leaflet-popup"
-        });
+            <p style="margin:1px 0"><strong>Ruta:</strong> ${b.route}</p>
+            <p style="margin:1px 0"><strong>Velocidad:</strong> ${b.speed}</p>
+            <p style="margin:1px 0"><strong>Estado:</strong> ${b.status === "onroute" ? "En ruta (a tiempo)" : "Retrasado"}</p>
+          </div>`, { closeButton: false, className: "custom-leaflet-popup" });
       });
 
-      // Zoom controller manually positioned
-      L.control.zoom({
-        position: "bottomright"
-      }).addTo(map);
+      L.control.zoom({ position: "bottomright" }).addTo(map);
     });
 
     return () => {
+      observerRef.current?.disconnect();
       if (mapInstance.current) {
         mapInstance.current.remove();
         mapInstance.current = null;
@@ -532,8 +501,6 @@ function OperacionesTab() {
       <style>{`
         .leaflet-container {
           background: var(--card) !important;
-          background-image: radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0) !important;
-          background-size: 24px 24px !important;
           border-radius: 24px;
           border: 1px solid var(--border);
         }
@@ -599,13 +566,14 @@ function OperacionesTab() {
         {/* Leaflet Map Wrapper */}
         <div className="relative overflow-hidden rounded-[24px] border border-border bg-card shadow-[var(--shadow-card)]" style={{ minHeight: "420px" }}>
           <div className="absolute left-4 top-4 z-10 rounded-2xl border border-border/50 bg-card/80 p-4 backdrop-blur-md" style={{ zIndex: 10 }}>
-            <h3 className="mb-2 text-sm font-bold text-foreground">Zonas de Operación</h3>
+            <h3 className="mb-2 text-sm font-bold text-foreground">Corredores</h3>
             <div className="space-y-1.5">
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><span className="h-2.5 w-2.5 rounded-full bg-primary" /> Lima - Cusco (Alta densidad)</div>
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><span className="h-2.5 w-2.5 rounded-full bg-primary/50" /> Cusco - Arequipa</div>
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><span className="h-2 w-4 rounded-full bg-emerald-500" /> Fluido</div>
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><span className="h-2 w-4 rounded-full bg-amber-500" /> Tránsito moderado</div>
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><span className="h-2 w-4 rounded-full bg-red-500" /> Retraso / Mantenimiento</div>
             </div>
           </div>
-          <div ref={mapRef} role="img" aria-label="Diagrama topológico de terminales y corredores KUNTUR" className="relative h-full min-h-[420px] w-full" style={{ zIndex: 1 }} />
+          <div ref={mapRef} role="img" aria-label="Mapa geográfico del Perú con terminales y corredores KUNTUR" className="relative h-full min-h-[420px] w-full" style={{ zIndex: 1 }} />
         </div>
 
         {/* Alerts */}
