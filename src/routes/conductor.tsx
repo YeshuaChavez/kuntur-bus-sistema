@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { RoleShell } from "@/components/kuntur/RoleShell";
 import {
-  Play, Pause, Flag, AlertTriangle, MapPin, Clock, Route as RouteIcon,
+  Pause, Flag, AlertTriangle, MapPin, Clock, Route as RouteIcon,
   Navigation, BadgeCheck, Fuel, Gauge, ThermometerSun, Users,
-  CheckCircle2, Circle, TimerReset, Timer,
+  CheckCircle2, Circle, TimerReset, Timer, MessageSquare,
   Activity, BatteryCharging, Thermometer, Zap, Shield, BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
@@ -34,6 +35,43 @@ const TRIP_LOOKUP: Record<string, ActiveTrip> = {
   "JY-318": { id: "JY-318", origin: "Trujillo", destination: "Lima",     bus: "JY-318", departure: "22:30" },
   "JY-405": { id: "JY-405", origin: "Lima",     destination: "Ica",      bus: "JY-405", departure: "07:15" },
   "JY-512": { id: "JY-512", origin: "Cusco",    destination: "Puno",     bus: "JY-512", departure: "09:45" },
+};
+
+const TRIP_STOPS: Record<string, { name: string; scheduled: string }[]> = {
+  "JY-104": [
+    { name: "Lima",     scheduled: "06:30" },
+    { name: "Huacho",   scheduled: "08:10" },
+    { name: "Barranca", scheduled: "09:25" },
+    { name: "Chimbote", scheduled: "11:40" },
+    { name: "Virú",     scheduled: "13:50" },
+    { name: "Trujillo", scheduled: "15:20" },
+  ],
+  "JY-220": [
+    { name: "Lima",     scheduled: "14:00" },
+    { name: "Ica",      scheduled: "18:30" },
+    { name: "Nazca",    scheduled: "20:15" },
+    { name: "Camaná",   scheduled: "23:40" },
+    { name: "Arequipa", scheduled: "04:30" },
+  ],
+  "JY-318": [
+    { name: "Trujillo", scheduled: "22:30" },
+    { name: "Chimbote", scheduled: "00:15" },
+    { name: "Barranca", scheduled: "02:30" },
+    { name: "Huacho",   scheduled: "03:45" },
+    { name: "Lima",     scheduled: "05:20" },
+  ],
+  "JY-405": [
+    { name: "Lima",     scheduled: "07:15" },
+    { name: "Cañete",   scheduled: "09:00" },
+    { name: "Chincha",  scheduled: "10:20" },
+    { name: "Ica",      scheduled: "12:00" },
+  ],
+  "JY-512": [
+    { name: "Cusco",    scheduled: "09:45" },
+    { name: "Sicuani",  scheduled: "11:30" },
+    { name: "Juliaca",  scheduled: "13:45" },
+    { name: "Puno",     scheduled: "15:00" },
+  ],
 };
 
 function ConductorView() {
@@ -124,6 +162,9 @@ function ActiveDriverView({ trip, driverName, onFinish }: {
   const started = startTime !== null;
   const elapsed = useElapsed(startEpoch);
 
+  const plannedStops = TRIP_STOPS[trip.id] ?? [];
+  const reachedStops = Math.min(paradaCount, plannedStops.length);
+
   const pushLog = (label: string) => {
     const time = nowHHMM();
     setLog((l) => [{ label, time }, ...l]);
@@ -142,15 +183,15 @@ function ActiveDriverView({ trip, driverName, onFinish }: {
     if (!started) return;
     const t = pushLog("Parada técnica");
     setStopTime(t);
-    setStatus("En parada");
+    setStatus("Parada técnica");
   };
 
   const handleParada = () => {
-    if (!started) return;
-    const next = paradaCount + 1;
-    setParadaCount(next);
-    pushLog(`Parada ${next}`);
-    setStatus(`Parada ${next}`);
+    if (!started || reachedStops >= plannedStops.length) return;
+    const stopName = plannedStops[reachedStops]?.name ?? `Parada ${paradaCount + 1}`;
+    setParadaCount((c) => c + 1);
+    pushLog(`Llegada · ${stopName}`);
+    setStatus(`En ${stopName}`);
   };
 
   const handleFinish = () => {
@@ -159,15 +200,10 @@ function ActiveDriverView({ trip, driverName, onFinish }: {
     onFinish();
   };
 
-  const plannedStops = [
-    { name: "Lima",     scheduled: trip.departure },
-    { name: "Huacho",   scheduled: "08:10" },
-    { name: "Barranca", scheduled: "09:25" },
-    { name: "Chimbote", scheduled: "11:40" },
-    { name: "Virú",     scheduled: "13:50" },
-    { name: "Trujillo", scheduled: "15:20" },
-  ];
-  const reachedStops = Math.min(paradaCount, plannedStops.length);
+  const handleNotify = () => {
+    pushLog("Aviso enviado a central");
+    toast.success("Mensaje enviado a Central KUNTUR", { description: "Un operador lo recibirá en breve.", duration: 4000 });
+  };
 
   return (
     <RoleShell role="Conductor" rightSlot={<DriverBadge name={driverName} />}>
@@ -182,7 +218,10 @@ function ActiveDriverView({ trip, driverName, onFinish }: {
           </div>
           <h1 className="mt-3 text-3xl font-bold">{trip.origin} → {trip.destination}</h1>
           <div className="mt-1 flex items-center gap-1.5 text-sm opacity-90">
-            <MapPin className="h-3.5 w-3.5" /> Km 248 · cerca de Chimbote
+            <MapPin className="h-3.5 w-3.5" />
+            {!started
+              ? `Listo para partir · ${trip.origin}`
+              : `En camino a ${plannedStops[reachedStops]?.name ?? trip.destination}`}
           </div>
           <div className="mt-5 grid grid-cols-4 gap-3 border-t border-primary-foreground/20 pt-4">
             <Mini icon={Clock}  k="Inicio"      v={startTime ?? "—"} />
@@ -233,7 +272,7 @@ function ActiveDriverView({ trip, driverName, onFinish }: {
               <InfoCard icon={Users}          label="Pasajeros"   value="34/40" />
             </div>
 
-            <RouteMap reachedStops={reachedStops} started={started} />
+            <RouteMap reachedStops={reachedStops} started={started} stops={plannedStops} />
 
             <div className="mt-6 flex items-center justify-between rounded-2xl border border-primary/30 bg-secondary p-4 shadow-[var(--shadow-card)]">
               <div className="flex items-center gap-3">
@@ -257,9 +296,28 @@ function ActiveDriverView({ trip, driverName, onFinish }: {
 
             <h2 className="mt-8 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Reporte rápido</h2>
             <div className="mt-3 grid grid-cols-3 gap-3">
-              <BigBtn icon={Play}   label={startTime ? `Iniciado · ${startTime}` : "Inicio de ruta"} onClick={handleStart} active={status === "En ruta"} />
-              <BigBtn icon={Pause}  label={stopTime  ? `Parada · ${stopTime}`   : "Parada técnica"} onClick={handleStop}  active={status === "En parada"} disabled={!started} />
-              <BigBtn icon={MapPin} label={paradaCount > 0 ? `Parada ${paradaCount}` : "Parada 1"}  onClick={handleParada} active={status.startsWith("Parada ")} disabled={!started} />
+              <BigBtn
+                icon={MapPin}
+                label={reachedStops >= plannedStops.length ? "Ruta completa" : (plannedStops[reachedStops]?.name ?? "Parada")}
+                sublabel={reachedStops >= plannedStops.length ? "" : "Marcar llegada"}
+                onClick={handleParada}
+                active={status.startsWith("En ") && status !== "En ruta"}
+                disabled={!started || reachedStops >= plannedStops.length}
+              />
+              <BigBtn
+                icon={Pause}
+                label="Parada técnica"
+                sublabel="No programada"
+                onClick={handleStop}
+                active={status === "Parada técnica"}
+                disabled={!started}
+              />
+              <BigBtn
+                icon={MessageSquare}
+                label="Avisar central"
+                sublabel="Incidente menor"
+                onClick={handleNotify}
+              />
             </div>
 
             <div className="mt-6 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
@@ -366,38 +424,43 @@ function InfoCard({ icon: Icon, label, value, tone }: {
 }
 
 /* ─── Route Map ─────────────────────────────────────────────────────── */
-function RouteMap({ reachedStops, started }: { reachedStops: number; started: boolean }) {
-  const [animProgress, setAnimProgress] = useState(0);
+function RouteMap({ reachedStops, started, stops }: {
+  reachedStops: number; started: boolean; stops: { name: string; scheduled: string }[];
+}) {
+  const [segProgress, setSegProgress] = useState(0);
 
+  // Reset and restart animation each time a stop is registered
   useEffect(() => {
-    if (!started) { setAnimProgress(0); return; }
-    const DURATION = 10000; // 10 segundos por vuelta
-    const startTime = performance.now();
+    if (!started) { setSegProgress(0); return; }
+    const DURATION = 14000;
+    const startT = performance.now();
     let rafId: number;
     const tick = (now: number) => {
-      setAnimProgress(((now - startTime) % DURATION) / DURATION);
+      setSegProgress((((now - startT) % DURATION) / DURATION) * 0.87);
       rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [started]);
+  }, [started, reachedStops]);
 
-  const stops = [
-    { x: 60,  y: 380, name: "Lima"     },
-    { x: 180, y: 320, name: "Huacho"   },
-    { x: 300, y: 280, name: "Barranca" },
-    { x: 420, y: 220, name: "Chimbote" },
-    { x: 560, y: 150, name: "Virú"     },
-    { x: 700, y: 90,  name: "Trujillo" },
-  ];
-  const path = stops.map((s, i) => `${i === 0 ? "M" : "L"} ${s.x} ${s.y}`).join(" ");
+  const n = stops.length;
+  if (n < 2) return null;
 
-  // Interpolación lineal entre paradas
-  const n = stops.length - 1;
-  const seg = Math.min(Math.floor(animProgress * n), n - 1);
-  const t   = (animProgress * n) - seg;
-  const busX = stops[seg].x + (stops[Math.min(seg + 1, n)].x - stops[seg].x) * t;
-  const busY = stops[seg].y + (stops[Math.min(seg + 1, n)].y - stops[seg].y) * t;
+  // Distribute stops evenly across the SVG canvas
+  const svgStops = stops.map((s, i) => ({
+    ...s,
+    x: 60  + (i / (n - 1)) * 640,
+    y: 380 - (i / (n - 1)) * 290,
+  }));
+
+  const path = svgStops.map((s, i) => `${i === 0 ? "M" : "L"} ${s.x} ${s.y}`).join(" ");
+
+  // Bus starts at current stop and moves toward next within the segment
+  const seg     = Math.min(reachedStops, n - 2);
+  const nextSeg = seg + 1;
+  const progress = started ? segProgress : 0;
+  const busX = svgStops[seg].x + (svgStops[nextSeg].x - svgStops[seg].x) * progress;
+  const busY = svgStops[seg].y + (svgStops[nextSeg].y - svgStops[seg].y) * progress;
 
   return (
     <div className="mt-6 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)]">
@@ -410,10 +473,8 @@ function RouteMap({ reachedStops, started }: { reachedStops: number; started: bo
           <span className="h-1 w-5 rounded-full bg-destructive" /> Ruta óptima (Dijkstra)
         </span>
       </div>
-      <div className="relative h-[460px] sm:h-[560px] bg-[radial-gradient(ellipse_at_center,_var(--secondary)_0%,_var(--background)_75%)]">
-        <svg viewBox="0 0 760 440" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet">
-          <path d="M 60 380 Q 250 420 420 220 T 700 90" stroke="oklch(0.7 0.02 150)" strokeWidth="3" fill="none" strokeDasharray="6 6" opacity="0.4" />
-          <path d="M 60 380 Q 200 200 700 90"           stroke="oklch(0.7 0.02 150)" strokeWidth="3" fill="none" strokeDasharray="6 6" opacity="0.4" />
+      <div className="relative h-[260px] sm:h-[340px] bg-[radial-gradient(ellipse_at_center,_var(--secondary)_0%,_var(--background)_75%)]">
+        <svg viewBox="0 0 760 420" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet">
           <path
             d={path}
             stroke="oklch(0.62 0.18 28)"
@@ -423,9 +484,9 @@ function RouteMap({ reachedStops, started }: { reachedStops: number; started: bo
             strokeLinejoin="round"
             filter="drop-shadow(0 2px 6px oklch(0.62 0.18 28 / 0.4))"
           />
-          {stops.map((s, i) => {
+          {svgStops.map((s, i) => {
             const done    = i < reachedStops;
-            const current = started && i === reachedStops;
+            const current = started && i === reachedStops && i < n - 1;
             return (
               <g key={s.name}>
                 <circle
@@ -441,22 +502,18 @@ function RouteMap({ reachedStops, started }: { reachedStops: number; started: bo
                     <animate attributeName="opacity" from="0.6" to="0"  dur="1.5s" repeatCount="indefinite" />
                   </circle>
                 )}
-                <text x={s.x} y={s.y - 16} textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 700 }}>
+                <text x={s.x} y={s.y - 16} textAnchor="middle" className="fill-foreground" style={{ fontSize: 12, fontWeight: 700 }}>
                   {s.name}
                 </text>
               </g>
             );
           })}
-
-          {/* Bus animado — aparece al iniciar el viaje */}
-          {started && (
+          {started && reachedStops < n - 1 && (
             <g>
-              {/* Halo pulsante */}
               <circle cx={busX} cy={busY} r="18" fill="oklch(0.62 0.18 28)" opacity="0.2">
                 <animate attributeName="r"       values="14;22;14" dur="1s" repeatCount="indefinite" />
                 <animate attributeName="opacity" values="0.3;0.08;0.3" dur="1s" repeatCount="indefinite" />
               </circle>
-              {/* Punto del bus */}
               <circle
                 cx={busX} cy={busY} r="11"
                 fill="oklch(0.62 0.18 28)"
@@ -464,7 +521,6 @@ function RouteMap({ reachedStops, started }: { reachedStops: number; started: bo
                 strokeWidth="3"
                 filter="drop-shadow(0 2px 8px oklch(0.62 0.18 28 / 0.6))"
               />
-              {/* Icono "B" de bus */}
               <text x={busX} y={busY + 4} textAnchor="middle" fill="white" style={{ fontSize: 10, fontWeight: 900 }}>B</text>
             </g>
           )}
@@ -490,14 +546,14 @@ function Mini({ icon: Icon, k, v }: { icon: any; k: string; v: string }) {
 }
 
 /* ─── Big Button ────────────────────────────────────────────────────── */
-function BigBtn({ icon: Icon, label, onClick, active, disabled }: {
-  icon: any; label: string; onClick: () => void; active?: boolean; disabled?: boolean;
+function BigBtn({ icon: Icon, label, sublabel, onClick, active, disabled }: {
+  icon: any; label: string; sublabel?: string; onClick: () => void; active?: boolean; disabled?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border-2 p-4 text-center transition-all active:scale-95 ${
+      className={`flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border-2 p-3 text-center transition-all active:scale-95 ${
         disabled
           ? "cursor-not-allowed border-border/50 bg-muted/40 text-muted-foreground/60"
           : active
@@ -505,8 +561,13 @@ function BigBtn({ icon: Icon, label, onClick, active, disabled }: {
           : "border-border bg-card text-foreground hover:border-primary/40"
       }`}
     >
-      <Icon className="h-9 w-9" strokeWidth={2} />
-      <span className="text-sm font-bold leading-tight">{label}</span>
+      <Icon className="h-8 w-8" strokeWidth={2} />
+      <span className="text-[13px] font-bold leading-tight">{label}</span>
+      {sublabel && (
+        <span className={`text-[10px] leading-none ${disabled ? "text-muted-foreground/50" : "text-muted-foreground"}`}>
+          {sublabel}
+        </span>
+      )}
     </button>
   );
 }
