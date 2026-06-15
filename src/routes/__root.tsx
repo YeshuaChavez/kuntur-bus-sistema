@@ -300,7 +300,7 @@ export const Route = createRootRoute({
       { rel: "icon", type: "image/svg+xml", href: "/condor.svg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..850;1,300..850&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" },
       { rel: "stylesheet", href: appCss },
     ],
   }),
