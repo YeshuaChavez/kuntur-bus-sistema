@@ -6,7 +6,7 @@ import {
   Pause, Flag, AlertTriangle, MapPin, Clock, Route as RouteIcon,
   Navigation, BadgeCheck, Fuel, Gauge, ThermometerSun, Users,
   CheckCircle2, Circle, TimerReset, Timer, MessageSquare,
-  Activity, BatteryCharging, Thermometer, Zap, Shield, BarChart3,
+  Activity, BatteryCharging, Thermometer, Zap, Shield, BarChart3, Play,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { TripPicker, UpcomingTrips } from "./auxiliar";
