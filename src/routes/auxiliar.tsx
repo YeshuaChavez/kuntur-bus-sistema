@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { RoleShell } from "@/components/jaysi/RoleShell";
-import { SeatMap, type Seat } from "@/components/jaysi/SeatMap";
+import { RoleShell } from "@/components/kuntur/RoleShell";
+import { SeatMap, type Seat } from "@/components/kuntur/SeatMap";
 import {
   ScanLine, Grid3x3, Wifi, WifiOff, CheckCircle2, Users, Phone, BadgeCheck,
   Bus, ArrowRight, Clock, CalendarClock, Flag, ChevronRight, LogOut, MapPin,
@@ -12,7 +12,7 @@ import { useAuth } from "@/lib/auth";
 export const Route = createFileRoute("/auxiliar")({
   head: () => ({
     meta: [
-      { title: "Auxiliar · JAYSI" },
+      { title: "Auxiliar · KUNTUR" },
       { name: "description", content: "Validación de tickets QR y mapa operativo de abordaje." },
     ],
   }),
@@ -52,7 +52,7 @@ const tripStyles: Record<string, {
   Premium: {
     icon: Crown,
     gradient: "linear-gradient(135deg, oklch(0.78 0.14 85), oklch(0.68 0.16 50))",
-    chip: "bg-amber-100 text-amber-700 border border-amber-300",
+    chip: "bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700/50",
     accent: "text-amber-600",
     tagline: "VIP · snack incluido",
     bg: "bg-amber-50 border-amber-200",
@@ -60,7 +60,7 @@ const tripStyles: Record<string, {
   Ejecutivo: {
     icon: Star,
     gradient: "linear-gradient(135deg, oklch(0.62 0.13 230), oklch(0.55 0.14 250))",
-    chip: "bg-blue-100 text-blue-700 border border-blue-300",
+    chip: "bg-blue-100 text-blue-700 border border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50",
     accent: "text-blue-600",
     tagline: "Asiento amplio · WiFi",
     bg: "bg-blue-50 border-blue-200",
@@ -68,7 +68,7 @@ const tripStyles: Record<string, {
   Cama: {
     icon: BedDouble,
     gradient: "linear-gradient(135deg, oklch(0.62 0.13 150), oklch(0.5 0.14 160))",
-    chip: "bg-emerald-100 text-emerald-700 border border-emerald-300",
+    chip: "bg-emerald-100 text-emerald-700 border border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700/50",
     accent: "text-emerald-600",
     tagline: "Reclinable 160°",
     bg: "bg-emerald-50 border-emerald-200",
@@ -76,7 +76,7 @@ const tripStyles: Record<string, {
   "Cama nocturna": {
     icon: Moon,
     gradient: "linear-gradient(135deg, oklch(0.4 0.1 280), oklch(0.3 0.09 270))",
-    chip: "bg-violet-100 text-violet-700 border border-violet-300",
+    chip: "bg-violet-100 text-violet-700 border border-violet-300 dark:bg-violet-900/30 dark:text-violet-300 dark:border-violet-700/50",
     accent: "text-violet-600",
     tagline: "Reclinable 180° · manta",
     bg: "bg-violet-50 border-violet-200",
@@ -93,7 +93,7 @@ function buildSeats(): Seat[] {
     (["A", "B", "C", "D"] as const).forEach((c, i) => {
       const id = `${r}${c}`;
       const status: Seat["status"] = boarded.has(id) ? "boarded" : sold.has(id) ? "sold" : "free";
-      list.push({ id, row: r, col: i + 1, status, passenger: sold.has(id) || boarded.has(id) ? "Pasajero #" + id : undefined });
+      list.push({ id, row: r, col: i + 1, floor: 1, status, passenger: sold.has(id) || boarded.has(id) ? "Pasajero #" + id : undefined });
     });
   }
   return list;
@@ -259,9 +259,9 @@ function CountdownBadge({ dateStr, hhmm }: { dateStr: string; hhmm: string }) {
   return (
     <div className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 font-mono text-sm font-bold tabular-nums ${
       ready
-        ? "animate-pulse bg-emerald-100 text-emerald-700"
+        ? "animate-pulse bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
         : secs < 600
-        ? "bg-amber-100 text-amber-700"
+        ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
         : "bg-secondary text-primary"
     }`}>
       <Timer className="h-3.5 w-3.5 flex-shrink-0" />
@@ -610,13 +610,45 @@ function DropoffPanel({ stops, currentIdx, onToggle, onClose }: {
   );
 }
 
+/* ─── Scanner mock data ──────────────────────────────────────────────── */
+const MOCK_PASSENGERS = [
+  { name: "María López",    seat: "3C", dni: "72450123", route: "Lima → Trujillo", valid: true  },
+  { name: "Carlos Rivas",   seat: "1A", dni: "45892167", route: "Lima → Trujillo", valid: true  },
+  { name: "Ana Gutiérrez",  seat: "7B", dni: "89231045", route: "Lima → Trujillo", valid: true  },
+  { name: "Pedro Mamani",   seat: "4D", dni: "67823401", route: "Lima → Arequipa", valid: false },
+  { name: "Rosa Quispe",    seat: "2B", dni: "53190847", route: "Lima → Trujillo", valid: true  },
+];
+
 /* ─── Scanner ───────────────────────────────────────────────────────── */
 function Scanner() {
+  const [phase, setPhase] = useState<"idle" | "scanning" | "valid" | "invalid">("idle");
+  const [passenger, setPassenger] = useState<typeof MOCK_PASSENGERS[0] | null>(null);
+  const [scanIdx, setScanIdx] = useState(0);
+
+  const doScan = () => {
+    setPhase("scanning");
+    setTimeout(() => {
+      const p = MOCK_PASSENGERS[scanIdx % MOCK_PASSENGERS.length];
+      setPassenger(p);
+      setPhase(p.valid ? "valid" : "invalid");
+      setScanIdx((i) => i + 1);
+    }, 2000);
+  };
+
+  const reset = () => { setPhase("idle"); setPassenger(null); };
+
+  const bracketColor =
+    phase === "valid"   ? "border-emerald-400" :
+    phase === "invalid" ? "border-destructive"  : "border-[var(--primary-glow)]";
+
   return (
     <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-foreground/95 p-4 shadow-[var(--shadow-card)]">
+      {/* Viewfinder */}
       <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-foreground">
         <div className="absolute inset-0 bg-gradient-to-br from-foreground via-foreground to-primary/20" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_30%,_rgba(0,0,0,0.6)_70%)]" />
+
+        {/* Corner brackets */}
         <div className="absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2">
           {[
             "top-0 left-0 border-l-[3px] border-t-[3px] rounded-tl-xl",
@@ -624,21 +656,97 @@ function Scanner() {
             "bottom-0 left-0 border-l-[3px] border-b-[3px] rounded-bl-xl",
             "bottom-0 right-0 border-r-[3px] border-b-[3px] rounded-br-xl",
           ].map((c) => (
-            <div key={c} className={`absolute h-10 w-10 border-[var(--primary-glow)] ${c}`} />
+            <div key={c} className={`absolute h-10 w-10 transition-colors duration-500 ${bracketColor} ${c}`} />
           ))}
-          <div className="absolute inset-x-2 top-1/2 h-0.5 animate-pulse rounded-full bg-[var(--primary-glow)] shadow-[0_0_12px_var(--primary-glow)]" />
+
+          {/* Scan line */}
+          {phase === "scanning" && (
+            <div className="absolute inset-x-2 top-1/2 h-0.5 animate-pulse rounded-full bg-[var(--primary-glow)] shadow-[0_0_16px_var(--primary-glow)]" />
+          )}
+
+          {/* Result icon */}
+          {phase === "valid" && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <CheckCircle2 className="h-20 w-20 text-emerald-400 drop-shadow-lg" />
+            </div>
+          )}
+          {phase === "invalid" && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <AlertCircle className="h-20 w-20 text-destructive drop-shadow-lg" />
+            </div>
+          )}
         </div>
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-foreground/80 px-4 py-1.5 text-xs font-medium text-background backdrop-blur">
-          Apunta al código QR del pasajero
+
+        {/* Scanning spinner badge */}
+        {phase === "scanning" && (
+          <div className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-black/50">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-[var(--primary-glow)]" />
+          </div>
+        )}
+
+        {/* Status label */}
+        <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-semibold backdrop-blur transition-all duration-300 ${
+          phase === "valid"    ? "bg-emerald-500/90 text-white" :
+          phase === "invalid"  ? "bg-destructive/90 text-white" :
+          phase === "scanning" ? "bg-primary/80 text-white"     :
+                                  "bg-foreground/80 text-background"
+        }`}>
+          {phase === "idle"     && "Toca para simular escaneo"}
+          {phase === "scanning" && "Leyendo código QR…"}
+          {phase === "valid"    && "✓ Boleto válido"}
+          {phase === "invalid"  && "✗ No autorizado"}
         </div>
+
+        {/* Tap overlay (idle only) */}
+        {phase === "idle" && (
+          <button onClick={doScan} className="absolute inset-0" aria-label="Simular escaneo QR" />
+        )}
       </div>
-      <div className="mt-3 flex items-center justify-between rounded-xl bg-secondary p-3 text-sm">
-        <div className="flex items-center gap-2 text-secondary-foreground">
-          <CheckCircle2 className="h-4 w-4 text-[var(--success)]" />
-          <span className="font-semibold">Último: Asiento 3C · María L.</span>
+
+      {/* Result card */}
+      {(phase === "valid" || phase === "invalid") && passenger && (
+        <div className={`mt-3 rounded-xl border p-3 ${
+          phase === "valid" ? "border-emerald-300/50 bg-emerald-500/10 dark:border-emerald-700/50 dark:bg-emerald-500/15" : "border-destructive/30 bg-destructive/10"
+        }`}>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className={`text-sm font-bold ${phase === "valid" ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}`}>
+                {phase === "valid" ? "Acceso permitido" : "Acceso denegado"}
+              </p>
+              {phase === "valid" ? (
+                <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                  <p><strong className="text-foreground">{passenger.name}</strong> · DNI {passenger.dni}</p>
+                  <p>Asiento <strong className="text-foreground">{passenger.seat}</strong> · {passenger.route}</p>
+                </div>
+              ) : (
+                <p className="mt-1 text-xs text-muted-foreground">Boleto no corresponde a la ruta actual.</p>
+              )}
+            </div>
+            <button onClick={reset} className="shrink-0 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-semibold text-foreground transition-colors hover:bg-muted">
+              Siguiente
+            </button>
+          </div>
         </div>
-        <span className="text-xs text-muted-foreground">hace 12s</span>
-      </div>
+      )}
+
+      {/* Idle: last scanned */}
+      {phase === "idle" && (
+        <div className="mt-3 flex items-center justify-between rounded-xl bg-secondary p-3 text-sm">
+          <div className="flex items-center gap-2 text-secondary-foreground">
+            <CheckCircle2 className="h-4 w-4 text-[var(--success)]" />
+            <span className="font-semibold">Último: Asiento 3C · María L.</span>
+          </div>
+          <span className="text-xs text-muted-foreground">hace 12s</span>
+        </div>
+      )}
+
+      {/* Scanning: spinner row */}
+      {phase === "scanning" && (
+        <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-secondary p-3 text-sm">
+          <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+          <span className="font-semibold text-muted-foreground">Verificando con servidor…</span>
+        </div>
+      )}
     </div>
   );
 }

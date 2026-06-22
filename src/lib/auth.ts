@@ -8,16 +8,16 @@ export interface AuthUser {
   role: Role;
 }
 
-const KEY = "jaysi_auth";
-const REG_KEY = "jaysi_registered";
+const KEY = "kuntur_auth";
+const REG_KEY = "kuntur_registered";
 
 // Demo accounts — passwords are "demo" for all
 export const DEMO_ACCOUNTS: Record<string, { password: string; user: AuthUser }> = {
-  "cliente@jaysi.com":      { password: "demo", user: { name: "María López",   email: "cliente@jaysi.com",      role: "cliente" } },
-  "auxiliar@jaysi.com":     { password: "demo", user: { name: "Luis Ramírez",  email: "auxiliar@jaysi.com",     role: "auxiliar" } },
-  "conductor@jaysi.com":    { password: "demo", user: { name: "Carlos Mendoza",email: "conductor@jaysi.com",    role: "conductor" } },
-  "controlador@jaysi.com":  { password: "demo", user: { name: "Ana Torres",    email: "controlador@jaysi.com",  role: "controlador" } },
-  "administrador@jaysi.com":{ password: "demo", user: { name: "Pedro Vargas",  email: "administrador@jaysi.com",role: "administrador" } },
+  "cliente@kuntur.com":      { password: "demo", user: { name: "María López",   email: "cliente@kuntur.com",      role: "cliente" } },
+  "auxiliar@kuntur.com":     { password: "demo", user: { name: "Luis Ramírez",  email: "auxiliar@kuntur.com",     role: "auxiliar" } },
+  "conductor@kuntur.com":    { password: "demo", user: { name: "Carlos Mendoza",email: "conductor@kuntur.com",    role: "conductor" } },
+  "controlador@kuntur.com":  { password: "demo", user: { name: "Ana Torres",    email: "controlador@kuntur.com",  role: "controlador" } },
+  "administrador@kuntur.com":{ password: "demo", user: { name: "Pedro Vargas",  email: "administrador@kuntur.com",role: "administrador" } },
 };
 
 type Registered = Record<string, { password: string; user: AuthUser }>;
@@ -66,7 +66,7 @@ export function storeUser(user: AuthUser | null) {
   if (typeof window === "undefined") return;
   if (user) localStorage.setItem(KEY, JSON.stringify(user));
   else localStorage.removeItem(KEY);
-  window.dispatchEvent(new Event("jaysi-auth"));
+  window.dispatchEvent(new Event("kuntur-auth"));
 }
 
 export function roleHome(role: Role): string {
@@ -74,14 +74,13 @@ export function roleHome(role: Role): string {
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser());
   useEffect(() => {
-    setUser(getStoredUser());
     const onChange = () => setUser(getStoredUser());
-    window.addEventListener("jaysi-auth", onChange);
+    window.addEventListener("kuntur-auth", onChange);
     window.addEventListener("storage", onChange);
     return () => {
-      window.removeEventListener("jaysi-auth", onChange);
+      window.removeEventListener("kuntur-auth", onChange);
       window.removeEventListener("storage", onChange);
     };
   }, []);
