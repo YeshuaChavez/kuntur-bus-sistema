@@ -151,10 +151,13 @@ export function TripPicker({ title, subtitle, onPick }: {
   return (
     <div className="mx-auto max-w-2xl">
       {/* Hero banner */}
-      <div className="rounded-2xl border border-border bg-[image:var(--gradient-primary)] p-5 text-primary-foreground shadow-[var(--shadow-soft)]">
-        <div className="text-[10px] uppercase tracking-wider opacity-80">Inicio de turno</div>
-        <h1 className="mt-1 text-xl font-bold">{title}</h1>
-        <p className="mt-1 text-sm opacity-90">{subtitle}</p>
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-[image:var(--gradient-primary)] p-5 text-primary-foreground shadow-[var(--shadow-soft)]">
+        <div className="relative z-10 max-w-[70%]">
+          <div className="text-[10px] uppercase tracking-wider opacity-80">Inicio de turno</div>
+          <h1 className="mt-1 text-xl font-bold">{title}</h1>
+          <p className="mt-1 text-sm opacity-90">{subtitle}</p>
+        </div>
+        <img src="/boarding_hero.png" alt="Boarding Hero" className="absolute -right-4 -bottom-6 h-28 w-auto object-contain opacity-25 sm:opacity-35 pointer-events-none" />
       </div>
 
       {/* Hoy */}
@@ -311,8 +314,8 @@ export function UpcomingTrips({ finishedTripLabel, onPickNext }: {
 
       <div className="mt-3 space-y-3">
         {upcoming.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
-            <Sparkles className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
+          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center flex flex-col items-center justify-center">
+            <img src="/shift_completed.png" alt="Shift completed" className="mb-4 h-32 w-auto object-contain opacity-80" />
             <p className="text-sm font-semibold text-muted-foreground">No hay más viajes asignados. ¡Descansa!</p>
           </div>
         )}
@@ -699,7 +702,12 @@ function Scanner() {
 
         {/* Tap overlay (idle only) */}
         {phase === "idle" && (
-          <button onClick={doScan} className="absolute inset-0" aria-label="Simular escaneo QR" />
+          <>
+            <div className="absolute inset-0 flex items-center justify-center p-12 opacity-25">
+              <img src="/scanner_placeholder.png" alt="Scan QR" className="h-48 w-auto object-contain" />
+            </div>
+            <button onClick={doScan} className="absolute inset-0 z-10" aria-label="Simular escaneo QR" />
+          </>
         )}
       </div>
 

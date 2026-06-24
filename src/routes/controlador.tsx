@@ -593,13 +593,13 @@ function RutasTab() {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-[24px] bg-[image:var(--gradient-primary)] p-5 text-primary-foreground">
-          <div className="relative z-10">
+        <div className="relative overflow-hidden rounded-[24px] bg-[image:var(--gradient-primary)] p-5 text-primary-foreground shadow-[var(--shadow-soft)]">
+          <div className="relative z-10 max-w-[80%]">
             <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider opacity-80">Rendimiento Hoy</p>
             <h4 className="mb-2 text-2xl font-bold">94.8% Eficiencia</h4>
-            <p className="text-sm opacity-80">Tráfico moderado en variante Pasamayo.</p>
+            <p className="text-sm opacity-85 text-xs">Tráfico moderado en variante Pasamayo.</p>
           </div>
-          <TrendingUp className="absolute -bottom-2 -right-2 h-24 w-24 opacity-10" />
+          <img src="/eco_efficiency.png" alt="Eco Efficiency" className="absolute -right-4 -bottom-4 h-20 w-auto object-contain opacity-25 pointer-events-none" />
         </div>
       </aside>
 
@@ -618,13 +618,11 @@ function RutasTab() {
         {filtered.map((r) => (
           <div key={r.id} className="group flex flex-col overflow-hidden rounded-[24px] border border-border/30 bg-card shadow-[var(--shadow-card)] transition-all hover:border-primary/30 hover:-translate-y-0.5 md:flex-row">
             {/* Map thumbnail placeholder */}
-            <div className="relative flex h-44 w-full flex-shrink-0 items-center justify-center bg-secondary md:h-auto md:w-64">
-              <svg className="h-full w-full opacity-20" viewBox="0 0 256 180" fill="none">
-                <path d="M0 90 Q64 40 128 90 T256 90" stroke="currentColor" strokeWidth="2" strokeDasharray="6 4" className="text-primary" />
-                <path d="M40 0 Q80 90 100 180" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 6" className="text-muted-foreground" />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="rounded-2xl bg-card/80 px-3 py-1 backdrop-blur-sm border border-border/50 flex items-center gap-2 text-xs font-semibold">
+            <div className="relative flex h-44 w-full flex-shrink-0 items-center justify-center bg-muted overflow-hidden md:h-auto md:w-64">
+              <img src="/route_map_thumbnail.png" alt="Route Map" className="absolute inset-0 h-full w-full object-cover opacity-40 transition-transform duration-500 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <div className="rounded-2xl bg-card/90 px-3 py-1 border border-border/50 flex items-center gap-2 text-xs font-semibold shadow-sm backdrop-blur-sm">
                   <span className={cn("h-2 w-2 rounded-full", r.traffic === "clear" ? "animate-pulse bg-primary" : "bg-[var(--warning)]")} />
                   {r.traffic === "clear" ? "Vía Despejada" : "Tráfico Moderado"}
                 </div>
@@ -972,13 +970,12 @@ function TallerTab() {
       </div>
 
       {/* Banner */}
-      <div className="relative overflow-hidden rounded-[24px] bg-[image:var(--gradient-primary)] p-8 text-primary-foreground">
-        <div className="relative z-10 max-w-xl">
+      <div className="relative overflow-hidden rounded-[24px] bg-[image:var(--gradient-primary)] p-8 text-primary-foreground shadow-[var(--shadow-elegant)]">
+        <div className="relative z-10 max-w-[70%]">
           <h3 className="mb-2 text-2xl font-bold">Optimización de Flota</h3>
-          <p className="opacity-90">Nuestro sistema predice fallos mecánicos antes de que ocurran, ahorrando un 15% en costos operativos anuales.</p>
+          <p className="opacity-95 text-sm">Nuestro sistema predice fallos mecánicos antes de que ocurran, ahorrando un 15% en costos operativos anuales.</p>
         </div>
-        <Zap className="absolute -bottom-4 -right-4 h-40 w-40 opacity-10" />
-        <BarChart3 className="absolute bottom-8 right-24 h-24 w-24 opacity-10" />
+        <img src="/fleet_optimization.png" alt="Fleet Optimization" className="absolute -right-6 -bottom-8 h-36 w-auto object-contain opacity-35 pointer-events-none" />
       </div>
     </div>
   );

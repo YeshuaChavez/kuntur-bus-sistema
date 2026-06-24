@@ -123,6 +123,7 @@ function SeatsPage() {
           onPay={handlePay}
           user={user}
           pax={booking.pax}
+          onClear={() => setSelectedSeats([])}
         />
       </main>
       {authBlock && (
