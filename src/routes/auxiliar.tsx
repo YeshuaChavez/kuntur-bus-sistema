@@ -109,7 +109,7 @@ function AuxiliarView() {
 
   if (stage === "select" || !trip) {
     return (
-      <RoleShell role="Auxiliar" rightSlot={<AuxBadge name={auxName} />}>
+      <RoleShell role="Auxiliar" variant="phone" rightSlot={<AuxBadge name={auxName} />}>
         <TripPicker
           title="Selecciona el viaje a operar"
           subtitle="Elige el bus que tienes asignado para iniciar el turno."
@@ -121,7 +121,7 @@ function AuxiliarView() {
 
   if (stage === "upcoming") {
     return (
-      <RoleShell role="Auxiliar" rightSlot={<AuxBadge name={auxName} />}>
+      <RoleShell role="Auxiliar" variant="phone" rightSlot={<AuxBadge name={auxName} />}>
         <UpcomingTrips
           finishedTripLabel={`${trip.origin} → ${trip.destination}`}
           onPickNext={(id) => { setTripId(id); setStage("active"); }}
@@ -426,6 +426,7 @@ function ActiveTripView({ trip, auxName, onFinish }: {
   return (
     <RoleShell
       role="Auxiliar"
+      variant="phone"
       rightSlot={
         <div className="flex items-center gap-2">
           <span className="hidden items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-bold text-secondary-foreground sm:inline-flex">
@@ -515,7 +516,7 @@ function ActiveTripView({ trip, auxName, onFinish }: {
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-4 backdrop-blur">
+      <div className="fixed md:absolute inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-4 backdrop-blur">
         <button
           onClick={onFinish}
           className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[image:var(--gradient-primary)] py-4 text-base font-bold text-primary-foreground shadow-[var(--shadow-soft)] transition-all active:scale-[0.98]"
