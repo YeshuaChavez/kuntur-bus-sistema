@@ -76,6 +76,7 @@ const CHIP_GROUPS: { label: string; chips: string[] }[] = [
 ];
 
 function AssistenteIA() {
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<{ from: "bot" | "user"; text: string }[]>([
     { from: "bot", text: "¡Hola! Soy el asistente KUNTUR. ¿En qué puedo ayudarte hoy? Puedes escribir o elegir un tema:" },
@@ -93,6 +94,19 @@ function AssistenteIA() {
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 100);
   }, [open]);
+
+  const cleanPath = (pathname + " " + (typeof window !== "undefined" ? window.location.pathname : "")).toLowerCase();
+  const isRoleRoute = [
+    "auxiliar",
+    "conductor",
+    "controlador",
+    "administrador",
+    "login"
+  ].some((role) => cleanPath.includes(role));
+
+  if (isRoleRoute) {
+    return null;
+  }
 
   const reply = (text: string) => {
     const trimmed = text.trim();
