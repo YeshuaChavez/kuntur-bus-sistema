@@ -336,8 +336,24 @@ function ResumenTab({ adminName }: { adminName: string }) {
         <div className="flex items-center justify-between bg-secondary/20 px-6 py-3 text-xs text-muted-foreground">
           <span>Mostrando 4 de 115 unidades analizadas</span>
           <div className="flex gap-1">
-            <button className="rounded-lg p-1.5 hover:bg-secondary transition-colors"><ChevronLeft className="h-4 w-4" /></button>
-            <button className="rounded-lg p-1.5 hover:bg-secondary transition-colors"><ChevronRight className="h-4 w-4" /></button>
+            <button
+              onClick={() => toast.info("Auditorías del período anterior", {
+                description: "Cargando registros históricos de conciliaciones bancarias..."
+              })}
+              className="rounded-lg p-1.5 hover:bg-secondary transition-colors active:scale-95"
+              aria-label="Página anterior de auditorías"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => toast.info("Auditorías del período siguiente", {
+                description: "Cargando registros futuros de conciliaciones programadas..."
+              })}
+              className="rounded-lg p-1.5 hover:bg-secondary transition-colors active:scale-95"
+              aria-label="Página siguiente de auditorías"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -909,8 +925,20 @@ function PersonalTab() {
           <div className="flex items-center justify-between border-t border-border p-5 text-xs text-muted-foreground">
             <span>Mostrando {filtered.length} de 128 colaboradores</span>
             <div className="flex items-center gap-1">
-              <button className="rounded-lg p-1.5 bg-secondary hover:bg-secondary/70 disabled:opacity-40" disabled><ChevronLeft className="h-4 w-4" /></button>
-              <button className="h-8 w-8 rounded-lg bg-primary text-xs font-bold text-primary-foreground">1</button>
+              <button
+                onClick={() => toast.info("Página anterior", { description: "Ya te encuentras en la primera página de colaboradores." })}
+                className="rounded-lg p-1.5 bg-secondary hover:bg-secondary/70 disabled:opacity-40 active:scale-95"
+                disabled
+                aria-label="Página anterior de colaboradores"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => toast.info("Página 1", { description: "Ya te encuentras en la primera página de colaboradores." })}
+                className="h-8 w-8 rounded-lg bg-primary text-xs font-bold text-primary-foreground active:scale-95"
+              >
+                1
+              </button>
               <button onClick={() => toast.info("Página 2 · Cargando colaboradores…")} className="h-8 w-8 rounded-lg text-xs font-bold text-foreground hover:bg-secondary">2</button>
               <button onClick={() => toast.info("Página 3 · Cargando colaboradores…")} className="h-8 w-8 rounded-lg text-xs font-bold text-foreground hover:bg-secondary">3</button>
               <button onClick={() => toast.info("Página 2 · Cargando colaboradores…")} className="rounded-lg p-1.5 bg-secondary hover:bg-secondary/70"><ChevronRight className="h-4 w-4" /></button>

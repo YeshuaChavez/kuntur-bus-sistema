@@ -825,7 +825,14 @@ function AlertasTab() {
                         <MessageSquare className="h-3.5 w-3.5" /> Notificar Pasajeros
                       </button>
                     )}
-                    <button className="ml-auto rounded-xl border border-border bg-background p-2 text-muted-foreground transition-colors hover:text-primary">
+                    <button
+                      onClick={() => toast.info(`Opciones para la alerta de ${a.id}`, {
+                        description: "Permite cambiar prioridad, reasignar operador o archivar alerta.",
+                        action: { label: "Archivar", onClick: () => toast.success("Alerta archivada") }
+                      })}
+                      className="ml-auto rounded-xl border border-border bg-background p-2 text-muted-foreground transition-colors hover:text-primary active:scale-95"
+                      aria-label="Más opciones de alerta"
+                    >
                       <MoreVertical className="h-4 w-4" />
                     </button>
                   </div>
@@ -939,7 +946,16 @@ function TallerTab() {
                 </div>
               ))}
             </div>
-            <button className="mt-5 w-full rounded-xl border border-primary py-2 text-xs font-bold text-primary transition-all hover:bg-primary/5 active:scale-95">
+            <button
+              onClick={() => toast.success("Inventario completo cargado (54 ítems)", {
+                description: "Se exportó la lista al portapapeles en formato CSV.",
+                action: {
+                  label: "Ver",
+                  onClick: () => alert("Detalle de Inventario:\n- Filtro Aceite: 12 uds\n- Neumáticos G8: 42 uds\n- Pastillas Freno: 24 uds")
+                }
+              })}
+              className="mt-5 w-full rounded-xl border border-primary py-2 text-xs font-bold text-primary transition-all hover:bg-primary/5 active:scale-95"
+            >
               Ver Todo el Inventario
             </button>
           </div>
@@ -959,7 +975,14 @@ function TallerTab() {
                     <p className="text-[11px] text-muted-foreground">{p.task}</p>
                     <div className="mt-2 flex items-center justify-between">
                       <span className="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">Próximo</span>
-                      <button className="text-[11px] font-semibold text-primary hover:underline">Estimar Días</button>
+                      <button
+                        onClick={() => toast.info(`Estimación para ${p.unit}`, {
+                          description: "Próximo servicio programado en 6 días (aprox. 1,450 km restantes)."
+                        })}
+                        className="text-[11px] font-semibold text-primary hover:underline"
+                      >
+                        Estimar Días
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1004,7 +1027,22 @@ function KpiCard({ Icon, bg, color, label, value, sub, destructive }: {
 function UnitCard({ unit }: { unit: typeof fleet[number] }) {
   const initials = unit.driver.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
   return (
-    <div className="cursor-pointer rounded-2xl border border-border bg-background p-3 transition-all hover:border-primary/40">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => toast.success(`Conexión GPS Estable: Unidad ${unit.id}`, {
+        description: `Conductor: ${unit.driver} | Auxiliar: ${unit.aux} | ETA: ${unit.eta}`
+      })}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          toast.success(`Conexión GPS Estable: Unidad ${unit.id}`, {
+            description: `Conductor: ${unit.driver} | Auxiliar: ${unit.aux} | ETA: ${unit.eta}`
+          });
+        }
+      }}
+      className="cursor-pointer rounded-2xl border border-border bg-background p-3 transition-all hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+    >
       <div className="mb-2 flex items-start justify-between">
         <div>
           <p className="text-xs font-bold text-foreground">{unit.id}</p>
