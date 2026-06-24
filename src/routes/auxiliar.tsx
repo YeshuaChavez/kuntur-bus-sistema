@@ -151,13 +151,10 @@ export function TripPicker({ title, subtitle, onPick }: {
   return (
     <div className="mx-auto max-w-2xl">
       {/* Hero banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-[image:var(--gradient-primary)] p-5 text-primary-foreground shadow-[var(--shadow-soft)]">
-        <div className="relative z-10 max-w-[70%]">
-          <div className="text-[10px] uppercase tracking-wider opacity-80">Inicio de turno</div>
-          <h1 className="mt-1 text-xl font-bold">{title}</h1>
-          <p className="mt-1 text-sm opacity-90">{subtitle}</p>
-        </div>
-        <img src="/boarding_hero.png" alt="Boarding Hero" className="absolute -right-4 -bottom-6 h-28 w-auto object-contain opacity-25 sm:opacity-35 pointer-events-none" />
+      <div className="rounded-2xl border border-border bg-[image:var(--gradient-primary)] p-5 text-primary-foreground shadow-[var(--shadow-soft)]">
+        <div className="text-[10px] uppercase tracking-wider opacity-80">Inicio de turno</div>
+        <h1 className="mt-1 text-xl font-bold">{title}</h1>
+        <p className="mt-1 text-sm opacity-90">{subtitle}</p>
       </div>
 
       {/* Hoy */}
