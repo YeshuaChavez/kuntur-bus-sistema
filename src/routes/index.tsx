@@ -1506,10 +1506,11 @@ export function PassengersStep({ selected, passengers, setPassengers, total, onB
 
 type FieldStatus = "valid" | "invalid" | "idle";
 
-function FieldInput({ icon: Icon, label, value, onChange, placeholder, maxLength, status = "idle", hint, showCounter }: {
+function FieldInput({ icon: Icon, label, value, onChange, placeholder, maxLength, status = "idle", hint, showCounter, onFocus, onBlur }: {
   icon: any; label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; maxLength?: number;
   status?: FieldStatus; hint?: string; showCounter?: boolean;
+  onFocus?: () => void; onBlur?: () => void;
 }) {
   const borderCls = status === "valid"
     ? "border-[var(--success)]"
@@ -1542,6 +1543,8 @@ function FieldInput({ icon: Icon, label, value, onChange, placeholder, maxLength
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         maxLength={maxLength}
+        onFocus={onFocus}
+        onBlur={onBlur}
         className="w-full bg-transparent text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
       />
       {hint && value.length > 0 && (
@@ -1558,6 +1561,16 @@ export function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
   total: number; payment: { method: "card" | "yape" | "plin"; card: string; exp: string; cvv: string };
   setPayment: (p: typeof payment) => void; onBack: () => void; onPay: () => void;
 }) {
+  const [focusedField, setFocusedField] = useState<"card" | "exp" | "cvv" | null>(null);
+  
+  const booking = getBookingState();
+  const passengerName = booking.passengers?.[0]?.name || "TITULAR DE TARJETA";
+
+  const cleanNum = payment.card.replace(/\s/g, "");
+  const isVisa = cleanNum.startsWith("4");
+  const isMastercard = /^5[1-5]/.test(cleanNum);
+  const cardBrand = isVisa ? "Visa" : isMastercard ? "Mastercard" : "KNT Card";
+
   const methods: { id: "card" | "yape" | "plin"; label: string; desc: string; icon: any }[] = [
     { id: "card",  label: "Tarjeta", desc: "Visa \u00b7 Mastercard",     icon: CreditCard  },
     { id: "yape",  label: "Yape",    desc: "Pago instant\u00e1neo",      icon: Smartphone  },
@@ -1579,16 +1592,126 @@ export function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
             </button>
           ))}
         </div>
+        
         {payment.method === "card" && (
-          <div className="rounded-[24px] border border-border/20 bg-card p-6 shadow-[var(--shadow-card)]">
-            <FieldInput icon={CreditCard} label="N\u00famero de tarjeta" placeholder="4242 4242 4242 4242" value={payment.card} onChange={(v) => setPayment({ ...payment, card: v.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 ") })} />
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <FieldInput icon={Calendar} label="Vencimiento" placeholder="MM/AA" value={payment.exp} onChange={(v) => { const d = v.replace(/\D/g, "").slice(0, 4); setPayment({ ...payment, exp: d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d }); }} />
-              <FieldInput icon={Lock} label="CVV" placeholder="123" maxLength={4} value={payment.cvv} onChange={(v) => setPayment({ ...payment, cvv: v.replace(/\D/g, "").slice(0, 4) })} />
+          <div className="flex flex-col gap-6 rounded-[24px] border border-border/20 bg-card p-6 shadow-[var(--shadow-card)]">
+            
+            {/* 3D Virtual Credit Card */}
+            <div className="w-full max-w-[320px] h-[190px] mx-auto relative mt-2" style={{ perspective: "1000px" }}>
+              <div
+                className="w-full h-full relative transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                style={{
+                  transformStyle: "preserve-3d",
+                  transform: focusedField === "cvv" ? "rotateY(180deg)" : "rotateY(0deg)",
+                }}
+              >
+                {/* FRONT */}
+                <div
+                  className="absolute inset-0 w-full h-full rounded-2xl p-5 flex flex-col justify-between text-white shadow-[var(--shadow-elegant)] select-none"
+                  style={{
+                    backfaceVisibility: "hidden",
+                    background: "linear-gradient(135deg, oklch(0.24 0.04 260) 0%, oklch(0.14 0.04 265) 100%)",
+                    border: "1px solid oklch(1 0 0 / 12%)"
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-black tracking-widest text-primary/70 uppercase">KUNTUR Platinum</span>
+                    <span className="text-xs font-extrabold italic tracking-tight">{cardBrand}</span>
+                  </div>
+                  
+                  <div className="w-9 h-7 rounded bg-gradient-to-r from-amber-200 via-amber-400 to-amber-300 shadow-sm border border-amber-500/20 relative overflow-hidden flex items-center justify-center">
+                    <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-20 border border-slate-900/30" />
+                  </div>
+                  
+                  <div className="font-mono text-lg tracking-wider font-semibold text-center text-white/90">
+                    {payment.card || "•••• •••• •••• ••••"}
+                  </div>
+                  
+                  <div className="flex items-end justify-between">
+                    <div className="min-w-0 flex-1 pr-4">
+                      <div className="text-[7px] uppercase tracking-wider text-white/50 font-semibold">Titular</div>
+                      <div className="text-[11px] font-bold truncate tracking-wide uppercase text-white/90">
+                        {passengerName}
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="text-[7px] uppercase tracking-wider text-white/50 font-semibold">Vence</div>
+                      <div className="font-mono text-[11px] font-bold text-white/90">
+                        {payment.exp || "••/••"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BACK */}
+                <div
+                  className="absolute inset-0 w-full h-full rounded-2xl flex flex-col justify-between text-white shadow-[var(--shadow-elegant)] select-none"
+                  style={{
+                    backfaceVisibility: "hidden",
+                    transform: "rotateY(180deg)",
+                    background: "linear-gradient(135deg, oklch(0.18 0.04 260) 0%, oklch(0.11 0.04 265) 100%)",
+                    border: "1px solid oklch(1 0 0 / 12%)"
+                  }}
+                >
+                  <div className="w-full h-9 bg-slate-950 mt-4 flex-shrink-0" />
+                  
+                  <div className="px-5 mt-2">
+                    <div className="text-[7px] uppercase tracking-wider text-white/50 font-semibold mb-1">Firma / CVV</div>
+                    <div className="flex items-center">
+                      <div className="flex-1 h-7 bg-white/20 rounded-l-md" />
+                      <div className="w-12 h-7 bg-white text-slate-950 font-mono text-xs font-black flex items-center justify-center rounded-r-md italic">
+                        {payment.cvv || "•••"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 pt-0 text-[7px] text-white/40 leading-normal text-center">
+                    Esta tarjeta es ficticia y sirve solo como simulación para KUNTUR.
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="mt-4 flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/20 p-3 text-xs text-primary font-medium"><Lock className="h-4 w-4" /> Pago 100% seguro &middot; datos cifrados</div>
+
+            {/* Input fields */}
+            <div className="space-y-3">
+              <FieldInput
+                icon={CreditCard}
+                label="N&uacute;mero de tarjeta"
+                placeholder="4242 4242 4242 4242"
+                value={payment.card}
+                onChange={(v) => setPayment({ ...payment, card: v.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 ") })}
+                onFocus={() => setFocusedField("card")}
+                onBlur={() => setFocusedField(null)}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <FieldInput
+                  icon={Calendar}
+                  label="Vencimiento"
+                  placeholder="MM/AA"
+                  value={payment.exp}
+                  onChange={(v) => { const d = v.replace(/\D/g, "").slice(0, 4); setPayment({ ...payment, exp: d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d }); }}
+                  onFocus={() => setFocusedField("exp")}
+                  onBlur={() => setFocusedField(null)}
+                />
+                <FieldInput
+                  icon={Lock}
+                  label="CVV"
+                  placeholder="123"
+                  maxLength={4}
+                  value={payment.cvv}
+                  onChange={(v) => setPayment({ ...payment, cvv: v.replace(/\D/g, "").slice(0, 4) })}
+                  onFocus={() => setFocusedField("cvv")}
+                  onBlur={() => setFocusedField(null)}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/20 p-3 text-xs text-primary font-medium">
+              <Lock className="h-4 w-4" /> Pago 100% seguro &middot; datos cifrados
+            </div>
           </div>
         )}
+        
         {payment.method !== "card" && (
           <div className="rounded-[24px] border border-border/20 bg-card p-8 text-center shadow-[var(--shadow-card)]">
             <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-primary"><QrCode className="h-8 w-8" /></div>
