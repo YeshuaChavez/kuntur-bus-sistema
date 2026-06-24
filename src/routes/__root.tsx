@@ -1,4 +1,4 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts, useLocation } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
@@ -327,10 +327,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  const { pathname } = useLocation();
+  const isRoleRoute = ["/auxiliar", "/conductor", "/controlador", "/administrador"].some(
+    (role) => pathname.startsWith(role)
+  );
+
   return (
     <>
       <Outlet />
-      <AssistenteIA />
+      {!isRoleRoute && <AssistenteIA />}
     </>
   );
 }
