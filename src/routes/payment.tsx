@@ -37,7 +37,7 @@ function PaymentPage() {
   const [showEmail, setShowEmail] = useState(false);
   const [purchaseId, setPurchaseId] = useState("");
   const [payment, setPayment] = useState({
-    method: "card" as "card" | "yape" | "plin",
+    method: "card" as "card" | "qr" | "pagoefectivo",
     card: "",
     exp: "",
     cvv: "",

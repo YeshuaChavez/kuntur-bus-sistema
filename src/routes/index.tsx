@@ -1026,6 +1026,7 @@ export function TripsList({ origin, destination, date, onPick, onBack }: {
 }) {
   const dateLabel = format(date, "EEEE d 'de' MMMM, yyyy", { locale: es });
   const [activeCategory, setActiveCategory] = useState("Todos");
+  const [selectedBusCategory, setSelectedBusCategory] = useState<string | null>(null);
   const filtered = tripsBase.filter((t) => activeCategory === "Todos" || t.type === activeCategory);
 
   return (
@@ -1105,10 +1106,20 @@ export function TripsList({ origin, destination, date, onPick, onBack }: {
             <button key={t.id} onClick={() => onPick(t.id)} className={cn("group relative flex w-full flex-col md:flex-row items-start md:items-center justify-between overflow-hidden rounded-[24px] border p-6 text-left shadow-[var(--shadow-card)] transition-all hover:shadow-[var(--shadow-elegant)] hover:-translate-y-0.5 bg-card", isFirst ? "border-2 border-primary ring-4 ring-primary/5" : "border-border/30 hover:border-primary/50")}>
               {isFirst && <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-4 py-1 rounded-bl-xl text-[11px] font-bold uppercase tracking-wider">Recomendado</div>}
               <div className="flex items-start gap-4 flex-1">
-                <div className="hidden sm:flex h-20 w-32 flex-shrink-0 items-center justify-center rounded-xl overflow-hidden bg-secondary border border-border/50 relative shadow-[var(--shadow-soft)] group-hover:scale-[1.03] transition-transform duration-300">
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedBusCategory(t.type);
+                  }}
+                  className="hidden sm:flex h-20 w-32 flex-shrink-0 items-center justify-center rounded-xl overflow-hidden bg-secondary border border-border/50 relative shadow-[var(--shadow-soft)] hover:scale-[1.05] active:scale-95 transition-all duration-300 cursor-zoom-in group/image"
+                  title="Ver comodidades del bus"
+                >
                   <img src={s.image} alt={s.label} className="h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/image:opacity-100 flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-wider transition-opacity gap-1">
+                    <Search className="h-3.5 w-3.5" /> Ver info
+                  </div>
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-3">
                     <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider", s.chip)}><Icon className="h-3 w-3" /> {s.label}</span>
                     <div className="flex items-center gap-2">
@@ -1128,9 +1139,42 @@ export function TripsList({ origin, destination, date, onPick, onBack }: {
                     <div className="text-right"><p className="text-2xl font-semibold text-foreground">{t.arr}</p><p className="text-xs text-muted-foreground">{destination}</p></div>
                   </div>
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{s.description}</p>
+
+                  {/* Micro-comodidades (badges rápidos) */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                    {t.type === "Premium" && (
+                      <>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/30"><BedDouble className="h-3 w-3 text-primary" /> Asiento 180° (Cama)</span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/30"><Smartphone className="h-3 w-3 text-primary" /> USB</span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/30"><Globe className="h-3 w-3 text-primary" /> WiFi Satelital</span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/30"><Utensils className="h-3 w-3 text-primary" /> Snacks</span>
+                      </>
+                    )}
+                    {t.type === "Ejecutivo" && (
+                      <>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/30"><BedDouble className="h-3 w-3 text-primary" /> Reclinable 160°</span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/30"><Smartphone className="h-3 w-3 text-primary" /> USB</span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/30"><Globe className="h-3 w-3 text-primary" /> WiFi gratis</span>
+                      </>
+                    )}
+                    {t.type === "Cama" && (
+                      <>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/30"><BedDouble className="h-3 w-3 text-primary" /> Semi-Cama 160°</span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/30"><Smartphone className="h-3 w-3 text-primary" /> USB</span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/30"><Clock className="h-3 w-3 text-primary" /> TV General</span>
+                      </>
+                    )}
+                    {t.type === "Cama nocturna" && (
+                      <>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/30"><BedDouble className="h-3 w-3 text-primary" /> Asiento 180°</span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/30"><Smartphone className="h-3 w-3 text-primary" /> USB</span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/30"><Compass className="h-3 w-3 text-primary" /> Cortinas de Privacidad</span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="md:border-l border-border/30 md:pl-6 flex flex-col items-center md:items-end mt-4 md:mt-0 w-full md:w-auto">
+              <div className="md:border-l border-border/30 md:pl-6 flex flex-col items-center md:items-end mt-4 md:mt-0 w-full md:w-auto shrink-0 justify-center">
                 <p className="text-xs text-muted-foreground mb-1">Precio por persona</p>
                 <p className={cn("text-3xl font-bold mb-4", isFirst ? "text-primary" : "text-foreground")}>S/ {t.price}.00</p>
                 <div className={cn("w-full md:w-auto px-6 py-3 rounded-xl font-bold text-sm text-center transition-all", isFirst ? "bg-primary text-primary-foreground shadow-lg active:scale-95" : "border-2 border-primary text-primary hover:bg-primary/5")}>Seleccionar</div>
@@ -1139,15 +1183,75 @@ export function TripsList({ origin, destination, date, onPick, onBack }: {
           );
         })}
       </div>
+
+      {/* Bus category amenities gallery modal */}
+      <Dialog open={selectedBusCategory !== null} onOpenChange={(open) => { if (!open) setSelectedBusCategory(null); }}>
+        <DialogContent className="max-w-md gap-0 overflow-hidden rounded-[28px] p-0 bg-card border border-border">
+          {selectedBusCategory && (() => {
+            const s = getTripStyle(selectedBusCategory);
+            const Icon = s.icon;
+            return (
+              <>
+                <div className="relative h-48 w-full overflow-hidden">
+                  <img src={s.image} alt={s.label} className="h-full w-full object-cover animate-in fade-in duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />
+                  <div className="absolute bottom-4 left-5 flex items-center gap-2">
+                    <span className={cn("inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider", s.chip)}>
+                      <Icon className="h-3.5 w-3.5" /> {s.label}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div>
+                    <h3 className="text-xl font-extrabold text-foreground">Servicio {s.label}</h3>
+                    <p className="mt-1 text-xs text-primary font-bold uppercase tracking-wider">{s.tagline}</p>
+                  </div>
+                  <div className="my-2 h-px bg-border/60" />
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Comodidades del Bus</h4>
+                    <p className="text-sm text-foreground leading-relaxed">
+                      {s.label === "Premium" && "Disfruta de nuestra categoría más alta. Cuenta con asientos de cuero reclinables de hasta 180° que se convierten en cama, climatización bi-zona, tomas de corriente USB independientes, snacks calientes y fríos servidos a bordo, mantas y almohadas sanitizadas, sistema de entretenimiento a bordo y WiFi satelital."}
+                      {s.label === "Ejecutivo" && "Nuestra opción balanceada y cómoda para viajes de negocios o turismo. Incluye asientos amplios ergonómicos reclinables de hasta 160°, WiFi de alta velocidad gratis para navegar durante tu viaje, tomacorrientes USB para tus dispositivos y climatización integrada."}
+                      {s.label === "Cama" && "Perfecto para trayectos de media y larga distancia durante el día. Ofrece asientos súper-reclinables de hasta 160°, pantallas generales de entretenimiento, cargadores USB, mantas de viaje ligeras y climatización automatizada."}
+                      {s.label === "Cama nocturna" && "Diseñado exclusivamente para viajar de noche y descansar sin interrupciones. Cuenta con asientos reclinables a 180° (cama completa), mantas térmicas de alta densidad, cortinas de privacidad individuales que te separan de los demás asientos para máxima tranquilidad, y climatización silenciosa."}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5 pt-2">
+                    <AmenityItem label="Asientos Ergonómicos" />
+                    <AmenityItem label="Cargador USB / Tomas" />
+                    <AmenityItem label="Aire Acondicionado" />
+                    <AmenityItem label="Entretenimiento" />
+                  </div>
+                  <button
+                    onClick={() => setSelectedBusCategory(null)}
+                    className="w-full rounded-2xl bg-[image:var(--gradient-primary)] py-3.5 text-center text-sm font-bold text-primary-foreground shadow-[var(--shadow-soft)] hover:brightness-110 active:scale-95 transition-all mt-4"
+                  >
+                    Entendido
+                  </button>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function AmenityItem({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2 rounded-xl border border-border bg-secondary/30 p-2.5">
+      <CheckCircle2 className="h-4 w-4 text-[var(--success)] shrink-0" />
+      <span className="text-xs font-semibold text-foreground truncate">{label}</span>
     </div>
   );
 }
 
 /* ====== SEAT STEP ====== */
-export function SeatStep({ trip, seats, selected, total, toggleSeat, onBack, onPay, user, pax }: {
+export function SeatStep({ trip, seats, selected, total, toggleSeat, onBack, onPay, user, pax, onClear }: {
   trip: typeof tripsBase[number]; seats: Seat[]; selected: Seat[]; total: number;
   toggleSeat: (id: string) => void; onBack: () => void; onPay: () => void;
-  user: ReturnType<typeof useAuth>["user"]; pax: number;
+  user: ReturnType<typeof useAuth>["user"]; pax: number; onClear?: () => void;
 }) {
   const isWrongRole = user && user.role !== "cliente";
   const s = getTripStyle(trip.type);
@@ -1167,7 +1271,7 @@ export function SeatStep({ trip, seats, selected, total, toggleSeat, onBack, onP
       <div>
         <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground mb-2">&larr; Volver a viajes</button>
         <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">Selecciona tus asientos</h2>
-        <p className="text-sm text-muted-foreground mb-6">Selecci&oacute;n libre &middot; toca para reservar</p>
+        <p className="text-sm text-muted-foreground mb-6">Selección libre · toca para reservar</p>
         <SeatMap seats={seats} onSelect={toggleSeat} variant="client" />
       </div>
       <aside className="rounded-[24px] border border-border/20 bg-card p-6 sm:p-8 shadow-[var(--shadow-card)] lg:sticky lg:top-28 lg:h-fit">
@@ -1176,12 +1280,19 @@ export function SeatStep({ trip, seats, selected, total, toggleSeat, onBack, onP
           {expired ? "Tiempo agotado — recarga la página" : `Tiempo para completar: ${mins}:${secs}`}
         </div>
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Tu reserva</h3>
+          <div className="flex items-center gap-3">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Tu reserva</h3>
+            {selected.length > 0 && onClear && (
+              <button onClick={onClear} className="text-[10px] font-bold text-destructive hover:underline active:scale-95 transition-all">
+                (Limpiar)
+              </button>
+            )}
+          </div>
           <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", s.chip)}><Icon className="h-3 w-3" /> {s.label}</span>
         </div>
         <div className="space-y-3 text-sm">
-          <Row k="Viaje" v={`${trip.time} \u00b7 ${trip.type}`} />
-          <Row k="Asientos" v={selected.length ? selected.map((s) => s.id).join(", ") : "\u2014"} />
+          <Row k="Viaje" v={`${trip.time} · ${trip.type}`} />
+          <Row k="Asientos" v={selected.length ? selected.map((s) => s.id).join(", ") : "—"} />
           <Row k="Precio unit." v={`S/ ${trip.price}`} />
           <Row k="Pasajeros" v={`${selected.length}/${pax}`} />
         </div>
@@ -1558,10 +1669,11 @@ function FieldInput({ icon: Icon, label, value, onChange, placeholder, maxLength
 
 /* ====== PAYMENT STEP ====== */
 export function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
-  total: number; payment: { method: "card" | "yape" | "plin"; card: string; exp: string; cvv: string };
+  total: number; payment: { method: "card" | "qr" | "pagoefectivo"; card: string; exp: string; cvv: string };
   setPayment: (p: typeof payment) => void; onBack: () => void; onPay: () => void;
 }) {
   const [focusedField, setFocusedField] = useState<"card" | "exp" | "cvv" | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const booking = getBookingState();
   const passengerName = booking.passengers?.[0]?.name || "TITULAR DE TARJETA";
@@ -1571,19 +1683,29 @@ export function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
   const isMastercard = /^5[1-5]/.test(cleanNum);
   const cardBrand = isVisa ? "Visa" : isMastercard ? "Mastercard" : "KNT Card";
 
-  const methods: { id: "card" | "yape" | "plin"; label: string; desc: string; icon: any }[] = [
-    { id: "card",  label: "Tarjeta", desc: "Visa \u00b7 Mastercard",     icon: CreditCard  },
-    { id: "yape",  label: "Yape",    desc: "Pago instant\u00e1neo",      icon: Smartphone  },
-    { id: "plin",  label: "Plin",    desc: "Transferencia m\u00f3vil",   icon: Smartphone  },
+  const methods: { id: "card" | "qr" | "pagoefectivo"; label: string; desc: string; icon: any }[] = [
+    { id: "card",          label: "Tarjeta",      desc: "Visa · Mastercard",     icon: CreditCard  },
+    { id: "qr",            label: "Yape / Plin",  desc: "Pago instantáneo QR",   icon: QrCode      },
+    { id: "pagoefectivo",  label: "PagoEfectivo", desc: "Banca Móvil o Agente",  icon: ArrowLeftRight },
   ];
+
   const cardOk = payment.method !== "card" || (payment.card.replace(/\s/g, "").length >= 13 && /^\d{2}\/\d{2}$/.test(payment.exp) && /^\d{3,4}$/.test(payment.cvv));
+
+  const handlePayClick = () => {
+    if (!cardOk || isProcessing) return;
+    setIsProcessing(true);
+    setTimeout(() => {
+      setIsProcessing(false);
+      onPay();
+    }, 1500);
+  };
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <div>
         <button onClick={onBack} className="text-xs font-semibold text-muted-foreground hover:text-foreground mb-2">&larr; Volver a datos</button>
-        <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">M&eacute;todo de pago</h2>
-        <p className="text-sm text-muted-foreground mb-6">Pago simulado &middot; ning&uacute;n cargo real.</p>
+        <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">Método de pago</h2>
+        <p className="text-sm text-muted-foreground mb-6">Pago simulado · ningún cargo real.</p>
         <div className="grid gap-3 sm:grid-cols-3 mb-6">
           {methods.map((m) => (
             <button key={m.id} onClick={() => setPayment({ ...payment, method: m.id })} className={cn("rounded-[20px] border-2 p-5 text-left transition-all bg-background", payment.method === m.id ? "border-primary shadow-[var(--shadow-soft)]" : "border-border hover:border-primary/40")}>
@@ -1607,15 +1729,13 @@ export function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
               >
                 {/* FRONT */}
                 <div
-                  className="absolute inset-0 w-full h-full rounded-2xl p-5 flex flex-col justify-between text-white shadow-[var(--shadow-elegant)] select-none"
+                  className="absolute inset-0 w-full h-full rounded-2xl p-5 flex flex-col justify-between text-white shadow-[var(--shadow-elegant)] select-none bg-[image:linear-gradient(135deg,oklch(0.52_0.07_160)_0%,oklch(0.42_0.06_160)_100%)] dark:bg-[image:linear-gradient(135deg,oklch(0.24_0.04_260)_0%,oklch(0.14_0.04_265)_100%)] border border-white/10"
                   style={{
-                    backfaceVisibility: "hidden",
-                    background: "linear-gradient(135deg, oklch(0.24 0.04 260) 0%, oklch(0.14 0.04 265) 100%)",
-                    border: "1px solid oklch(1 0 0 / 12%)"
+                    backfaceVisibility: "hidden"
                   }}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-black tracking-widest text-primary/70 uppercase">KUNTUR Platinum</span>
+                    <span className="text-[9px] font-black tracking-widest text-white/70 uppercase">KUNTUR Platinum</span>
                     <span className="text-xs font-extrabold italic tracking-tight">{cardBrand}</span>
                   </div>
                   
@@ -1623,7 +1743,7 @@ export function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
                     <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-20 border border-slate-900/30" />
                   </div>
                   
-                  <div className="font-mono text-lg tracking-wider font-semibold text-center text-white/90">
+                  <div className={cn("font-mono text-lg tracking-wider font-semibold text-center text-white/90 rounded-md p-1 transition-all duration-300", focusedField === "card" ? "ring-2 ring-white/50 bg-white/10" : "")}>
                     {payment.card || "•••• •••• •••• ••••"}
                   </div>
                   
@@ -1634,7 +1754,7 @@ export function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
                         {passengerName}
                       </div>
                     </div>
-                    <div className="shrink-0 text-right">
+                    <div className={cn("shrink-0 text-right rounded-md p-1 transition-all duration-300", focusedField === "exp" ? "ring-2 ring-white/50 bg-white/10" : "")}>
                       <div className="text-[7px] uppercase tracking-wider text-white/50 font-semibold">Vence</div>
                       <div className="font-mono text-[11px] font-bold text-white/90">
                         {payment.exp || "••/••"}
@@ -1645,12 +1765,10 @@ export function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
 
                 {/* BACK */}
                 <div
-                  className="absolute inset-0 w-full h-full rounded-2xl flex flex-col justify-between text-white shadow-[var(--shadow-elegant)] select-none"
+                  className="absolute inset-0 w-full h-full rounded-2xl flex flex-col justify-between text-white shadow-[var(--shadow-elegant)] select-none bg-[image:linear-gradient(135deg,oklch(0.45_0.06_160)_0%,oklch(0.35_0.05_160)_100%)] dark:bg-[image:linear-gradient(135deg,oklch(0.18_0.04_260)_0%,oklch(0.11_0.04_265)_100%)] border border-white/10"
                   style={{
                     backfaceVisibility: "hidden",
-                    transform: "rotateY(180deg)",
-                    background: "linear-gradient(135deg, oklch(0.18 0.04 260) 0%, oklch(0.11 0.04 265) 100%)",
-                    border: "1px solid oklch(1 0 0 / 12%)"
+                    transform: "rotateY(180deg)"
                   }}
                 >
                   <div className="w-full h-9 bg-slate-950 mt-4 flex-shrink-0" />
@@ -1676,7 +1794,7 @@ export function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
             <div className="space-y-3">
               <FieldInput
                 icon={CreditCard}
-                label="N&uacute;mero de tarjeta"
+                label="Número de tarjeta"
                 placeholder="4242 4242 4242 4242"
                 value={payment.card}
                 onChange={(v) => setPayment({ ...payment, card: v.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 ") })}
@@ -1707,16 +1825,63 @@ export function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
             </div>
 
             <div className="flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/20 p-3 text-xs text-primary font-medium">
-              <Lock className="h-4 w-4" /> Pago 100% seguro &middot; datos cifrados
+              <Lock className="h-4 w-4" /> Pago 100% seguro · datos cifrados
             </div>
           </div>
         )}
         
-        {payment.method !== "card" && (
-          <div className="rounded-[24px] border border-border/20 bg-card p-8 text-center shadow-[var(--shadow-card)]">
-            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-primary"><QrCode className="h-8 w-8" /></div>
-            <div className="text-lg font-bold text-foreground">Escanea con {payment.method === "yape" ? "Yape" : "Plin"}</div>
-            <div className="mt-1 text-sm text-muted-foreground">Confirma el pago de S/ {total} desde tu app.</div>
+        {payment.method === "qr" && (
+          <div className="flex flex-col items-center rounded-[24px] border border-border/20 bg-card p-8 text-center shadow-[var(--shadow-card)]">
+            <div className="flex items-center gap-3 mb-6 bg-secondary px-4 py-2 rounded-full border border-border/30">
+              <span className="font-black text-lg tracking-tight" style={{ color: "#6D14CC" }}>yape</span>
+              <span className="text-muted-foreground font-semibold">/</span>
+              <span className="font-black text-lg tracking-tight" style={{ color: "#14B8C8" }}>plin</span>
+            </div>
+            <div className="relative p-4 bg-white rounded-2xl border-2 border-dashed border-primary/20 shadow-inner mb-4">
+              <div className="grid h-36 w-36 grid-cols-6 grid-rows-6 gap-0.5 bg-white p-1">
+                {Array.from({ length: 36 }).map((_, i) => (
+                  <div key={i} className={cn("rounded-[2px]", (i * 13) % 5 === 0 || i < 6 || i % 6 === 0 ? "bg-slate-900" : "bg-transparent")} />
+                ))}
+              </div>
+            </div>
+            <div className="text-lg font-bold text-foreground">Escanea el código QR</div>
+            <div className="mt-1 text-sm text-muted-foreground max-w-sm">
+              Abre tu aplicación de <strong className="text-[#6D14CC]">Yape</strong> o <strong className="text-[#14B8C8]">Plin</strong>, escanea el código y confirma el monto de <strong className="text-foreground">S/ {total}.00</strong>.
+            </div>
+          </div>
+        )}
+
+        {payment.method === "pagoefectivo" && (
+          <div className="rounded-[24px] border border-border/20 bg-card p-8 shadow-[var(--shadow-card)]">
+            <div className="flex items-center gap-2 mb-6 bg-amber-500/10 text-amber-500 px-4 py-2 rounded-xl border border-amber-500/20 w-fit">
+              <ArrowLeftRight className="h-5 w-5" />
+              <span className="font-bold text-sm tracking-tight">PagoEfectivo</span>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-secondary/40 p-4 rounded-xl border border-border/40 text-center">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-1">Código CIP de Pago</span>
+                <span className="font-mono text-2xl font-black text-foreground tracking-wider">8491023</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard?.writeText("8491023").catch(() => {});
+                    toast.success("¡Código CIP copiado!", { description: "Pégalo en tu banca móvil." });
+                  }}
+                  className="mt-2 text-xs text-primary font-bold hover:underline block mx-auto active:scale-95 transition-all"
+                >
+                  Copiar código
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Instrucciones de pago:</h4>
+                <ol className="text-xs text-foreground space-y-2 list-decimal pl-4 leading-relaxed">
+                  <li>Ingresa a tu aplicación de <strong>Banca Móvil</strong> o visita un <strong>Agente Autorizado</strong> (BCP, BBVA, Interbank, Scotiabank, etc.).</li>
+                  <li>Selecciona la opción de **Pago de Servicios** y busca **PagoEfectivo** (Soles).</li>
+                  <li>Introduce el código CIP <strong className="font-mono">8491023</strong> y confirma el monto de <strong>S/ {total}.00</strong>.</li>
+                </ol>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -1727,10 +1892,18 @@ export function PaymentStep({ total, payment, setPayment, onBack, onPay }: {
           <span className="text-sm text-muted-foreground">Total</span>
           <span className="text-3xl font-bold text-primary">S/ {total}</span>
         </div>
-        <button disabled={!cardOk} onClick={onPay} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95">
-          <CheckCircle2 className="h-4 w-4" /> Confirmar pago
+        <button disabled={!cardOk || isProcessing} onClick={handlePayClick} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95">
+          {isProcessing ? (
+            <>
+              <RefreshCw className="h-4 w-4 animate-spin" /> Procesando pago...
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="h-4 w-4" /> Confirmar pago
+            </>
+          )}
         </button>
-        <p className="mt-3 text-center text-[11px] text-muted-foreground">Pago ficticio para demostraci&oacute;n.</p>
+        <p className="mt-3 text-center text-[11px] text-muted-foreground">Pago ficticio para demostración.</p>
       </aside>
     </div>
   );
