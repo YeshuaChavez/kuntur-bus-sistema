@@ -1525,7 +1525,7 @@ function FieldInput({ icon: Icon, label, value, onChange, placeholder, maxLength
     <div className={`rounded-xl border ${borderCls} bg-background px-4 py-3 transition-all focus-within:ring-2 ${focusCls}`}>
       <div className="flex items-center justify-between mb-1">
         <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          <Icon className="h-3 w-3" /> {label}
+          <Icon className="h-3.5 w-3.5 text-primary" /> {label}
         </span>
         <div className="flex items-center gap-1.5">
           {showCounter && maxLength && (
@@ -1542,7 +1542,7 @@ function FieldInput({ icon: Icon, label, value, onChange, placeholder, maxLength
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         maxLength={maxLength}
-        className="w-full bg-transparent text-base font-medium text-foreground outline-none placeholder:text-muted-foreground/50"
+        className="w-full bg-transparent text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
       />
       {hint && value.length > 0 && (
         <p className={`mt-1 text-[10px] font-medium ${status === "valid" ? "text-[var(--success)]" : "text-destructive"}`}>
