@@ -54,6 +54,20 @@ function PerfilPage() {
 
   const initials = user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
+  const isDemo = user.email in {
+    "cliente@kuntur.com": 1,
+    "auxiliar@kuntur.com": 1,
+    "conductor@kuntur.com": 1,
+    "controlador@kuntur.com": 1,
+    "administrador@kuntur.com": 1
+  };
+  const avatarUrl =
+    user.email === "cliente@kuntur.com" || user.email === "controlador@kuntur.com"
+      ? "/avatar-f.jpg"
+      : isDemo
+      ? "/avatar-m.jpg"
+      : null;
+
   const saveName = () => {
     if (!draftName.trim() || draftName.trim() === user.name) { setEditingName(false); return; }
     storeUser({ ...user, name: draftName.trim() });
@@ -84,9 +98,17 @@ function PerfilPage() {
           <div className="rounded-[28px] border border-border bg-card p-6 shadow-[var(--shadow-card)]">
             <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
               {/* Avatar */}
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-[image:var(--gradient-primary)] text-2xl font-extrabold text-primary-foreground shadow-[var(--shadow-soft)]">
-                {initials}
-              </div>
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={user.name}
+                  className="h-20 w-20 shrink-0 rounded-2xl object-cover shadow-[var(--shadow-soft)] border border-border/80"
+                />
+              ) : (
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-[image:var(--gradient-primary)] text-2xl font-extrabold text-primary-foreground shadow-[var(--shadow-soft)]">
+                  {initials}
+                </div>
+              )}
 
               <div className="flex-1 space-y-3">
                 {/* Name row */}
@@ -210,7 +232,7 @@ function PerfilPage() {
             <p className="mb-4 text-xs text-muted-foreground">Estas acciones son irreversibles. Úsalas con precaución.</p>
             <button
               onClick={() => { logout(); navigate({ to: "/" }); }}
-              className="rounded-xl border border-destructive/40 bg-background px-4 py-2 text-xs font-bold text-destructive transition hover:bg-destructive/10 active:scale-95"
+              className="rounded-xl border border-destructive/30 bg-background px-4 py-2.5 text-xs font-bold text-destructive transition-all duration-200 hover:bg-destructive hover:text-destructive-foreground hover:border-destructive active:scale-[0.97] shadow-sm"
             >
               Cerrar sesión en todos los dispositivos
             </button>
