@@ -84,21 +84,21 @@ function LoginPage() {
 
             {/* Bento Grid / Marketing Images */}
             <div className="grid grid-cols-2 gap-4 h-[350px] md:h-[400px]">
-              <div className="relative group overflow-hidden rounded-3xl col-span-1 row-span-2 shadow-sm rotate-[-1.5deg] translate-y-1 hover:rotate-0 hover:translate-y-0 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
+              <div className="relative group overflow-hidden rounded-3xl col-span-1 row-span-2 shadow-sm">
                 <img src="/lima.png" alt="Lima" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-md px-4 py-2 rounded-full border border-border/50 shadow-sm">
+                <div className="absolute bottom-4 left-4 bg-background/80 backdrop-blur-md px-4 py-2 rounded-full border border-border/50">
                   <span className="text-sm text-primary font-bold">Costa Central - Lima</span>
                 </div>
               </div>
-              <div className="relative group overflow-hidden rounded-3xl col-span-1 shadow-sm rotate-[1.8deg] translate-x-0.5 hover:rotate-0 hover:translate-x-0 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
+              <div className="relative group overflow-hidden rounded-3xl col-span-1 shadow-sm">
                 <img src="/arequipa.png" alt="Arequipa" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-md px-3 py-1 rounded-full border border-border/50 shadow-sm">
+                <div className="absolute bottom-4 left-4 bg-background/80 backdrop-blur-md px-3 py-1 rounded-full border border-border/50">
                   <span className="text-xs text-primary font-bold">Arequipa</span>
                 </div>
               </div>
-              <div className="relative group overflow-hidden rounded-3xl col-span-1 shadow-sm rotate-[-1deg] -translate-y-1 hover:rotate-0 hover:translate-y-0 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
+              <div className="relative group overflow-hidden rounded-3xl col-span-1 shadow-sm">
                 <img src="/cusco.png" alt="Cusco" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-md px-3 py-1 rounded-full border border-border/50 shadow-sm">
+                <div className="absolute bottom-4 left-4 bg-background/80 backdrop-blur-md px-3 py-1 rounded-full border border-border/50">
                   <span className="text-xs text-primary font-bold">Cusco</span>
                 </div>
               </div>
