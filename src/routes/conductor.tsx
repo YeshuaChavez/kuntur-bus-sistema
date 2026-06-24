@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { RoleShell } from "@/components/kuntur/RoleShell";
+import { playSirenTone } from "@/lib/utils";
 import {
   Pause, Flag, AlertTriangle, MapPin, Clock, Route as RouteIcon,
   Navigation, BadgeCheck, Fuel, Gauge, ThermometerSun, Users,
@@ -576,13 +577,32 @@ function BigBtn({ icon: Icon, label, sublabel, onClick, active, disabled }: {
 function SosModal({ onClose }: { onClose: () => void }) {
   const [phase, setPhase] = useState<"select" | "sending" | "done">("select");
   const [reason, setReason] = useState("");
+  const stopSirenRef = useRef<(() => void) | null>(null);
   const reasons = ["Avería mecánica", "Accidente de tránsito", "Asalto / Seguridad", "Emergencia médica", "Otro"];
 
   const handleReason = (r: string) => {
     setReason(r);
     setPhase("sending");
-    setTimeout(() => setPhase("done"), 2600);
+    
+    // Iniciar tono de sirena
+    stopSirenRef.current = playSirenTone();
+
+    setTimeout(() => {
+      setPhase("done");
+      if (stopSirenRef.current) {
+        stopSirenRef.current();
+        stopSirenRef.current = null;
+      }
+    }, 2600);
   };
+
+  useEffect(() => {
+    return () => {
+      if (stopSirenRef.current) {
+        stopSirenRef.current();
+      }
+    };
+  }, []);
 
   return (
     <div className="fixed lg:absolute inset-0 z-50 flex items-end justify-center bg-foreground/60 backdrop-blur-sm">

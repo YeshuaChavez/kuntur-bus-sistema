@@ -8,6 +8,7 @@ import {
   AlertCircle, UserMinus, Timer, Sparkles, Moon, BedDouble, Crown, Star,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { playSuccessBeep, playErrorBuzz } from "@/lib/utils";
 
 export const Route = createFileRoute("/auxiliar")({
   head: () => ({
@@ -625,14 +626,24 @@ function Scanner() {
   const [phase, setPhase] = useState<"idle" | "scanning" | "valid" | "invalid">("idle");
   const [passenger, setPassenger] = useState<typeof MOCK_PASSENGERS[0] | null>(null);
   const [scanIdx, setScanIdx] = useState(0);
+  const [shake, setShake] = useState(false);
 
   const doScan = () => {
     setPhase("scanning");
     setTimeout(() => {
       const p = MOCK_PASSENGERS[scanIdx % MOCK_PASSENGERS.length];
       setPassenger(p);
-      setPhase(p.valid ? "valid" : "invalid");
+      const nextPhase = p.valid ? "valid" : "invalid";
+      setPhase(nextPhase);
       setScanIdx((i) => i + 1);
+
+      if (nextPhase === "valid") {
+        playSuccessBeep();
+      } else {
+        playErrorBuzz();
+        setShake(true);
+        setTimeout(() => setShake(false), 420);
+      }
     }, 2000);
   };
 
@@ -645,7 +656,7 @@ function Scanner() {
   return (
     <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-foreground/95 p-4 shadow-[var(--shadow-card)]">
       {/* Viewfinder */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-foreground">
+      <div className={`relative aspect-square w-full overflow-hidden rounded-xl bg-foreground ${shake ? "animate-shake" : ""}`}>
         <div className="absolute inset-0 bg-gradient-to-br from-foreground via-foreground to-primary/20" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_30%,_rgba(0,0,0,0.6)_70%)]" />
 
