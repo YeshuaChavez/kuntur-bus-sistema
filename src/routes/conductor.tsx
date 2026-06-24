@@ -84,7 +84,7 @@ function ConductorView() {
 
   if (stage === "select" || !trip) {
     return (
-      <RoleShell role="Conductor" variant="tablet" rightSlot={<DriverBadge name={driverName} />}>
+      <RoleShell role="Conductor" rightSlot={<DriverBadge name={driverName} />}>
         <TripPicker
           title="Selecciona el viaje a conducir"
           subtitle="Elige tu unidad para iniciar el reporte de ruta."
@@ -96,7 +96,7 @@ function ConductorView() {
 
   if (stage === "upcoming") {
     return (
-      <RoleShell role="Conductor" variant="tablet" rightSlot={<DriverBadge name={driverName} />}>
+      <RoleShell role="Conductor" rightSlot={<DriverBadge name={driverName} />}>
         <UpcomingTrips
           finishedTripLabel={`${trip.origin} → ${trip.destination}`}
           onPickNext={(id) => { setTripId(id); setStage("active"); }}
@@ -207,7 +207,7 @@ function ActiveDriverView({ trip, driverName, onFinish }: {
   };
 
   return (
-    <RoleShell role="Conductor" variant="tablet" rightSlot={<DriverBadge name={driverName} />}>
+    <RoleShell role="Conductor" rightSlot={<DriverBadge name={driverName} />}>
       <div className="mx-auto max-w-3xl pb-44">
 
         {/* Hero card */}
@@ -375,7 +375,7 @@ function ActiveDriverView({ trip, driverName, onFinish }: {
       </div>
 
       {/* Bottom bar — always visible */}
-      <div className="fixed lg:absolute inset-x-0 bottom-0 z-40 space-y-2 border-t border-border bg-card/95 p-4 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-40 space-y-2 border-t border-border bg-card/95 p-4 backdrop-blur">
         {started && (
           <div className="flex items-center justify-center gap-2 rounded-xl bg-secondary py-2 text-sm font-mono font-bold text-primary tabular-nums">
             <Timer className="h-4 w-4" /> {formatElapsed(elapsed)} en ruta
@@ -605,7 +605,7 @@ function SosModal({ onClose }: { onClose: () => void }) {
   }, []);
 
   return (
-    <div className="fixed lg:absolute inset-0 z-50 flex items-end justify-center bg-foreground/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/60 backdrop-blur-sm">
       <div className="w-full max-w-md animate-in slide-in-from-bottom rounded-t-3xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] duration-300">
 
         {phase === "select" && (

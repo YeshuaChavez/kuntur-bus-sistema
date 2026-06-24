@@ -328,9 +328,14 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { pathname } = useLocation();
-  const isRoleRoute = ["/auxiliar", "/conductor", "/controlador", "/administrador"].some(
-    (role) => pathname.startsWith(role)
-  );
+  const cleanPath = pathname.toLowerCase();
+  const isRoleRoute = [
+    "auxiliar",
+    "conductor",
+    "controlador",
+    "administrador",
+    "login"
+  ].some((role) => cleanPath.includes(role));
 
   return (
     <>
