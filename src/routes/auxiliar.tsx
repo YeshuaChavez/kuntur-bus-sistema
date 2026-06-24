@@ -700,8 +700,8 @@ function Scanner() {
         {/* Tap overlay (idle only) */}
         {phase === "idle" && (
           <>
-            <div className="absolute inset-0 flex items-center justify-center p-12 opacity-25">
-              <img src="/scanner_placeholder.png" alt="Scan QR" className="h-48 w-auto object-contain" />
+            <div className="absolute inset-0 flex items-center justify-center p-12 opacity-35">
+              <img src="/scanner_placeholder.png" alt="Scan QR" className="h-48 w-auto object-contain mix-blend-screen" />
             </div>
             <button onClick={doScan} className="absolute inset-0 z-10" aria-label="Simular escaneo QR" />
           </>
