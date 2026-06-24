@@ -210,23 +210,20 @@ function ActiveDriverView({ trip, driverName, onFinish }: {
       <div className="mx-auto max-w-3xl pb-44">
 
         {/* Hero card */}
-        <div className="relative overflow-hidden rounded-3xl bg-[image:var(--gradient-primary)] p-6 text-primary-foreground shadow-[var(--shadow-elegant)]">
-          <div className="relative z-10">
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-widest opacity-80">
-              <span>Bus {trip.bus} · Salida {trip.departure}</span>
-              <span>Conductor: <strong className="font-bold opacity-100">{driverName}</strong></span>
-              <span>ID: <strong className="font-mono opacity-100">{trip.id}</strong></span>
-            </div>
-            <h1 className="mt-3 text-3xl font-bold">{trip.origin} → {trip.destination}</h1>
-            <div className="mt-1 flex items-center gap-1.5 text-sm opacity-90">
-              <MapPin className="h-3.5 w-3.5" />
-              {!started
-                ? `Listo para partir · ${trip.origin}`
-                : `En camino a ${plannedStops[reachedStops]?.name ?? trip.destination}`}
-            </div>
+        <div className="rounded-3xl bg-[image:var(--gradient-primary)] p-6 text-primary-foreground shadow-[var(--shadow-elegant)]">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-widest opacity-80">
+            <span>Bus {trip.bus} · Salida {trip.departure}</span>
+            <span>Conductor: <strong className="font-bold opacity-100">{driverName}</strong></span>
+            <span>ID: <strong className="font-mono opacity-100">{trip.id}</strong></span>
           </div>
-          <img src="/boarding_hero.png" alt="Route Hero" className="absolute -right-4 -bottom-6 h-36 w-auto object-contain opacity-25 sm:opacity-35 pointer-events-none" />
-          <div className="relative z-10 mt-5 grid grid-cols-4 gap-3 border-t border-primary-foreground/20 pt-4">
+          <h1 className="mt-3 text-3xl font-bold">{trip.origin} → {trip.destination}</h1>
+          <div className="mt-1 flex items-center gap-1.5 text-sm opacity-90">
+            <MapPin className="h-3.5 w-3.5" />
+            {!started
+              ? `Listo para partir · ${trip.origin}`
+              : `En camino a ${plannedStops[reachedStops]?.name ?? trip.destination}`}
+          </div>
+          <div className="mt-5 grid grid-cols-4 gap-3 border-t border-primary-foreground/20 pt-4">
             <Mini icon={Clock}  k="Inicio"      v={startTime ?? "—"} />
             <Mini icon={Pause}  k="Últ. parada" v={stopTime  ?? "—"} />
             <Mini icon={Flag}   k="Estado"      v={status} />
