@@ -982,17 +982,17 @@ export function Stepper({ step }: { step: string }) {
       <div className="flex items-center justify-center min-w-max mx-auto px-4">
         {labels.map((l, i) => (
           <div key={l} className="flex items-center">
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-1.5">
               <div className={cn(
-                "relative flex h-11 w-11 items-center justify-center rounded-full text-sm font-black transition-all duration-300 select-none",
+                "relative flex h-9 w-9 items-center justify-center rounded-full text-xs font-black transition-all duration-300 select-none",
                 i < idx
                   ? "bg-primary/15 text-primary ring-2 ring-primary/30"
                   : i === idx
-                  ? "bg-[image:var(--gradient-primary)] text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.45)] ring-4 ring-primary/20 scale-110"
+                  ? "bg-[image:var(--gradient-primary)] text-primary-foreground shadow-[0_0_15px_hsl(var(--primary)/0.45)] ring-4 ring-primary/20 scale-105"
                   : "bg-muted text-muted-foreground/50"
               )}>
                 {i < idx ? (
-                  <svg viewBox="0 0 12 12" fill="none" className="h-4 w-4 stroke-primary stroke-[2.5]">
+                  <svg viewBox="0 0 12 12" fill="none" className="h-3.5 w-3.5 stroke-primary stroke-[2.5]">
                     <polyline points="1.5,6.5 4.5,9.5 10.5,2.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 ) : (
@@ -1003,13 +1003,13 @@ export function Stepper({ step }: { step: string }) {
                 )}
               </div>
               <span className={cn(
-                "text-[11px] font-semibold whitespace-nowrap tracking-wide transition-colors",
+                "text-[10px] font-semibold whitespace-nowrap tracking-wide transition-colors",
                 i === idx ? "text-primary" : i < idx ? "text-primary/60" : "text-muted-foreground/50"
               )}>{l}</span>
             </div>
             {i < labels.length - 1 && (
               <div className={cn(
-                "mx-1 sm:mx-2 mb-5 h-[2px] w-8 sm:w-14 rounded-full transition-all duration-500",
+                "mx-1 sm:mx-2 mb-4 h-[2px] w-4 sm:w-10 rounded-full transition-all duration-500",
                 i < idx ? "bg-primary/50" : "bg-border"
               )} />
             )}
