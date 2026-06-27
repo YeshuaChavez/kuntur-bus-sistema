@@ -1,47 +1,47 @@
-# 🦅 KUNTUR — Sistema Inteligente de Gestión de Transporte y Movilidad
+# KUNTUR — Sistema Inteligente de Gestión de Transporte y Movilidad
 
 KUNTUR es una plataforma web moderna, interactiva y robusta diseñada para digitalizar y optimizar la experiencia de transporte terrestre interprovincial en el Perú. Inspirada en la imponencia y la conectividad del cóndor andino, KUNTUR unifica en un solo ecosistema digital la venta de pasajes para clientes y las herramientas operativas clave para el personal de tierra, tripulación de cabina, despachadores y administradores de flota.
 
 ---
 
-## 🚀 Características Principales por Rol
+## Características Principales por Rol
 
 El sistema cuenta con interfaces adaptadas y personalizadas para cinco roles clave del ecosistema de transporte:
 
-### 1. 🎫 Módulo del Cliente (Experiencia del Pasajero)
+### 1. Módulo del Cliente (Experiencia del Pasajero)
 * **Buscador Inteligente:** Filtros por origen, destino, fecha y categorías de servicio (Premium, Ejecutivo, Cama y Cama Nocturna).
 * **Mapa de Asientos Interactivo:** Visualización en tiempo real de la distribución del bus (primer y segundo piso) con estados diferenciados (Libre, Vendido, Seleccionado).
 * **Pasarela de Pago Simulada:** Formulario de pago seguro con DNI, validación de campos, selección de pasarela y simulación de compra instantánea.
 * **Boleto Digital QR:** Generación de boleto electrónico con código QR encriptado y envío automático simulado al correo del cliente.
 * **Sección "Mis Viajes":** Historial de compras pasadas y próximas salidas con conteo regresivo y descarga de boletos.
 
-### 2. 📱 Módulo de Auxiliar de Abordaje (Tierra)
+### 2. Módulo de Auxiliar de Abordaje (Tierra)
 * **Escáner QR Interactivo:** Simulación de lector de boletos integrado en interfaz móvil.
   * **Beep de Éxito:** Pitido doble agudo sintetizado en tiempo real ante boletos válidos.
   * **Zumbido de Advertencia:** Sonido grave y retroceso visual ante boletos inválidos.
   * **Feedback Háptico Visual:** Vibración en pantalla (shake) si el boleto no corresponde al viaje o al asiento.
-* **Monitoreo de Abordaje:** Vista del mapa de asientos con actualización en tiempo real de pasajeros validados (*check-in*).
+* **Monitoreo de Abordaje:** Vista del mapa de asientos con actualización en tiempo real de pasajeros validados (check-in).
 * **Control de Paradas y Equipaje:** Panel de bajadas por escala para registrar pasajeros de forma ordenada antes de cerrar y avanzar.
 
-### 3. 🚛 Módulo de Conductor de Ruta (A Bordo)
+### 3. Módulo de Conductor de Ruta (A Bordo)
 * **Bitácora Automatizada:** Registro cronológico de inicio de viaje, paradas técnicas e incidencias menores con marcas de tiempo en formato de números tabulares.
 * **Sensores y Telemetría en Tiempo Real:** Monitorización en vivo de temperatura del motor, presión de aceite, nivel de AdBlue y voltaje de batería con alertas de atención y advertencia críticas.
 * **Mapa de Navegación Dinámico:** Seguimiento GPS con un marcador de bus en movimiento a lo largo del trazado de paradas (calculado mediante algoritmo óptimo de Dijkstra).
-* **Botón de Emergencia S.O.S:** Disparador de alerta de prioridad crítica (accidentes, fallas mayores) que activa una **sirena sonora oscilante** en bucle y notifica de inmediato a la PNP y Central de control.
+* **Botón de Emergencia S.O.S:** Disparador de alerta de prioridad crítica (accidentes, fallas mayores) que activa una sirena sonora oscilante en bucle y notifica de inmediato a la PNP y Central de control.
 
-### 4. 🎛️ Módulo de Controlador de Flota (Central de Despacho)
+### 4. Módulo de Controlador de Flota (Central de Despacho)
 * **Mapa Satelital General:** Localización en vivo de todas las unidades activas en carretera con estados según telemetría.
 * **Gestión de Terminales y Andenes:** Monitoreo de andenes ocupados, salidas programadas e incidencias en agencias a nivel nacional.
 * **Taller y Mantenimiento:** Reporte técnico de unidades retiradas de servicio para mantenimiento preventivo u optimización de flota.
 
-### 5. 👑 Módulo del Administrador (Gestión del Negocio)
+### 5. Módulo del Administrador (Gestión del Negocio)
 * **Dashboard Global de Métricas:** Resumen de ingresos diarios, pasajes vendidos, porcentaje de ocupación y alertas de mantenimiento.
 * **Despacho y Planificación:** Creación y modificación de rutas interprovinciales con andenes de embarque asignados.
 * **Base de Datos de Flota e Historial:** Registro detallado de buses activos, marcas, capacidades y base de datos operativa.
 
 ---
 
-## 🛠️ Stack Tecnológico
+## Stack Tecnológico
 
 El proyecto está construido con herramientas frontend modernas y optimizadas para rendimiento y SEO:
 
@@ -55,17 +55,17 @@ El proyecto está construido con herramientas frontend modernas y optimizadas pa
 
 ---
 
-## 🎨 Sistema de Diseño (Estética KUNTUR)
+## Sistema de Diseño (Estética KUNTUR)
 
-El diseño visual del sistema rompe con plantillas genéricas de inteligencia artificial (*AI slop*) para enfocarse en una identidad andina, premium y limpia:
+El diseño visual del sistema rompe con plantillas genéricas de inteligencia artificial (AI slop) para enfocarse en una identidad andina, premium y limpia:
 * **Paleta de Colores:** Basada en tonos tierra y naturaleza. Predominan el verde salvia y esmeralda (`oklch(0.5 0.07 160)`), grises pizarra profunda para fondos oscuros (`oklch(0.129 0.042 264.695)`) y tonos crema suaves para fondos claros.
-* **Tipografía:** *Plus Jakarta Sans* y Outfit de Google Fonts, logrando un par tipográfico corporativo y sofisticado con pesos extra-bold y espaciado de tracking apretado.
+* **Tipografía:** Plus Jakarta Sans y Outfit de Google Fonts, logrando un par tipográfico corporativo y sofisticado con pesos extra-bold y espaciado de tracking apretado.
 * **Movimiento y Animaciones:** Transiciones y curvas de suavizado de alto nivel (como muelle de amortiguación `cubic-bezier(0.16, 1, 0.3, 1)` para paneles laterales e indicadores hover sutiles de `150ms`).
 * **Accesibilidad (A11y):** Contraste garantizado mayor a 4.5:1 (WCAG AA), elementos interactivos con foco visible claro (`focus-visible:ring-2`) y soporte completo de teclado (`role="button"` con Space/Enter).
 
 ---
 
-## 💻 Instrucciones para Desarrolladores
+## Instrucciones para Desarrolladores
 
 Sigue los siguientes pasos para levantar el entorno de desarrollo localmente:
 
@@ -93,7 +93,7 @@ Los archivos de distribución se generarán en la carpeta `dist/`.
 
 ---
 
-## 📁 Estructura del Proyecto (Key Directories)
+## Estructura del Proyecto (Key Directories)
 
 ```text
 ├── .agents/               # Reglas de diseño del frontend y buenas prácticas React
